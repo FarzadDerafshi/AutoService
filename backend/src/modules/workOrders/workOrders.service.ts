@@ -106,9 +106,25 @@ async function getHeaderById(db: PoolClient, id: string) {
 }
 
 export async function getWorkOrderById(db: PoolClient, id: string) {
-  const header = await getHeaderById(db, id);
+  // JOIN clients and vehicles so the response includes denormalized display
+  // fields (clientName, vehiclePlate, vehicleMake, vehicleModel) — the same
+  // fields the list endpoint returns. Without the JOIN the detail view only
+  // receives raw UUIDs and displays them instead of human-readable values.
+  const { rows } = await db.query(
+    `SELECT wo.*,
+            c.full_name        AS client_name,
+            v.license_plate    AS vehicle_plate,
+            v.make             AS vehicle_make,
+            v.model            AS vehicle_model
+     FROM   work_orders wo
+     JOIN   clients  c ON c.id = wo.client_id
+     JOIN   vehicles v ON v.id = wo.vehicle_id
+     WHERE  wo.id = $1`,
+    [id]
+  );
+  if (!rows[0]) throw new NotFoundError("Work order not found");
   const items = await fetchItems(db, id);
-  return { ...toCamel(header), items };
+  return { ...toCamel(rows[0]), items };
 }
 
 export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInput, createdBy: string) {

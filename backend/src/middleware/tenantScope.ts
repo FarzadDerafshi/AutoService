@@ -34,7 +34,10 @@ export async function tenantScope(req: Request, res: Response, next: NextFunctio
 
   try {
     await client.query("BEGIN");
-    await client.query("SET LOCAL app.current_shop_id = $1", [req.auth.shopId]);
+    // SET LOCAL does not support parameterised placeholders ($1) — it is a
+    // configuration directive, not a DML statement.  shopId is a UUID that
+    // originates from our own JWT (never raw user input), so inlining it is safe.
+    await client.query(`SET LOCAL app.current_shop_id = '${req.auth.shopId}'`);
     req.db = client;
     res.on("finish", finish);
     res.on("close", finish);

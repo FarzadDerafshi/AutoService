@@ -23,13 +23,54 @@ AutoService/
 ## Quick start
 
 ```bash
-cp .env.example .env        # then edit .env with real secrets
-docker compose up --build   # starts Postgres + the API
+cp .env.example .env        # edit — use alphanumeric DB_PASSWORD (no # @ / ?)
+docker compose up -d --build postgres api
 ```
 
-API health check: `http://localhost:3000/health`
+Build and serve the Flutter web frontend:
 
-Frontend (dev mode, outside Docker):
+```bash
+cd frontend
+flutter pub get
+flutter build web --release
+docker compose up -d web
+```
+
+| URL | Purpose |
+|---|---|
+| `http://localhost:8080` | Flutter web app (via nginx) |
+| `http://localhost:3000/health` | API health check |
+
+### LAN access from other devices
+
+Because the Flutter web build uses `Uri.base.origin` as its API base URL, any
+device on the same network can open `http://<your-machine-ip>:8080` and the
+app will work without any extra configuration — API calls are proxied by nginx
+at the same origin.
+
+> **Note:** plain HTTP is used. `flutter_secure_storage` requires HTTPS for its
+> Web Crypto encryption, so the web build falls back to `localStorage` for JWT
+> persistence on LAN. This is acceptable for an internal tool; add TLS for
+> production use.
+
+### Rebuilding after changes
+
+```bash
+# Backend code change
+docker compose up -d --build api
+
+# Frontend code change
+cd frontend && flutter build web --release
+docker restart repairshop_web
+
+# .env change (restart alone does NOT re-read .env)
+docker compose up -d --force-recreate <service>
+
+# Full reset (wipes database volume)
+docker compose down -v && docker compose up -d --build
+```
+
+Frontend (dev hot-reload, outside Docker):
 
 ```bash
 cd frontend
@@ -38,3 +79,11 @@ flutter run -d chrome
 ```
 
 Full details, prerequisites, and troubleshooting: [`SETUP.md`](./SETUP.md).
+
+## Documentation
+
+| File | Contents |
+|---|---|
+| [`SETUP.md`](./SETUP.md) | Prerequisites and step-by-step setup |
+| [`CHANGELOG.md`](./CHANGELOG.md) | What changed and when |
+| [`DECISIONS.md`](./DECISIONS.md) | Architecture decisions and known gotchas |
