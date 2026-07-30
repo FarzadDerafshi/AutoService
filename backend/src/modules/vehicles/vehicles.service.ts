@@ -1,0 +1,105 @@
+import { PoolClient } from "pg";
+import { NotFoundError } from "../../utils/errors";
+import { toCamel, toCamelList } from "../../utils/mapKeysToCamel";
+import { Pagination } from "../../utils/pagination";
+import { normalizePlate } from "../../utils/licensePlate";
+import { CreateVehicleInput, UpdateVehicleInput } from "./vehicles.schema";
+
+export async function listVehicles(
+  db: PoolClient,
+  filters: { plate?: string; clientId?: string },
+  pagination: Pagination
+) {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.plate) {
+    params.push(`%${normalizePlate(filters.plate)}%`);
+    conditions.push(`license_plate ILIKE $${params.length}`);
+  }
+  if (filters.clientId) {
+    params.push(filters.clientId);
+    conditions.push(`client_id = $${params.length}`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const { rows: countRows } = await db.query(`SELECT COUNT(*)::int AS total FROM vehicles ${where}`, params);
+  const total = countRows[0]?.total ?? 0;
+
+  params.push(pagination.pageSize, pagination.offset);
+  const { rows } = await db.query(
+    `SELECT * FROM vehicles ${where} ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
+
+  return { data: toCamelList(rows), total, page: pagination.page, pageSize: pagination.pageSize };
+}
+
+export async function getVehicleById(db: PoolClient, id: string) {
+  const { rows } = await db.query(`SELECT * FROM vehicles WHERE id = $1`, [id]);
+  if (!rows[0]) throw new NotFoundError("Vehicle not found");
+  return toCamel(rows[0]);
+}
+
+export async function getVehicleHistory(db: PoolClient, id: string) {
+  const vehicle = await getVehicleById(db, id);
+  const { rows } = await db.query(
+    `SELECT id, order_no, status, payment_method, subtotal, discount_amount, tax_rate,
+            tax_amount, grand_total, mileage_at_service, created_at, completed_at, paid_at
+     FROM work_orders WHERE vehicle_id = $1 ORDER BY created_at DESC`,
+    [id]
+  );
+  return { vehicle, workOrders: toCamelList(rows) };
+}
+
+export async function createVehicle(db: PoolClient, input: CreateVehicleInput) {
+  const { rows } = await db.query(
+    `INSERT INTO vehicles (shop_id, client_id, license_plate, make, model, engine_type, year, current_mileage_km)
+     VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7)
+     RETURNING *`,
+    [
+      input.clientId,
+      normalizePlate(input.licensePlate),
+      input.make || null,
+      input.model || null,
+      input.engineType || null,
+      input.year ?? null,
+      input.currentMileageKm ?? 0,
+    ]
+  );
+  return toCamel(rows[0]);
+}
+
+export async function updateVehicle(db: PoolClient, id: string, input: UpdateVehicleInput) {
+  await getVehicleById(db, id);
+
+  const fields: string[] = [];
+  const params: unknown[] = [];
+
+  const push = (column: string, value: unknown) => {
+    params.push(value);
+    fields.push(`${column} = $${params.length}`);
+  };
+
+  if (input.clientId !== undefined) push("client_id", input.clientId);
+  if (input.licensePlate !== undefined) push("license_plate", normalizePlate(input.licensePlate));
+  if (input.make !== undefined) push("make", input.make || null);
+  if (input.model !== undefined) push("model", input.model || null);
+  if (input.engineType !== undefined) push("engine_type", input.engineType || null);
+  if (input.year !== undefined) push("year", input.year);
+  if (input.currentMileageKm !== undefined) push("current_mileage_km", input.currentMileageKm);
+
+  if (fields.length === 0) {
+    return getVehicleById(db, id);
+  }
+
+  params.push(id);
+  const { rows } = await db.query(`UPDATE vehicles SET ${fields.join(", ")} WHERE id = $${params.length} RETURNING *`, params);
+  return toCamel(rows[0]);
+}
+
+export async function deleteVehicle(db: PoolClient, id: string) {
+  await getVehicleById(db, id);
+  await db.query(`DELETE FROM vehicles WHERE id = $1`, [id]);
+}

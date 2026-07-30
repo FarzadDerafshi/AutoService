@@ -1,0 +1,46 @@
+# Environment
+.env
+.env.local
+
+# Node / backend
+backend/node_modules/
+backend/dist/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/npm-debug.log*
+
+# Flutter / frontend
+frontend/.dart_tool/
+frontend/.flutter-plugin-dependencies
+frontend/build/
+frontend/.pub-cache/
+frontend/.pub/
+frontend/pubspec.lock
+frontend/**/generated_plugin_registrant.dart
+frontend/**/*.g.dart
+frontend/.flutter-versions
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/ios/Pods/
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+frontend/web/main.dart.js
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker
+pgdata/

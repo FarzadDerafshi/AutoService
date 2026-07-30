@@ -1,0 +1,240 @@
+import { PoolClient } from "pg";
+import { ConflictError, NotFoundError, ValidationError } from "../../utils/errors";
+import { toCamel, toCamelList } from "../../utils/mapKeysToCamel";
+import { Pagination } from "../../utils/pagination";
+import {
+  CreateWorkOrderInput,
+  LineItemInput,
+  UpdateStatusInput,
+  UpdateWorkOrderInput,
+} from "./workOrders.schema";
+
+export interface WorkOrderFilters {
+  status?: string;
+  clientId?: string;
+  vehicleId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+type WorkOrderStatus = "draft" | "completed" | "paid";
+
+// Forward-only status machine: draft -> completed -> paid.
+// Skipping a step (e.g. draft -> paid) returns a 400 rather than silently
+// allowing it, so payment is always recorded against a "completed" job.
+const ALLOWED_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
+  draft: ["completed"],
+  completed: ["paid"],
+  paid: [],
+};
+
+function computeTotals(items: LineItemInput[], discountAmount: number, taxRate: number) {
+  const subtotal = Number(items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0).toFixed(2));
+  const taxable = Math.max(0, subtotal - discountAmount);
+  const taxAmount = Number((taxable * (taxRate / 100)).toFixed(2));
+  const grandTotal = Number((taxable + taxAmount).toFixed(2));
+  return { subtotal, taxAmount, grandTotal };
+}
+
+async function insertItems(db: PoolClient, workOrderId: string, items: LineItemInput[]) {
+  for (const [index, item] of items.entries()) {
+    await db.query(
+      `INSERT INTO work_order_items (work_order_id, catalog_item_id, description, quantity, unit_price, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [workOrderId, item.catalogItemId ?? null, item.description, item.quantity, item.unitPrice, index]
+    );
+  }
+}
+
+async function fetchItems(db: PoolClient, workOrderId: string) {
+  const { rows } = await db.query(
+    `SELECT * FROM work_order_items WHERE work_order_id = $1 ORDER BY sort_order ASC`,
+    [workOrderId]
+  );
+  return toCamelList(rows);
+}
+
+export async function listWorkOrders(db: PoolClient, filters: WorkOrderFilters, pagination: Pagination) {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.status) {
+    params.push(filters.status);
+    conditions.push(`wo.status = $${params.length}`);
+  }
+  if (filters.clientId) {
+    params.push(filters.clientId);
+    conditions.push(`wo.client_id = $${params.length}`);
+  }
+  if (filters.vehicleId) {
+    params.push(filters.vehicleId);
+    conditions.push(`wo.vehicle_id = $${params.length}`);
+  }
+  if (filters.dateFrom) {
+    params.push(filters.dateFrom);
+    conditions.push(`wo.created_at >= $${params.length}`);
+  }
+  if (filters.dateTo) {
+    params.push(filters.dateTo);
+    conditions.push(`wo.created_at <= $${params.length}`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const { rows: countRows } = await db.query(`SELECT COUNT(*)::int AS total FROM work_orders wo ${where}`, params);
+  const total = countRows[0]?.total ?? 0;
+
+  params.push(pagination.pageSize, pagination.offset);
+  const { rows } = await db.query(
+    `SELECT wo.*, c.full_name AS client_name, v.license_plate AS vehicle_plate, v.make AS vehicle_make, v.model AS vehicle_model
+     FROM work_orders wo
+     JOIN clients c ON c.id = wo.client_id
+     JOIN vehicles v ON v.id = wo.vehicle_id
+     ${where}
+     ORDER BY wo.created_at DESC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
+
+  return { data: toCamelList(rows), total, page: pagination.page, pageSize: pagination.pageSize };
+}
+
+async function getHeaderById(db: PoolClient, id: string) {
+  const { rows } = await db.query(`SELECT * FROM work_orders WHERE id = $1`, [id]);
+  if (!rows[0]) throw new NotFoundError("Work order not found");
+  return rows[0];
+}
+
+export async function getWorkOrderById(db: PoolClient, id: string) {
+  const header = await getHeaderById(db, id);
+  const items = await fetchItems(db, id);
+  return { ...toCamel(header), items };
+}
+
+export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInput, createdBy: string) {
+  const { subtotal, taxAmount, grandTotal } = computeTotals(input.items, input.discountAmount, input.taxRate);
+
+  const {
+    rows: [order],
+  } = await db.query(
+    `INSERT INTO work_orders
+       (shop_id, client_id, vehicle_id, mileage_at_service, subtotal,
+        discount_amount, tax_rate, tax_amount, grand_total, notes, created_by)
+     VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     RETURNING *`,
+    [
+      input.clientId,
+      input.vehicleId,
+      input.mileageAtService ?? null,
+      subtotal,
+      input.discountAmount,
+      input.taxRate,
+      taxAmount,
+      grandTotal,
+      input.notes || null,
+      createdBy,
+    ]
+  );
+
+  await insertItems(db, order.id, input.items);
+
+  // Keep the vehicle's odometer reading current — only ever moves forward.
+  if (input.mileageAtService) {
+    await db.query(
+      `UPDATE vehicles SET current_mileage_km = $1 WHERE id = $2 AND current_mileage_km < $1`,
+      [input.mileageAtService, input.vehicleId]
+    );
+  }
+
+  return getWorkOrderById(db, order.id);
+}
+
+export async function updateWorkOrder(db: PoolClient, id: string, input: UpdateWorkOrderInput) {
+  const header = await getHeaderById(db, id);
+
+  if (input.items && header.status !== "draft") {
+    throw new ConflictError("Line items can only be edited while the work order is in draft status");
+  }
+
+  let items: LineItemInput[];
+  if (input.items) {
+    items = input.items;
+  } else {
+    interface ExistingItemRow {
+      catalogItemId?: string;
+      description: string;
+      quantity: number;
+      unitPrice: number;
+    }
+    items = (await fetchItems(db, id)) as unknown as ExistingItemRow[];
+  }
+
+  const discountAmount = input.discountAmount ?? Number(header.discount_amount);
+  const taxRate = input.taxRate ?? Number(header.tax_rate);
+  const { subtotal, taxAmount, grandTotal } = computeTotals(items, discountAmount, taxRate);
+
+  if (input.items) {
+    await db.query(`DELETE FROM work_order_items WHERE work_order_id = $1`, [id]);
+    await insertItems(db, id, input.items);
+  }
+
+  await db.query(
+    `UPDATE work_orders
+     SET mileage_at_service = COALESCE($1, mileage_at_service),
+         subtotal = $2, discount_amount = $3, tax_rate = $4, tax_amount = $5, grand_total = $6,
+         notes = COALESCE($7, notes)
+     WHERE id = $8`,
+    [input.mileageAtService ?? null, subtotal, discountAmount, taxRate, taxAmount, grandTotal, input.notes ?? null, id]
+  );
+
+  if (input.mileageAtService) {
+    await db.query(
+      `UPDATE vehicles SET current_mileage_km = $1 WHERE id = $2 AND current_mileage_km < $1`,
+      [input.mileageAtService, header.vehicle_id]
+    );
+  }
+
+  return getWorkOrderById(db, id);
+}
+
+export async function updateWorkOrderStatus(db: PoolClient, id: string, input: UpdateStatusInput) {
+  const header = await getHeaderById(db, id);
+  const current = header.status as WorkOrderStatus;
+
+  if (current === input.status) {
+    return getWorkOrderById(db, id);
+  }
+
+  if (!ALLOWED_TRANSITIONS[current].includes(input.status)) {
+    throw new ValidationError(
+      `Cannot change status from '${current}' to '${input.status}'. Allowed next step: ${
+        ALLOWED_TRANSITIONS[current][0] ?? "none (already final)"
+      }.`
+    );
+  }
+
+  if (input.status === "paid" && !input.paymentMethod) {
+    throw new ValidationError("paymentMethod is required when marking a work order as paid");
+  }
+
+  const timestampColumn = input.status === "completed" ? "completed_at" : input.status === "paid" ? "paid_at" : null;
+
+  await db.query(
+    `UPDATE work_orders
+     SET status = $1,
+         payment_method = COALESCE($2, payment_method)
+         ${timestampColumn ? `, ${timestampColumn} = now()` : ""}
+     WHERE id = $3`,
+    [input.status, input.paymentMethod ?? null, id]
+  );
+
+  return getWorkOrderById(db, id);
+}
+
+export async function deleteWorkOrder(db: PoolClient, id: string) {
+  const header = await getHeaderById(db, id);
+  if (header.status !== "draft") {
+    throw new ConflictError("Only draft work orders can be deleted");
+  }
+  await db.query(`DELETE FROM work_orders WHERE id = $1`, [id]);
+}
