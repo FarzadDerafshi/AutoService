@@ -8,12 +8,40 @@ things are the way they are.
 
 ## Database
 
-### Multi-tenancy via Row-Level Security (RLS)
+### Multi-tenancy — application-level `shop_id` scoping is the real enforcement (2026-07-31)
 Every table that holds shop-specific data carries a `shop_id` UUID column.
-PostgreSQL RLS policies enforce that a connection can only see rows where
-`shop_id` matches the session-local variable `app.current_shop_id`.
+The *intended* design (see `db/init/008_row_level_security.sql`) was two
+layers: application-level `WHERE shop_id = ...` on every query, plus
+PostgreSQL RLS policies as a defense-in-depth backstop matching the
+session-local variable `app.current_shop_id`.
 
-The variable is set in the `tenantScope` Express middleware:
+**RLS is currently a no-op and must not be relied on.** The API connects as
+`repairshop_admin`, which also owns every table (it ran the `db/init`
+migrations) — Postgres exempts table owners from RLS policies by default
+unless `FORCE ROW LEVEL SECURITY` is also set, which it isn't. Combined with
+several service-layer queries that had been written assuming RLS would
+filter for them, this produced a real cross-tenant data leak (any shop could
+read another shop's clients/vehicles/catalog/work orders); fixed in v0.5.0 by
+adding an explicit `shop_id = current_setting('app.current_shop_id')::uuid`
+condition to every query in every service module. **This explicit filtering
+is now the only thing enforcing tenant isolation** — treat RLS as inert
+until the follow-up below is done, and add the `shop_id` condition to any
+new query on a shop-scoped table.
+
+**Follow-up (not yet done):** to make RLS a *real* backstop again — so a
+future missing `shop_id` filter fails closed instead of leaking — would
+require: (1) `ALTER TABLE ... FORCE ROW LEVEL SECURITY` on all six
+shop-scoped tables (or switching the API to a non-owner DB role, which is
+subject to RLS regardless of FORCE), **and** (2) reworking three auth-flow
+queries that currently run outside `tenantScope` and would break under a
+forced policy: `registerShopAndOwner`'s `INSERT INTO users` (no shop context
+exists yet — would need `SET LOCAL app.current_shop_id` to the newly-created
+shop's id before that insert) and `login`'s cross-shop email lookup (by
+design; would need to run with an explicit RLS bypass since it must search
+before any shop is known). `getCurrentUser` already filters by shop_id
+explicitly and should be unaffected either way.
+
+The tenant-scoping variable is set in the `tenantScope` Express middleware:
 ```sql
 SET LOCAL app.current_shop_id = '<uuid>';
 ```
@@ -218,6 +246,8 @@ docker compose up -d --build postgres api
 
 | Area | Issue | Suggested Fix |
 |---|---|---|
+| RLS not enforced | Table-owner DB role bypasses RLS; app-level `shop_id` filtering (added in v0.5.0) is the only real tenant isolation right now | `FORCE ROW LEVEL SECURITY` + non-owner app role, plus rework `register`/`login` (see Database section above) |
+| Catalog item ownership on work orders | `work_order_items.catalog_item_id` isn't verified to belong to the caller's shop when a work order is created | Add the same ownership check used for `clientId`/`vehicleId` in `createWorkOrder` |
 | HTTPS | App runs over plain HTTP; Web Crypto unavailable on LAN | Add TLS (self-signed cert or Let's Encrypt via Caddy/Traefik) |
 | Token storage (web) | `localStorage` is readable by JS (XSS risk) | Acceptable for internal LAN; switch to `flutter_secure_storage` when HTTPS is available |
 | Work-order numbering | Global sequence, not per-shop | Add `shop_counters` table with advisory lock |

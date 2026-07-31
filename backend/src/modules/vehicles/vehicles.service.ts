@@ -5,12 +5,17 @@ import { Pagination } from "../../utils/pagination";
 import { normalizePlate } from "../../utils/licensePlate";
 import { CreateVehicleInput, UpdateVehicleInput } from "./vehicles.schema";
 
+// RLS on this table is defense-in-depth only (see db/init/008_row_level_security.sql) —
+// the connecting DB role owns these tables, and Postgres exempts table owners from RLS
+// by default, so every query here must explicitly scope by shop_id itself.
+const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
+
 export async function listVehicles(
   db: PoolClient,
   filters: { plate?: string; clientId?: string },
   pagination: Pagination
 ) {
-  const conditions: string[] = [];
+  const conditions: string[] = [SHOP_SCOPE];
   const params: unknown[] = [];
 
   if (filters.plate) {
@@ -37,7 +42,7 @@ export async function listVehicles(
 }
 
 export async function getVehicleById(db: PoolClient, id: string) {
-  const { rows } = await db.query(`SELECT * FROM vehicles WHERE id = $1`, [id]);
+  const { rows } = await db.query(`SELECT * FROM vehicles WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
   if (!rows[0]) throw new NotFoundError("Vehicle not found");
   return toCamel(rows[0]);
 }
@@ -47,7 +52,7 @@ export async function getVehicleHistory(db: PoolClient, id: string) {
   const { rows } = await db.query(
     `SELECT id, order_no, status, payment_method, subtotal, discount_amount, tax_rate,
             tax_amount, grand_total, mileage_at_service, created_at, completed_at, paid_at
-     FROM work_orders WHERE vehicle_id = $1 ORDER BY created_at DESC`,
+     FROM work_orders WHERE vehicle_id = $1 AND ${SHOP_SCOPE} ORDER BY created_at DESC`,
     [id]
   );
   return { vehicle, workOrders: toCamelList(rows) };
@@ -95,11 +100,14 @@ export async function updateVehicle(db: PoolClient, id: string, input: UpdateVeh
   }
 
   params.push(id);
-  const { rows } = await db.query(`UPDATE vehicles SET ${fields.join(", ")} WHERE id = $${params.length} RETURNING *`, params);
+  const { rows } = await db.query(
+    `UPDATE vehicles SET ${fields.join(", ")} WHERE id = $${params.length} AND ${SHOP_SCOPE} RETURNING *`,
+    params
+  );
   return toCamel(rows[0]);
 }
 
 export async function deleteVehicle(db: PoolClient, id: string) {
   await getVehicleById(db, id);
-  await db.query(`DELETE FROM vehicles WHERE id = $1`, [id]);
+  await db.query(`DELETE FROM vehicles WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
 }

@@ -3,8 +3,13 @@ import { NotFoundError } from "../../utils/errors";
 import { toCamel, toCamelList } from "../../utils/mapKeysToCamel";
 import { CreateCatalogItemInput, UpdateCatalogItemInput } from "./catalog.schema";
 
+// RLS on this table is defense-in-depth only (see db/init/008_row_level_security.sql) —
+// the connecting DB role owns these tables, and Postgres exempts table owners from RLS
+// by default, so every query here must explicitly scope by shop_id itself.
+const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
+
 export async function listCatalogItems(db: PoolClient, filters: { type?: string; search?: string }) {
-  const conditions: string[] = [];
+  const conditions: string[] = [SHOP_SCOPE];
   const params: unknown[] = [];
 
   if (filters.type) {
@@ -22,7 +27,7 @@ export async function listCatalogItems(db: PoolClient, filters: { type?: string;
 }
 
 export async function getCatalogItemById(db: PoolClient, id: string) {
-  const { rows } = await db.query(`SELECT * FROM catalog_items WHERE id = $1`, [id]);
+  const { rows } = await db.query(`SELECT * FROM catalog_items WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
   if (!rows[0]) throw new NotFoundError("Catalog item not found");
   return toCamel(rows[0]);
 }
@@ -60,7 +65,7 @@ export async function updateCatalogItem(db: PoolClient, id: string, input: Updat
 
   params.push(id);
   const { rows } = await db.query(
-    `UPDATE catalog_items SET ${fields.join(", ")} WHERE id = $${params.length} RETURNING *`,
+    `UPDATE catalog_items SET ${fields.join(", ")} WHERE id = $${params.length} AND ${SHOP_SCOPE} RETURNING *`,
     params
   );
   return toCamel(rows[0]);
@@ -72,8 +77,8 @@ export async function deleteCatalogItem(db: PoolClient, id: string) {
   const { rows: referenced } = await db.query(`SELECT 1 FROM work_order_items WHERE catalog_item_id = $1 LIMIT 1`, [id]);
 
   if (referenced.length > 0) {
-    await db.query(`UPDATE catalog_items SET is_active = false WHERE id = $1`, [id]);
+    await db.query(`UPDATE catalog_items SET is_active = false WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
   } else {
-    await db.query(`DELETE FROM catalog_items WHERE id = $1`, [id]);
+    await db.query(`DELETE FROM catalog_items WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
   }
 }

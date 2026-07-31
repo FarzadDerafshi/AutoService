@@ -8,6 +8,11 @@ interface DateRange {
   dateTo?: string;
 }
 
+// RLS on these tables is defense-in-depth only (see db/init/008_row_level_security.sql) —
+// the connecting DB role owns these tables, and Postgres exempts table owners from RLS
+// by default, so every query here must explicitly scope by shop_id itself.
+const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
+
 function dateRangeClause(column: string, range: DateRange, params: unknown[]) {
   const conditions: string[] = [];
   if (range.dateFrom) {
@@ -25,7 +30,7 @@ function dateRangeClause(column: string, range: DateRange, params: unknown[]) {
 // on paid_at (not created_at) within the requested range.
 export async function getRevenueReport(db: PoolClient, range: DateRange, groupBy: "day" | "week" | "month") {
   const params: unknown[] = [];
-  const conditions = ["status = 'paid'", "paid_at IS NOT NULL", ...dateRangeClause("paid_at", range, params)];
+  const conditions = [SHOP_SCOPE, "status = 'paid'", "paid_at IS NOT NULL", ...dateRangeClause("paid_at", range, params)];
 
   const { rows } = await db.query(
     `SELECT date_trunc('${groupBy}', paid_at) AS period,
@@ -43,8 +48,8 @@ export async function getRevenueReport(db: PoolClient, range: DateRange, groupBy
 
 export async function getPaymentStatusReport(db: PoolClient, range: DateRange) {
   const params: unknown[] = [];
-  const conditions = dateRangeClause("created_at", range, params);
-  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const conditions = [SHOP_SCOPE, ...dateRangeClause("created_at", range, params)];
+  const where = `WHERE ${conditions.join(" AND ")}`;
 
   const { rows } = await db.query(
     `SELECT status, COUNT(*)::int AS count, COALESCE(SUM(grand_total), 0)::numeric(12,2) AS total
@@ -67,7 +72,11 @@ export async function getPaymentStatusReport(db: PoolClient, range: DateRange) {
 
 export async function getPartsUsageReport(db: PoolClient, range: DateRange, catalogItemId?: string) {
   const params: unknown[] = [];
-  const conditions = ["woi.catalog_item_id IS NOT NULL", ...dateRangeClause("wo.created_at", range, params)];
+  const conditions = [
+    "wo.shop_id = current_setting('app.current_shop_id')::uuid",
+    "woi.catalog_item_id IS NOT NULL",
+    ...dateRangeClause("wo.created_at", range, params),
+  ];
 
   if (catalogItemId) {
     params.push(catalogItemId);
@@ -91,14 +100,16 @@ export async function getPartsUsageReport(db: PoolClient, range: DateRange, cata
 }
 
 export async function getVehicleHistoryByPlate(db: PoolClient, plate: string) {
-  const { rows } = await db.query(`SELECT * FROM vehicles WHERE license_plate = $1`, [normalizePlate(plate)]);
+  const { rows } = await db.query(`SELECT * FROM vehicles WHERE license_plate = $1 AND ${SHOP_SCOPE}`, [
+    normalizePlate(plate),
+  ]);
   const vehicle = rows[0];
   if (!vehicle) throw new NotFoundError("Vehicle not found for that license plate");
 
   const { rows: orders } = await db.query(
     `SELECT id, order_no, status, payment_method, subtotal, discount_amount, tax_rate,
             tax_amount, grand_total, mileage_at_service, created_at, completed_at, paid_at
-     FROM work_orders WHERE vehicle_id = $1 ORDER BY created_at DESC`,
+     FROM work_orders WHERE vehicle_id = $1 AND ${SHOP_SCOPE} ORDER BY created_at DESC`,
     [vehicle.id]
   );
 

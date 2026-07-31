@@ -46,7 +46,7 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
      JOIN shops s ON s.id = wo.shop_id
      JOIN clients c ON c.id = wo.client_id
      JOIN vehicles v ON v.id = wo.vehicle_id
-     WHERE wo.id = $1`,
+     WHERE wo.id = $1 AND wo.shop_id = current_setting('app.current_shop_id')::uuid`,
     [workOrderId]
   );
 

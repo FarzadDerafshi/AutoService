@@ -19,6 +19,12 @@ export interface WorkOrderFilters {
 
 type WorkOrderStatus = "draft" | "completed" | "paid";
 
+// RLS on these tables is defense-in-depth only (see db/init/008_row_level_security.sql) —
+// the connecting DB role owns these tables, and Postgres exempts table owners from RLS
+// by default, so every query here must explicitly scope by shop_id itself.
+const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
+const WO_SHOP_SCOPE = "wo.shop_id = current_setting('app.current_shop_id')::uuid";
+
 // Forward-only status machine: draft -> completed -> paid.
 // Skipping a step (e.g. draft -> paid) returns a 400 rather than silently
 // allowing it, so payment is always recorded against a "completed" job.
@@ -55,7 +61,7 @@ async function fetchItems(db: PoolClient, workOrderId: string) {
 }
 
 export async function listWorkOrders(db: PoolClient, filters: WorkOrderFilters, pagination: Pagination) {
-  const conditions: string[] = [];
+  const conditions: string[] = [WO_SHOP_SCOPE];
   const params: unknown[] = [];
 
   if (filters.status) {
@@ -100,7 +106,7 @@ export async function listWorkOrders(db: PoolClient, filters: WorkOrderFilters, 
 }
 
 async function getHeaderById(db: PoolClient, id: string) {
-  const { rows } = await db.query(`SELECT * FROM work_orders WHERE id = $1`, [id]);
+  const { rows } = await db.query(`SELECT * FROM work_orders WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
   if (!rows[0]) throw new NotFoundError("Work order not found");
   return rows[0];
 }
@@ -119,7 +125,7 @@ export async function getWorkOrderById(db: PoolClient, id: string) {
      FROM   work_orders wo
      JOIN   clients  c ON c.id = wo.client_id
      JOIN   vehicles v ON v.id = wo.vehicle_id
-     WHERE  wo.id = $1`,
+     WHERE  wo.id = $1 AND ${WO_SHOP_SCOPE}`,
     [id]
   );
   if (!rows[0]) throw new NotFoundError("Work order not found");
@@ -128,6 +134,19 @@ export async function getWorkOrderById(db: PoolClient, id: string) {
 }
 
 export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInput, createdBy: string) {
+  // Verify the referenced client/vehicle actually belong to this shop before
+  // creating a work order against them — otherwise a caller could pass another
+  // shop's id and (a) attach their own work order to someone else's records, or
+  // (b) via the mileage-sync UPDATE below, write into another shop's vehicle row.
+  const { rows: ownedRows } = await db.query(
+    `SELECT
+       EXISTS(SELECT 1 FROM clients  WHERE id = $1 AND ${SHOP_SCOPE}) AS client_owned,
+       EXISTS(SELECT 1 FROM vehicles WHERE id = $2 AND ${SHOP_SCOPE}) AS vehicle_owned`,
+    [input.clientId, input.vehicleId]
+  );
+  if (!ownedRows[0].client_owned) throw new NotFoundError("Client not found");
+  if (!ownedRows[0].vehicle_owned) throw new NotFoundError("Vehicle not found");
+
   const { subtotal, taxAmount, grandTotal } = computeTotals(input.items, input.discountAmount, input.taxRate);
 
   const {
@@ -157,7 +176,7 @@ export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInpu
   // Keep the vehicle's odometer reading current — only ever moves forward.
   if (input.mileageAtService) {
     await db.query(
-      `UPDATE vehicles SET current_mileage_km = $1 WHERE id = $2 AND current_mileage_km < $1`,
+      `UPDATE vehicles SET current_mileage_km = $1 WHERE id = $2 AND current_mileage_km < $1 AND ${SHOP_SCOPE}`,
       [input.mileageAtService, input.vehicleId]
     );
   }
@@ -199,13 +218,13 @@ export async function updateWorkOrder(db: PoolClient, id: string, input: UpdateW
      SET mileage_at_service = COALESCE($1, mileage_at_service),
          subtotal = $2, discount_amount = $3, tax_rate = $4, tax_amount = $5, grand_total = $6,
          notes = COALESCE($7, notes)
-     WHERE id = $8`,
+     WHERE id = $8 AND ${SHOP_SCOPE}`,
     [input.mileageAtService ?? null, subtotal, discountAmount, taxRate, taxAmount, grandTotal, input.notes ?? null, id]
   );
 
   if (input.mileageAtService) {
     await db.query(
-      `UPDATE vehicles SET current_mileage_km = $1 WHERE id = $2 AND current_mileage_km < $1`,
+      `UPDATE vehicles SET current_mileage_km = $1 WHERE id = $2 AND current_mileage_km < $1 AND ${SHOP_SCOPE}`,
       [input.mileageAtService, header.vehicle_id]
     );
   }
@@ -240,7 +259,7 @@ export async function updateWorkOrderStatus(db: PoolClient, id: string, input: U
      SET status = $1,
          payment_method = COALESCE($2, payment_method)
          ${timestampColumn ? `, ${timestampColumn} = now()` : ""}
-     WHERE id = $3`,
+     WHERE id = $3 AND ${SHOP_SCOPE}`,
     [input.status, input.paymentMethod ?? null, id]
   );
 
@@ -252,5 +271,5 @@ export async function deleteWorkOrder(db: PoolClient, id: string) {
   if (header.status !== "draft") {
     throw new ConflictError("Only draft work orders can be deleted");
   }
-  await db.query(`DELETE FROM work_orders WHERE id = $1`, [id]);
+  await db.query(`DELETE FROM work_orders WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
 }

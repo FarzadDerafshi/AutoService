@@ -4,8 +4,13 @@ import { toCamel, toCamelList } from "../../utils/mapKeysToCamel";
 import { Pagination } from "../../utils/pagination";
 import { CreateClientInput, UpdateClientInput } from "./clients.schema";
 
+// RLS on this table is defense-in-depth only (see db/init/008_row_level_security.sql) —
+// the connecting DB role owns these tables, and Postgres exempts table owners from RLS
+// by default, so every query here must explicitly scope by shop_id itself.
+const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
+
 export async function listClients(db: PoolClient, search: string | undefined, pagination: Pagination) {
-  const conditions: string[] = [];
+  const conditions: string[] = [SHOP_SCOPE];
   const params: unknown[] = [];
 
   if (search) {
@@ -28,7 +33,7 @@ export async function listClients(db: PoolClient, search: string | undefined, pa
 }
 
 export async function getClientById(db: PoolClient, id: string) {
-  const { rows } = await db.query(`SELECT * FROM clients WHERE id = $1`, [id]);
+  const { rows } = await db.query(`SELECT * FROM clients WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
   if (!rows[0]) throw new NotFoundError("Client not found");
   return toCamel(rows[0]);
 }
@@ -70,11 +75,14 @@ export async function updateClient(db: PoolClient, id: string, input: UpdateClie
   }
 
   params.push(id);
-  const { rows } = await db.query(`UPDATE clients SET ${fields.join(", ")} WHERE id = $${params.length} RETURNING *`, params);
+  const { rows } = await db.query(
+    `UPDATE clients SET ${fields.join(", ")} WHERE id = $${params.length} AND ${SHOP_SCOPE} RETURNING *`,
+    params
+  );
   return toCamel(rows[0]);
 }
 
 export async function deleteClient(db: PoolClient, id: string) {
   await getClientById(db, id);
-  await db.query(`DELETE FROM clients WHERE id = $1`, [id]);
+  await db.query(`DELETE FROM clients WHERE id = $1 AND ${SHOP_SCOPE}`, [id]);
 }

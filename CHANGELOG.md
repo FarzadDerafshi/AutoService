@@ -5,6 +5,71 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.5.0] — 2026-07-31  *(Security Fix — Cross-Tenant Data Leak)*
+
+### Fixed
+
+#### Backend — Critical
+- **Every shop could read (and in some cases write) every other shop's data**
+  Discovered while investigating an unrelated report of an empty Vehicle
+  History screen. `db/init/008_row_level_security.sql` enables Postgres RLS
+  on `clients`, `vehicles`, `catalog_items`, `work_orders`, `work_order_items`,
+  and `users`, intended as defense-in-depth on top of application-level
+  `shop_id` filtering (per the original architecture doc). In practice:
+  1. The API connects as `repairshop_admin`, which also **owns** every one of
+     those tables (it ran the `db/init` migrations). Postgres exempts table
+     owners from RLS policies by default unless `FORCE ROW LEVEL SECURITY` is
+     also set — it wasn't, so RLS was silently a no-op for every request.
+  2. Nearly every list/get/update/delete query across every module (clients,
+     vehicles, catalog, work orders, reports, search) had no explicit
+     `WHERE shop_id = ...` filter at all, because the app-level scoping half
+     of the intended two-layer defense was never actually written — the code
+     relied solely on RLS, which was never active.
+
+  Net effect: any authenticated user, in any shop, could list/read every
+  other shop's clients, vehicles, catalog items, and work orders through the
+  API. Confirmed with a live reproduction: a brand-new, empty test shop's
+  session (`GET /api/v1/vehicles`) returned another shop's vehicles verbatim.
+  Two write-path cases were also affected — `POST /work-orders` didn't verify
+  the given `clientId`/`vehicleId` belonged to the caller's shop, and its
+  mileage-sync `UPDATE vehicles` had no shop filter — so a work order could
+  be attached to another shop's client/vehicle, and that vehicle's mileage
+  could be overwritten cross-tenant.
+
+  Fix: added an explicit `shop_id = current_setting('app.current_shop_id')::uuid`
+  condition to every query in every service module that reads or mutates a
+  shop-scoped table — restoring the application-level scoping layer the
+  architecture always called for, independent of whether RLS is active.
+  `createWorkOrder` now also verifies the referenced client and vehicle belong
+  to the caller's shop before inserting.
+
+  **Not changed in this pass:** `registerShopAndOwner`, `login`, and
+  `getCurrentUser` in `auth.service.ts` — these run before a `shop_id` session
+  context exists (registration creates the shop; login looks up by email
+  across shops by design, since the login form doesn't ask which shop) or
+  already filter by shop_id explicitly (`getCurrentUser`). Enabling
+  `FORCE ROW LEVEL SECURITY` as a true backstop is deliberately deferred: it
+  would additionally require reworking these three flows (their queries run
+  outside `tenantScope`, so `app.current_shop_id` isn't set when they execute,
+  and a forced policy would reject their inserts/selects outright). See
+  DECISIONS.md for the follow-up.
+
+  Verified: registered a fresh empty shop, confirmed it could no longer see
+  another shop's vehicles/history via direct API calls (was returning data
+  before, returns `404`/empty after); ran a full create-client → create-vehicle
+  → create-work-order → history → reports → search regression against the
+  fix to confirm same-shop operations still work; confirmed the real shop's
+  pre-existing data (2 vehicles, 2 work orders) was untouched throughout.
+  _Files: `backend/src/modules/clients/clients.service.ts`,
+  `backend/src/modules/vehicles/vehicles.service.ts`,
+  `backend/src/modules/catalog/catalog.service.ts`,
+  `backend/src/modules/workOrders/workOrders.service.ts`,
+  `backend/src/modules/workOrders/workOrders.pdf.ts`,
+  `backend/src/modules/reports/reports.service.ts`,
+  `backend/src/modules/search/search.service.ts`_
+
+---
+
 ## [0.4.3] — 2026-07-31  *(Turkish Localization Patch — Vehicle History Order Titles)*
 
 ### Fixed
