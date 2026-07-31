@@ -113,6 +113,63 @@ Two alternatives were tried and rejected:
    Tokens are readable by JS (XSS risk), acceptable for an internal LAN tool.
    When HTTPS is added, reconsider `flutter_secure_storage` on web.
 
+### Internationalisation (i18n)
+
+The app supports **English** and **Turkish** via Flutter's official
+`flutter_localizations` SDK package and the `gen-l10n` code-generation pipeline.
+
+Key files:
+| File | Purpose |
+|---|---|
+| `frontend/l10n.yaml` | Code-gen config (ARB dir, template file, output dir) |
+| `frontend/lib/l10n/app_en.arb` | English string catalogue (~70 keys) |
+| `frontend/lib/l10n/app_tr.arb` | Turkish translations |
+| `frontend/lib/generated/app_localizations*.dart` | Generated at build time by `flutter gen-l10n` |
+| `frontend/lib/core/locale/locale_provider.dart` | `StateNotifierProvider<LocaleNotifier, Locale>` |
+
+**Important:** The generated files under `lib/generated/` **are** committed to
+the repository. This avoids forcing every contributor to run `flutter gen-l10n`
+before they can build. If you add or rename ARB keys, re-run:
+```bash
+cd frontend && flutter gen-l10n
+```
+and commit the updated generated files.
+
+**Locale persistence** uses the same `_storage_web` / `_storage_stub`
+conditional import pattern as JWT token storage — `localStorage` on web,
+`flutter_secure_storage` on native. The locale language code (`"en"` / `"tr"`)
+is stored under the key `locale_code`.
+
+**Adding a new language:**
+1. Create `frontend/lib/l10n/app_<code>.arb` with all keys from `app_en.arb`.
+2. Add `Locale('<code>')` to `supportedLocales` in `frontend/lib/app.dart`.
+3. Add `'<code>'` to `LocaleNotifier._supported` in `locale_provider.dart`.
+4. Run `flutter gen-l10n` and commit the generated file.
+
+**`intl` version pin:** `flutter_localizations` from the SDK pins `intl` to a
+specific version. Always check the pin when upgrading Flutter:
+```bash
+flutter pub deps | grep intl
+```
+The `intl` constraint in `pubspec.yaml` must match (`^0.20.2` as of Flutter
+3.41.x).
+
+### Progressive Web App (PWA)
+
+Flutter generates a service worker (`flutter_service_worker.js`) automatically
+on each `flutter build web --release`. No additional plugin or configuration is
+needed for offline asset caching.
+
+Manual PWA configuration (done once):
+- **`frontend/web/manifest.json`** — `name`, `short_name`, `description`,
+  `orientation: any`, `background_color` matching the Material Dark seed colour.
+- **`frontend/web/index.html`** — `<title>`, `apple-mobile-web-app-capable`,
+  `theme-color` meta, and `apple-touch-icon` links for iOS home-screen icons.
+
+The Flutter web build must be rebuilt (`flutter build web --release`) and the
+nginx container restarted (`docker restart repairshop_web`) for PWA changes to
+take effect.
+
 ### State management
 Riverpod `AsyncNotifier` is used for auth state. The initial `build()` call
 checks for a stored token and calls `/auth/me` to validate it. Errors from
@@ -167,3 +224,5 @@ docker compose up -d --build postgres api
 | Role-based UI | Schema supports owner/manager/technician but UI doesn't restrict by role | Add `canManage` guards to edit/delete actions |
 | Testing | No automated tests exist | Add `jest` + `supertest` for backend; `flutter_test` for frontend |
 | CI/CD | No pipeline | Add GitHub Actions: lint → test → build → deploy |
+| i18n | Only English and Turkish supported | Add new ARB file + locale entry (see i18n section above) |
+| PWA icons | No real icon artwork; manifest references placeholder icons | Replace `icons/` assets with branded artwork |

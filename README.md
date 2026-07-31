@@ -1,9 +1,11 @@
 # AutoService — Auto Repair Shop Management System
 
-A small multi-tenant shop-management app: clients, vehicles, a service/parts catalog,
+A multi-tenant shop-management app: clients, vehicles, a service/parts catalog,
 work orders (repair slips) with PDF printing, and basic revenue/parts reporting.
 
-**Stack:** Flutter (Web + Mobile) · Node.js/TypeScript (Express) · PostgreSQL · Docker Compose
+**Stack:** Flutter (Web + Mobile + PWA) · Node.js/TypeScript (Express) · PostgreSQL · Docker Compose
+
+**Features:** English / Turkish language switching · Installable as a PWA on any device · LAN access from any browser
 
 See [`SETUP.md`](./SETUP.md) for a full step-by-step guide to installing prerequisites and
 running the project locally in VS Code.
@@ -32,6 +34,7 @@ Build and serve the Flutter web frontend:
 ```bash
 cd frontend
 flutter pub get
+flutter gen-l10n          # regenerate localisation files if ARBs changed
 flutter build web --release
 docker compose up -d web
 ```
@@ -52,6 +55,18 @@ at the same origin.
 > Web Crypto encryption, so the web build falls back to `localStorage` for JWT
 > persistence on LAN. This is acceptable for an internal tool; add TLS for
 > production use.
+
+### Installing as a PWA
+
+Open `http://<your-machine-ip>:8080` in any modern browser and use the
+browser's **"Add to Home Screen"** / **"Install app"** option. The service
+worker caches all app assets for offline use after the first load.
+
+### Switching language
+
+Use the **`[EN] [TR]`** toggle on the login or registration screen, or open the
+user menu (top-right inside the app) and select *Language → English / Türkçe*.
+The choice is persisted between sessions.
 
 ### Rebuilding after changes
 
