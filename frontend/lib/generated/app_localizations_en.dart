@@ -152,6 +152,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCatalogItemsYet => 'No catalog items yet';
 
   @override
+  String get newCatalogItem => 'New Catalog Item';
+
+  @override
+  String get editCatalogItem => 'Edit Catalog Item';
+
+  @override
+  String get service => 'Service';
+
+  @override
+  String get part => 'Part';
+
+  @override
+  String get nameLabel => 'Name';
+
+  @override
+  String get required => 'Required';
+
+  @override
+  String get skuOptional => 'SKU (optional)';
+
+  @override
+  String get unit => 'Unit';
+
+  @override
+  String get defaultPrice => 'Default price';
+
+  @override
+  String get enterValidNumber => 'Enter a valid number';
+
+  @override
+  String get save => 'Save';
+
+  @override
   String get newWorkOrder => 'New Work Order';
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../generated/app_localizations.dart';
 import '../data/catalog_item_model.dart';
 
 class CatalogItemFormResult {
@@ -65,6 +66,7 @@ class _CatalogItemFormSheetState extends State<_CatalogItemFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -78,13 +80,13 @@ class _CatalogItemFormSheetState extends State<_CatalogItemFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(widget.existing == null ? 'New Catalog Item' : 'Edit Catalog Item',
+            Text(widget.existing == null ? l10n.newCatalogItem : l10n.editCatalogItem,
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'service', label: Text('Service')),
-                ButtonSegment(value: 'part', label: Text('Part')),
+              segments: [
+                ButtonSegment(value: 'service', label: Text(l10n.service)),
+                ButtonSegment(value: 'part', label: Text(l10n.part)),
               ],
               selected: {_type},
               onSelectionChanged: (selection) => setState(() => _type = selection.first),
@@ -92,28 +94,28 @@ class _CatalogItemFormSheetState extends State<_CatalogItemFormSheet> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _name,
-              decoration: const InputDecoration(labelText: 'Name'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              decoration: InputDecoration(labelText: l10n.nameLabel),
+              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _sku, decoration: const InputDecoration(labelText: 'SKU (optional)')),
+            TextFormField(controller: _sku, decoration: InputDecoration(labelText: l10n.skuOptional)),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: TextFormField(controller: _unit, decoration: const InputDecoration(labelText: 'Unit'))),
+                Expanded(child: TextFormField(controller: _unit, decoration: InputDecoration(labelText: l10n.unit))),
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextFormField(
                     controller: _price,
-                    decoration: const InputDecoration(labelText: 'Default price'),
+                    decoration: InputDecoration(labelText: l10n.defaultPrice),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    validator: (v) => (double.tryParse(v ?? '') == null) ? 'Enter a valid number' : null,
+                    validator: (v) => (double.tryParse(v ?? '') == null) ? l10n.enterValidNumber : null,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: _submit, child: const Text('Save')),
+            FilledButton(onPressed: _submit, child: Text(l10n.save)),
           ],
         ),
       ),

@@ -152,6 +152,39 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noCatalogItemsYet => 'Henüz katalog öğesi yok';
 
   @override
+  String get newCatalogItem => 'Yeni Katalog Öğesi';
+
+  @override
+  String get editCatalogItem => 'Katalog Öğesini Düzenle';
+
+  @override
+  String get service => 'Servis';
+
+  @override
+  String get part => 'Parça';
+
+  @override
+  String get nameLabel => 'İsim';
+
+  @override
+  String get required => 'Zorunlu';
+
+  @override
+  String get skuOptional => 'SKU (isteğe bağlı)';
+
+  @override
+  String get unit => 'Birim';
+
+  @override
+  String get defaultPrice => 'Varsayılan fiyat';
+
+  @override
+  String get enterValidNumber => 'Geçerli bir sayı girin';
+
+  @override
+  String get save => 'Kaydet';
+
+  @override
   String get newWorkOrder => 'Yeni İş Emri';
 
   @override

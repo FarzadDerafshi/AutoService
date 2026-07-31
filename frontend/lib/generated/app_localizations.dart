@@ -362,6 +362,72 @@ abstract class AppLocalizations {
   /// **'No catalog items yet'**
   String get noCatalogItemsYet;
 
+  /// No description provided for @newCatalogItem.
+  ///
+  /// In en, this message translates to:
+  /// **'New Catalog Item'**
+  String get newCatalogItem;
+
+  /// No description provided for @editCatalogItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Catalog Item'**
+  String get editCatalogItem;
+
+  /// No description provided for @service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get service;
+
+  /// No description provided for @part.
+  ///
+  /// In en, this message translates to:
+  /// **'Part'**
+  String get part;
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get nameLabel;
+
+  /// No description provided for @required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get required;
+
+  /// No description provided for @skuOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'SKU (optional)'**
+  String get skuOptional;
+
+  /// No description provided for @unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get unit;
+
+  /// No description provided for @defaultPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Default price'**
+  String get defaultPrice;
+
+  /// No description provided for @enterValidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get enterValidNumber;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
   /// No description provided for @newWorkOrder.
   ///
   /// In en, this message translates to:

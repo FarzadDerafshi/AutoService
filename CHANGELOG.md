@@ -5,6 +5,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.4.1] — 2026-07-31  *(Turkish Localization Patch — Catalog Item Form)*
+
+### Fixed
+
+#### Frontend
+- **Catalog item form sheet still displayed English strings**
+  `catalog_item_form_sheet.dart` was not wired to the localisation system,
+  so the bottom-sheet shown when creating or editing a catalog item always
+  rendered in English regardless of the selected language.
+  Affected strings: sheet title (*New Catalog Item* / *Edit Catalog Item*),
+  type toggle (*Service* / *Part*), field labels (*Name*, *SKU (optional)*,
+  *Unit*, *Default price*), inline validator messages (*Required*,
+  *Enter a valid number*), and the submit button (*Save*).
+
+  Fix: added `AppLocalizations` import and resolved all 11 hardcoded strings
+  through `l10n.*` getters; removed `const` from `SegmentedButton.segments`
+  to allow runtime-localised labels.
+  New ARB keys added to both `app_en.arb` and `app_tr.arb`:
+  `newCatalogItem`, `editCatalogItem`, `service`, `part`, `nameLabel`,
+  `required`, `skuOptional`, `unit`, `defaultPrice`, `enterValidNumber`,
+  `save`.
+  Generated files (`app_localizations.dart`, `app_localizations_en.dart`,
+  `app_localizations_tr.dart`) updated to match.
+  _Files: `frontend/lib/features/catalog/presentation/catalog_item_form_sheet.dart`,
+  `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/generated/app_localizations.dart`,
+  `frontend/lib/generated/app_localizations_en.dart`,
+  `frontend/lib/generated/app_localizations_tr.dart`_
+
+---
+
 ## [0.4.0] — 2026-07-31  *(PWA + Turkish Language Support)*
 
 ### Added
