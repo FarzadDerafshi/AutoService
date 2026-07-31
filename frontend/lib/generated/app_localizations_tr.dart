@@ -61,7 +61,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backToLogin => 'Girişe dön';
 
   @override
-  String get workOrders => 'İş Emirleri';
+  String get workOrders => 'Servis Kaydı';
 
   @override
   String get clients => 'Müşteriler';
@@ -164,7 +164,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get noWorkOrdersYet => 'Henüz iş emri yok';
+  String get noWorkOrdersYet => 'Henüz servis kaydı yok';
 
   @override
   String mileageKm(String km) {
@@ -220,20 +220,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get save => 'Kaydet';
 
   @override
-  String get newWorkOrder => 'Yeni İş Emri';
+  String get newWorkOrder => 'Yeni Servis Kaydı';
 
   @override
-  String get noWorkOrders => 'İş emri yok';
+  String get noWorkOrders => 'Servis kaydı yok';
 
   @override
   String get paymentMethodTitle => 'Ödeme yöntemi';
 
   @override
-  String get deleteWorkOrderTitle => 'İş emri silinsin mi?';
+  String get deleteWorkOrderTitle => 'Servis kaydı silinsin mi?';
 
   @override
   String deleteWorkOrderBody(int orderNo) {
-    return '#$orderNo numaralı sipariş kalıcı olarak silinecek.';
+    return '#$orderNo numaralı servis kaydı kalıcı olarak silinecek.';
   }
 
   @override
@@ -243,7 +243,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String orderNo(int no) {
-    return '#$no Sipariş';
+    return '#$no Servis Kaydı';
   }
 
   @override
@@ -324,7 +324,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get totalRevenue => 'Toplam gelir';
 
   @override
-  String get noPaidWorkOrdersInRange => 'Bu aralıkta ödenmiş iş emri yok';
+  String get noPaidWorkOrdersInRange => 'Bu aralıkta ödenmiş servis kaydı yok';
 
   @override
   String get noUsageInRange => 'Bu aralıkta kullanım yok';
