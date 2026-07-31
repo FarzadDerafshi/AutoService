@@ -223,6 +223,41 @@ The Flutter web build must be rebuilt (`flutter build web --release`) and the
 nginx container restarted (`docker restart repairshop_web`) for PWA changes to
 take effect.
 
+### Brand icon/logo (v0.6.0)
+
+`assets/branding/logo.svg` is the source of truth for the app icon — a
+1024×1024 wrench mark on the app's SeaGreen brand colour (`#2E8B57`, same
+seed as `app_theme.dart`). Every consumer (web favicon/manifest icons,
+Android `mipmap-*/ic_launcher.png`, Windows `app_icon.ico`) is a rendering of
+this one file — edit the SVG, not the individual PNG/ICO outputs, and
+re-render all of them together so they stay in sync (the same mistake as the
+ARB/generated-file gotcha above, just for images instead of translations).
+
+No SVG rasterizer (ImageMagick/Inkscape/rsvg-convert) is installed on this
+machine. Regenerate with Node + `sharp` (PNG rendering) and `png-to-ico`
+(Windows ICO packaging) — install them as a one-off in a scratch directory,
+not as project dependencies, since this is an infrequent manual step:
+```bash
+npm install --prefix <scratch-dir> sharp png-to-ico
+node -e "
+  const sharp = require('<scratch-dir>/node_modules/sharp');
+  sharp('assets/branding/logo.svg').resize(SIZE, SIZE).png().toFile(OUT_PATH);
+"
+# Windows ICO (auto-generates the full 16..256 size set from one square PNG):
+node -e "
+  const pngToIco = require('<scratch-dir>/node_modules/png-to-ico').default;
+  pngToIco('assets/branding/logo-1024.png').then(buf =>
+    require('fs').writeFileSync('frontend/windows/runner/resources/app_icon.ico', buf));
+"
+```
+Target paths and sizes: `frontend/web/favicon.png` (48px), `frontend/web/icons/Icon-{,maskable-}{192,512}.png`
+(maskable and plain icons share the same art — the design already keeps the
+wrench inside the maskable safe zone against a full-bleed background),
+`frontend/android/app/src/main/res/mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher.png`
+(48/72/96/144/192px), `frontend/windows/runner/resources/app_icon.ico`.
+Same rebuild-and-restart step as any other web asset change applies
+afterward.
+
 ### State management
 Riverpod `AsyncNotifier` is used for auth state. The initial `build()` call
 checks for a stored token and calls `/auth/me` to validate it. Errors from
@@ -294,4 +329,3 @@ docker compose up -d --build postgres api
 | Testing | No automated tests exist | Add `jest` + `supertest` for backend; `flutter_test` for frontend |
 | CI/CD | No pipeline | Add GitHub Actions: lint → test → build → deploy |
 | i18n | Only English and Turkish supported | Add new ARB file + locale entry (see i18n section above) |
-| PWA icons | No real icon artwork; manifest references placeholder icons | Replace `icons/` assets with branded artwork |

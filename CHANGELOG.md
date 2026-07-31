@@ -5,6 +5,52 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.6.0] — 2026-07-31  *(Branded App Icon — Replaces Flutter Placeholder Artwork)*
+
+### Added
+- **Real app icon/logo, replacing the default Flutter scaffold artwork**
+  A wrench mark (closed ring end + open-jaw end, on a solid rounded-square
+  background in the app's existing SeaGreen brand colour `#2E8B57` — the same
+  seed colour `app_theme.dart` already uses) designed as a single master SVG
+  and rasterized to every size each platform needs. Resolves the "PWA icons"
+  row in `DECISIONS.md`'s Known Limitations.
+  - **Source of truth:** `assets/branding/logo.svg` (1024×1024 master) and a
+    pre-rendered `assets/branding/logo-1024.png`, kept outside `frontend/` so
+    they aren't tied to one platform target and can be re-rendered for any
+    future consumer.
+  - **Web/PWA:** `frontend/web/favicon.png` (48×48), and all four manifest
+    icons — `Icon-192.png`, `Icon-512.png`, `Icon-maskable-192.png`,
+    `Icon-maskable-512.png`. The design keeps the wrench within the inner 80%
+    "safe zone" (scaled to 0.85 before an already-conservative layout) against
+    a full-bleed solid background, so the same artwork is valid for both
+    plain and maskable manifest entries.
+  - **Android:** `mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher.png` (48/72/96/144/192px).
+  - **Windows:** `windows/runner/resources/app_icon.ico`, a proper
+    multi-resolution ICO (16/32/48/64/128/256) generated via `png-to-ico`
+    rather than a single upscaled PNG renamed to `.ico`.
+  - **Theme colour mismatch fixed alongside it:** `web/index.html`'s
+    `<meta name="theme-color">` and `web/manifest.json`'s `theme_color` were
+    still Flutter's scaffold default blue (`#0175C2`), which never matched
+    the app's actual green theme — both now use `#2E8B57`. This is what
+    tints the browser/PWA chrome (mobile address bar, task switcher) so it
+    now matches the icon and the in-app colour scheme instead of clashing.
+
+  No source SVG/PNG rasterizer was available on this machine (no ImageMagick/
+  Inkscape/rsvg-convert); generated everything with `sharp` + `png-to-ico` via
+  a throwaway Node script in the scratch directory — not added as a project
+  dependency, since regenerating the icon set is an infrequent, manual task.
+  Verified: rebuilt the web bundle, restarted the `web` container, confirmed
+  the new favicon bytes and `theme-color` are served, and visually inspected
+  the generated PNGs (icons/Icon-512.png, favicon.png, an Android mipmap) to
+  confirm the wrench renders correctly and holds up down to favicon size.
+  _Files: `assets/branding/logo.svg`, `assets/branding/logo-1024.png`,
+  `frontend/web/favicon.png`, `frontend/web/icons/*.png`,
+  `frontend/web/index.html`, `frontend/web/manifest.json`,
+  `frontend/android/app/src/main/res/mipmap-*/ic_launcher.png`,
+  `frontend/windows/runner/resources/app_icon.ico`_
+
+---
+
 ## [0.5.2] — 2026-07-31  *(Turkish Wording Change — "İş Emri" → "Servis Kaydı", ARB/generated re-sync)*
 
 ### Changed
