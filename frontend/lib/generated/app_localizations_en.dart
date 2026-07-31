@@ -106,6 +106,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noVehiclesFound => 'No vehicles found';
 
   @override
+  String get newVehicle => 'New Vehicle';
+
+  @override
+  String get editVehicle => 'Edit Vehicle';
+
+  @override
+  String get owner => 'Owner';
+
+  @override
+  String get selectAnOwner => 'Select an owner';
+
+  @override
+  String failedToLoadClients(Object error) {
+    return 'Failed to load clients: $error';
+  }
+
+  @override
+  String get licensePlate => 'License plate';
+
+  @override
+  String get make => 'Make';
+
+  @override
+  String get model => 'Model';
+
+  @override
+  String get engineLabel => 'Engine';
+
+  @override
+  String get yearFieldLabel => 'Year';
+
+  @override
+  String get currentMileageKmLabel => 'Current mileage (km)';
+
+  @override
   String get vehicleHistory => 'Vehicle History';
 
   @override

@@ -5,6 +5,42 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.4.2] — 2026-07-31  *(Turkish Localization Patch — New/Edit Vehicle Form)*
+
+### Fixed
+
+#### Frontend
+- **New/Edit Vehicle form sheet still displayed English strings**
+  `vehicle_form_sheet.dart` was not wired to the localisation system, so the
+  bottom-sheet shown when creating or editing a vehicle always rendered in
+  English regardless of the selected language.
+  Affected strings: sheet title (*New Vehicle* / *Edit Vehicle*), field labels
+  (*Owner*, *License plate*, *Make*, *Model*, *Engine*, *Year*, *Current
+  mileage (km)*), inline validator messages (*Select an owner*, *Required*),
+  the "failed to load clients" error text, and the submit button (*Save*).
+
+  Fix: added `AppLocalizations` import and resolved all hardcoded strings
+  through `l10n.*` getters (reusing the existing `required`/`save` keys from
+  the 0.4.1 catalog patch).
+  New ARB keys added to both `app_en.arb` and `app_tr.arb`: `newVehicle`,
+  `editVehicle`, `owner`, `selectAnOwner`, `failedToLoadClients`,
+  `licensePlate`, `make`, `model`, `engineLabel`, `yearFieldLabel`,
+  `currentMileageKmLabel`. (Named distinctly from the pre-existing
+  placeholder-style `engine`/`yearLabel`/`currentMileage` keys used
+  elsewhere for display text, to avoid collisions.)
+  Generated files (`app_localizations.dart`, `app_localizations_en.dart`,
+  `app_localizations_tr.dart`) updated to match.
+  Verified in-browser: opened the form in both English and Turkish, and
+  triggered the empty-submit validators in Turkish (*Bir sahip seçin*,
+  *Zorunlu*).
+  _Files: `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+  `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/generated/app_localizations.dart`,
+  `frontend/lib/generated/app_localizations_en.dart`,
+  `frontend/lib/generated/app_localizations_tr.dart`_
+
+---
+
 ## [0.4.1] — 2026-07-31  *(Turkish Localization Patch — Catalog Item Form)*
 
 ### Fixed

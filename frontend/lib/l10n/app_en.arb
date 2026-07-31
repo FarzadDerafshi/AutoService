@@ -39,6 +39,20 @@
   "clientsVehicles": "Client's Vehicles",
   "searchByLicensePlate": "Search by license plate",
   "noVehiclesFound": "No vehicles found",
+  "newVehicle": "New Vehicle",
+  "editVehicle": "Edit Vehicle",
+  "owner": "Owner",
+  "selectAnOwner": "Select an owner",
+  "failedToLoadClients": "Failed to load clients: {error}",
+  "@failedToLoadClients": {
+    "placeholders": { "error": { "type": "Object" } }
+  },
+  "licensePlate": "License plate",
+  "make": "Make",
+  "model": "Model",
+  "engineLabel": "Engine",
+  "yearFieldLabel": "Year",
+  "currentMileageKmLabel": "Current mileage (km)",
 
   "vehicleHistory": "Vehicle History",
   "engine": "Engine: {value}",

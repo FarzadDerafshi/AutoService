@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../generated/app_localizations.dart';
 import '../../clients/application/clients_provider.dart';
 import '../data/vehicle_model.dart';
 
@@ -76,6 +77,7 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final clientsAsync = ref.watch(allClientsProvider);
 
     return Padding(
@@ -91,32 +93,32 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(widget.existing == null ? 'New Vehicle' : 'Edit Vehicle', style: Theme.of(context).textTheme.titleLarge),
+            Text(widget.existing == null ? l10n.newVehicle : l10n.editVehicle, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             clientsAsync.when(
               data: (clients) => DropdownButtonFormField<String>(
                 initialValue: clients.any((c) => c.id == _clientId) ? _clientId : null,
-                decoration: const InputDecoration(labelText: 'Owner'),
+                decoration: InputDecoration(labelText: l10n.owner),
                 items: clients.map((c) => DropdownMenuItem(value: c.id, child: Text(c.fullName))).toList(),
                 onChanged: (value) => setState(() => _clientId = value),
-                validator: (v) => v == null ? 'Select an owner' : null,
+                validator: (v) => v == null ? l10n.selectAnOwner : null,
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('Failed to load clients: $e'),
+              error: (e, _) => Text(l10n.failedToLoadClients(e)),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _plate,
-              decoration: const InputDecoration(labelText: 'License plate'),
+              decoration: InputDecoration(labelText: l10n.licensePlate),
               textCapitalization: TextCapitalization.characters,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: TextFormField(controller: _make, decoration: const InputDecoration(labelText: 'Make'))),
+                Expanded(child: TextFormField(controller: _make, decoration: InputDecoration(labelText: l10n.make))),
                 const SizedBox(width: 12),
-                Expanded(child: TextFormField(controller: _model, decoration: const InputDecoration(labelText: 'Model'))),
+                Expanded(child: TextFormField(controller: _model, decoration: InputDecoration(labelText: l10n.model))),
               ],
             ),
             const SizedBox(height: 12),
@@ -125,14 +127,14 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
                 Expanded(
                   child: TextFormField(
                     controller: _engineType,
-                    decoration: const InputDecoration(labelText: 'Engine'),
+                    decoration: InputDecoration(labelText: l10n.engineLabel),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextFormField(
                     controller: _year,
-                    decoration: const InputDecoration(labelText: 'Year'),
+                    decoration: InputDecoration(labelText: l10n.yearFieldLabel),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -141,11 +143,11 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _mileage,
-              decoration: const InputDecoration(labelText: 'Current mileage (km)'),
+              decoration: InputDecoration(labelText: l10n.currentMileageKmLabel),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: _submit, child: const Text('Save')),
+            FilledButton(onPressed: _submit, child: Text(l10n.save)),
           ],
         ),
       ),

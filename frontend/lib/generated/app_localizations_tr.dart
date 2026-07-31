@@ -106,6 +106,41 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noVehiclesFound => 'Araç bulunamadı';
 
   @override
+  String get newVehicle => 'Yeni Araç';
+
+  @override
+  String get editVehicle => 'Aracı Düzenle';
+
+  @override
+  String get owner => 'Sahip';
+
+  @override
+  String get selectAnOwner => 'Bir sahip seçin';
+
+  @override
+  String failedToLoadClients(Object error) {
+    return 'Müşteriler yüklenemedi: $error';
+  }
+
+  @override
+  String get licensePlate => 'Plaka';
+
+  @override
+  String get make => 'Marka';
+
+  @override
+  String get model => 'Model';
+
+  @override
+  String get engineLabel => 'Motor';
+
+  @override
+  String get yearFieldLabel => 'Yıl';
+
+  @override
+  String get currentMileageKmLabel => 'Güncel kilometre (km)';
+
+  @override
   String get vehicleHistory => 'Araç Geçmişi';
 
   @override

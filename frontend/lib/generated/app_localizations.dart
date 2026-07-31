@@ -290,6 +290,72 @@ abstract class AppLocalizations {
   /// **'No vehicles found'**
   String get noVehiclesFound;
 
+  /// No description provided for @newVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Vehicle'**
+  String get newVehicle;
+
+  /// No description provided for @editVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Vehicle'**
+  String get editVehicle;
+
+  /// No description provided for @owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get owner;
+
+  /// No description provided for @selectAnOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an owner'**
+  String get selectAnOwner;
+
+  /// No description provided for @failedToLoadClients.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load clients: {error}'**
+  String failedToLoadClients(Object error);
+
+  /// No description provided for @licensePlate.
+  ///
+  /// In en, this message translates to:
+  /// **'License plate'**
+  String get licensePlate;
+
+  /// No description provided for @make.
+  ///
+  /// In en, this message translates to:
+  /// **'Make'**
+  String get make;
+
+  /// No description provided for @model.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get model;
+
+  /// No description provided for @engineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine'**
+  String get engineLabel;
+
+  /// No description provided for @yearFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get yearFieldLabel;
+
+  /// No description provided for @currentMileageKmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current mileage (km)'**
+  String get currentMileageKmLabel;
+
   /// No description provided for @vehicleHistory.
   ///
   /// In en, this message translates to:
