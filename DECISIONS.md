@@ -157,11 +157,36 @@ Key files:
 
 **Important:** The generated files under `lib/generated/` **are** committed to
 the repository. This avoids forcing every contributor to run `flutter gen-l10n`
-before they can build. If you add or rename ARB keys, re-run:
+before they can build. If you add, rename, or **reword** ARB keys, re-run:
 ```bash
 cd frontend && flutter gen-l10n
 ```
 and commit the updated generated files.
+
+**Gotcha (hit in practice, v0.5.2):** never hand-edit a file under
+`lib/generated/` directly — always edit the source ARB
+(`app_en.arb`/`app_tr.arb`) and regenerate. A wording change was once made by
+editing `app_localizations_tr.dart` directly; it worked in the running app
+(Dart reads the compiled generated file, not the ARB), but the ARB source
+still had the old wording. The *next* `flutter gen-l10n` run — for a
+completely unrelated key change — would have silently reverted it, since
+generation always overwrites the target file from the ARB. After any manual
+edit to a generated file, run `flutter gen-l10n` immediately and diff the
+result against what you intended; if it doesn't match, the ARB is out of
+sync and needs the same edit backported into it.
+
+**Seeing a translation/UI change take effect in the running Docker stack:**
+```bash
+cd frontend
+flutter gen-l10n              # only needed if you touched an ARB file
+flutter build web --release
+docker restart repairshop_web
+```
+A plain browser refresh is not enough to prove the new build landed — the
+browser may serve a cached bundle. Force a hard reload (Ctrl+Shift+R) or,
+when testing via automation, unregister the service worker / fetch with
+`cache: 'no-store'` and check the response for the expected string before
+trusting what renders on screen.
 
 **Locale persistence** uses the same `_storage_web` / `_storage_stub`
 conditional import pattern as JWT token storage — `localStorage` on web,
@@ -209,6 +234,20 @@ that call (expired token, network error) silently clear the token and return
 navigation. The guard is driven by a `ChangeNotifier` that listens to the
 `authControllerProvider` — so it updates automatically on login/logout without
 recreating the router.
+
+**Gotcha — deep-linking into a master-detail screen (fixed v0.5.1):**
+`MasterDetailScaffold` only renders `detailPanel` on windows ≥900px
+(`desktopBreakpoint`); below that it renders **only** `masterPanel`,
+regardless of whether a detail item is selected (see `master_detail_scaffold.dart`).
+This means the query-param route `/work-orders?id=<id>` (→
+`WorkOrdersScreen(initialId: ...)`, which just sets `selectedWorkOrderIdProvider`)
+only actually shows anything on wide windows — on any narrower window or
+phone it silently lands on the bare list with nothing selected and no error.
+`vehicle_history_screen.dart` hit this exact bug tapping into a service-history
+entry. **Any new "jump to a work order from elsewhere" entry point must use
+the direct path route `/work-orders/:id` (→ `WorkOrderDetailScreen`)**, not
+the `?id=` query-param form — this is what `global_search_bar.dart` and
+`work_orders_master_list.dart`'s own mobile branch already do correctly.
 
 ---
 

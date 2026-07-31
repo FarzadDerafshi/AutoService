@@ -5,6 +5,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.5.2] — 2026-07-31  *(Turkish Wording Change — "İş Emri" → "Servis Kaydı", ARB/generated re-sync)*
+
+### Changed
+
+#### Frontend
+- **"Work Order" terminology re-translated in Turkish**
+  Changed from "İş Emri" ("work order/job order") to "Servis Kaydı" ("service
+  record") across the work-orders section: nav label, empty-state messages,
+  the new/delete dialog titles, and the per-order title format.
+  _Keys: `workOrders`, `noWorkOrdersYet`, `newWorkOrder`, `noWorkOrders`,
+  `deleteWorkOrderTitle`, `deleteWorkOrderBody`, `orderNo`,
+  `noPaidWorkOrdersInRange`._
+
+### Fixed
+- **Wording change had been applied to the generated file only, not the ARB
+  source** — this change was originally committed by editing
+  `app_localizations_tr.dart` directly rather than `app_tr.arb`. Since
+  `app_tr.arb` is the source of truth and `flutter gen-l10n` regenerates the
+  Dart file from it, the next regeneration (e.g. for an unrelated ARB key
+  change) would have silently reverted this wording back to "İş Emri".
+  Backfilled the same wording into `app_tr.arb` and re-ran `flutter gen-l10n`
+  to confirm it now reproduces the generated file byte-for-byte (zero diff).
+  Rebuilt the Flutter web bundle and restarted the `web` container; verified
+  "Servis Kaydı" renders live in the browser.
+  _Files: `frontend/lib/l10n/app_tr.arb`_
+
+---
+
 ## [0.5.1] — 2026-07-31  *(Fix — Vehicle History → Work Order Detail Link Broken)*
 
 ### Fixed
