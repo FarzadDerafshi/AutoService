@@ -50,7 +50,7 @@ class VehicleHistoryScreen extends ConsumerWidget {
               for (final order in history.workOrders)
                 Card(
                   child: ListTile(
-                    title: Text('Order #${order['orderNo']} — ${order['status']}'),
+                    title: Text('${l.orderNo(order['orderNo'] as int)} — ${_statusLabel(l, order['status'] as String)}'),
                     subtitle: Text(
                       '${l.mileageKm((order['mileageAtService'] ?? '—').toString())} · ${DateTime.parse(order['createdAt'] as String).toLocal().toString().split('.').first}',
                     ),
@@ -65,3 +65,10 @@ class VehicleHistoryScreen extends ConsumerWidget {
     );
   }
 }
+
+String _statusLabel(AppLocalizations l, String status) => switch (status) {
+      'draft' => l.draft,
+      'completed' => l.completed,
+      'paid' => l.paid,
+      _ => status,
+    };

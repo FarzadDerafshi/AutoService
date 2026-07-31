@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.4.3] — 2026-07-31  *(Turkish Localization Patch — Vehicle History Order Titles)*
+
+### Fixed
+
+#### Frontend
+- **Vehicle History screen's order list showed a hardcoded English title**
+  `vehicle_history_screen.dart` built each service-history row's title with a
+  raw string template (`'Order #${order['orderNo']} — ${order['status']}'`),
+  bypassing localisation entirely — including the raw backend status enum
+  value (`draft`/`completed`/`paid`), which stayed in English even in Turkish.
+
+  Fix: reused the existing `orderNo` ARB key for the order number, and added
+  a small `_statusLabel()` helper that maps the raw status string to the
+  existing localized `l.draft`/`l.completed`/`l.paid` getters (same ones
+  already used by the work-orders filter chips). No new ARB keys needed.
+  Verified in-browser: vehicle with a completed order now reads
+  "#1 Sipariş — Tamamlandı" in Turkish and "Order #1 — completed" in English.
+  _File: `frontend/lib/features/vehicles/presentation/vehicle_history_screen.dart`_
+
+---
+
 ## [0.4.2] — 2026-07-31  *(Turkish Localization Patch — New/Edit Vehicle Form)*
 
 ### Fixed
