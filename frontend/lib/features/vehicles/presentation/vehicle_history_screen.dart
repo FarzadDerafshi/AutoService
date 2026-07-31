@@ -55,7 +55,7 @@ class VehicleHistoryScreen extends ConsumerWidget {
                       '${l.mileageKm((order['mileageAtService'] ?? '—').toString())} · ${DateTime.parse(order['createdAt'] as String).toLocal().toString().split('.').first}',
                     ),
                     trailing: Text(formatCurrency((order['grandTotal'] as num).toDouble())),
-                    onTap: () => context.push('/work-orders?id=${order['id']}'),
+                    onTap: () => context.push('/work-orders/${order['id']}'),
                   ),
                 ),
             ],

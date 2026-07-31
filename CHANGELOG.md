@@ -5,6 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.5.1] — 2026-07-31  *(Fix — Vehicle History → Work Order Detail Link Broken)*
+
+### Fixed
+
+#### Frontend
+- **Tapping a work order in Vehicle History opened the Work Orders screen with
+  nothing shown**
+  `vehicle_history_screen.dart` navigated via `context.push('/work-orders?id=${id}')`,
+  which routes to `WorkOrdersScreen(initialId: ...)`. That screen only shows the
+  detail panel through `MasterDetailScaffold`, which renders *only* the master
+  list on windows narrower than the 900px desktop breakpoint — silently
+  dropping the detail panel regardless of `initialId`. On any normal browser
+  window or phone under that width, tapping a vehicle's service-history entry
+  landed on the work-orders list with no order selected and no visible error.
+
+  Fix: navigate via the direct detail route (`/work-orders/${id}` →
+  `WorkOrderDetailScreen`) instead — the same route `global_search_bar.dart`
+  and `work_orders_master_list.dart` already use for this exact "jump to a
+  work order from elsewhere" case. Renders the full order detail
+  (client/vehicle/date, line items, totals, status actions) regardless of
+  window width.
+  Verified in-browser at both a narrow (700px) and wide (1280px) window size,
+  tapping a real service-history entry end to end.
+  _File: `frontend/lib/features/vehicles/presentation/vehicle_history_screen.dart`_
+
+---
+
 ## [0.5.0] — 2026-07-31  *(Security Fix — Cross-Tenant Data Leak)*
 
 ### Fixed
