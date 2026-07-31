@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../generated/app_localizations.dart';
 import '../application/vehicles_provider.dart';
 
 class VehicleHistoryScreen extends ConsumerWidget {
@@ -11,10 +12,11 @@ class VehicleHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final historyAsync = ref.watch(vehicleHistoryProvider(vehicleId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Vehicle History')),
+      appBar: AppBar(title: Text(l.vehicleHistory)),
       body: AsyncValueWidget(
         value: historyAsync,
         onRetry: () => ref.invalidate(vehicleHistoryProvider(vehicleId)),
@@ -32,23 +34,25 @@ class VehicleHistoryScreen extends ConsumerWidget {
                       Text(vehicle.licensePlate, style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: 4),
                       Text(vehicle.displayName),
-                      if (vehicle.engineType != null) Text('Engine: ${vehicle.engineType}'),
-                      if (vehicle.year != null) Text('Year: ${vehicle.year}'),
-                      Text('Current mileage: ${vehicle.currentMileageKm} km'),
+                      if (vehicle.engineType != null) Text(l.engine(vehicle.engineType!)),
+                      if (vehicle.year != null) Text(l.yearLabel(vehicle.year.toString())),
+                      Text(l.currentMileage(vehicle.currentMileageKm.toString())),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              Text('Service History (${history.workOrders.length})', style: Theme.of(context).textTheme.titleMedium),
+              Text(l.serviceHistoryCount(history.workOrders.length),
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              if (history.workOrders.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No work orders yet')),
+              if (history.workOrders.isEmpty)
+                Padding(padding: const EdgeInsets.all(16), child: Text(l.noWorkOrdersYet)),
               for (final order in history.workOrders)
                 Card(
                   child: ListTile(
                     title: Text('Order #${order['orderNo']} — ${order['status']}'),
                     subtitle: Text(
-                      'Mileage: ${order['mileageAtService'] ?? '—'} km · ${DateTime.parse(order['createdAt'] as String).toLocal().toString().split('.').first}',
+                      '${l.mileageKm((order['mileageAtService'] ?? '—').toString())} · ${DateTime.parse(order['createdAt'] as String).toLocal().toString().split('.').first}',
                     ),
                     trailing: Text(formatCurrency((order['grandTotal'] as num).toDouble())),
                     onTap: () => context.push('/work-orders?id=${order['id']}'),

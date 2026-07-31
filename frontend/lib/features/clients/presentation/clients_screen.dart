@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../generated/app_localizations.dart';
 import '../../auth/application/auth_provider.dart';
 import '../application/clients_provider.dart';
 import 'client_form_sheet.dart';
@@ -12,20 +13,21 @@ class ClientsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final clientsAsync = ref.watch(clientsListProvider);
     final canManage = ref.watch(currentUserProvider)?.canManage ?? false;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Clients'),
+        title: Text(l.clients),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Search by name, phone, or email',
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: l.searchByNamePhoneOrEmail,
                 isDense: true,
               ),
               onChanged: (value) => ref.read(clientSearchProvider.notifier).state = value,
@@ -51,7 +53,7 @@ class ClientsScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(clientsListProvider),
         data: (clients) {
           if (clients.isEmpty) {
-            return const Center(child: Text('No clients yet'));
+            return Center(child: Text(l.noClientsYet));
           }
           return ListView.separated(
             itemCount: clients.length,
@@ -83,9 +85,9 @@ class ClientsScreen extends ConsumerWidget {
                             }
                           }
                         },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(value: 'edit', child: Text(l.edit)),
+                          PopupMenuItem(value: 'delete', child: Text(l.delete)),
                         ],
                       )
                     : null,

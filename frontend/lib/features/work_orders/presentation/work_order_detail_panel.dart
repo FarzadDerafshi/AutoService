@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../generated/app_localizations.dart';
 import '../../auth/application/auth_provider.dart';
 import '../application/work_orders_provider.dart';
 import '../data/work_order_model.dart';
@@ -37,6 +38,7 @@ class _DetailContent extends ConsumerWidget {
   final VoidCallback? onClose;
 
   Future<void> _advanceStatus(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
     final next = _nextStatus[order.status];
     if (next == null) return;
 
@@ -45,7 +47,7 @@ class _DetailContent extends ConsumerWidget {
       paymentMethod = await showDialog<String>(
         context: context,
         builder: (context) => SimpleDialog(
-          title: const Text('Payment method'),
+          title: Text(AppLocalizations.of(context)!.paymentMethodTitle),
           children: _paymentMethods
               .map((m) => SimpleDialogOption(onPressed: () => Navigator.pop(context, m), child: Text(m)))
               .toList(),
@@ -64,16 +66,20 @@ class _DetailContent extends ConsumerWidget {
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete work order?'),
-        content: Text('Order #${order.orderNo} will be permanently deleted.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-        ],
-      ),
+      builder: (context) {
+        final dl = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(dl.deleteWorkOrderTitle),
+          content: Text(dl.deleteWorkOrderBody(order.orderNo)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(dl.cancel)),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(dl.delete)),
+          ],
+        );
+      },
     );
     if (confirmed != true) return;
 
@@ -96,21 +102,26 @@ class _DetailContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final next = _nextStatus[order.status];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Order #${order.orderNo}'),
+        title: Text(l.orderNo(order.orderNo)),
         actions: [
-          IconButton(icon: const Icon(Icons.print), tooltip: 'Print / PDF', onPressed: () => _printPdf(context, ref)),
+          IconButton(icon: const Icon(Icons.print), tooltip: l.printPdf, onPressed: () => _printPdf(context, ref)),
           if (canManage && order.status == 'draft')
             IconButton(
               icon: const Icon(Icons.edit),
-              tooltip: 'Edit',
+              tooltip: l.edit,
               onPressed: () => context.push('/work-orders/${order.id}/edit'),
             ),
           if (canManage && order.status == 'draft')
-            IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Delete', onPressed: () => _delete(context, ref)),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: l.delete,
+              onPressed: () => _delete(context, ref),
+            ),
         ],
       ),
       body: ListView(
@@ -126,7 +137,7 @@ class _DetailContent extends ConsumerWidget {
                 FilledButton.icon(
                   onPressed: () => _advanceStatus(context, ref),
                   icon: const Icon(Icons.arrow_forward),
-                  label: Text('Mark as $next'),
+                  label: Text(l.markAs(next)),
                 ),
             ],
           ),
@@ -137,16 +148,19 @@ class _DetailContent extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Client: ${order.clientName ?? order.clientId}'),
-                  Text('Vehicle: ${order.vehiclePlate ?? order.vehicleId} ${order.vehicleMake ?? ''} ${order.vehicleModel ?? ''}'),
-                  if (order.mileageAtService != null) Text('Mileage at service: ${order.mileageAtService} km'),
-                  Text('Date: ${order.createdAt.toLocal().toString().split('.').first}'),
+                  Text(l.clientLabel(order.clientName ?? order.clientId)),
+                  Text(l.vehicleLabel(
+                    '${order.vehiclePlate ?? order.vehicleId} ${order.vehicleMake ?? ''} ${order.vehicleModel ?? ''}'.trim(),
+                  )),
+                  if (order.mileageAtService != null)
+                    Text(l.mileageAtService(order.mileageAtService!)),
+                  Text(l.dateLabel(order.createdAt.toLocal().toString().split('.').first)),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text('Line Items', style: Theme.of(context).textTheme.titleMedium),
+          Text(l.lineItems, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Card(
             child: Column(
@@ -167,18 +181,18 @@ class _DetailContent extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _TotalRow('Subtotal', order.subtotal),
-                  if (order.discountAmount > 0) _TotalRow('Discount', -order.discountAmount),
-                  _TotalRow('Tax (${order.taxRate}%)', order.taxAmount),
+                  _TotalRow(l.subtotal, order.subtotal),
+                  if (order.discountAmount > 0) _TotalRow(l.discount, -order.discountAmount),
+                  _TotalRow(l.taxWithRate(order.taxRate.toString()), order.taxAmount),
                   const Divider(),
-                  _TotalRow('Grand Total', order.grandTotal, emphasize: true),
+                  _TotalRow(l.grandTotal, order.grandTotal, emphasize: true),
                 ],
               ),
             ),
           ),
           if (order.notes != null && order.notes!.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Notes', style: Theme.of(context).textTheme.titleMedium),
+            Text(l.notes, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(order.notes!),
           ],

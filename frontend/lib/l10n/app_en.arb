@@ -1,0 +1,151 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "AutoService",
+
+  "email": "Email",
+  "password": "Password",
+  "emailRequired": "Email is required",
+  "passwordRequired": "Password is required",
+  "logIn": "Log in",
+  "newShopCreateAccount": "New shop? Create an account",
+
+  "createYourShop": "Create your shop",
+  "createShopDescription": "This creates a new shop and its first owner account.",
+  "shopName": "Shop name",
+  "yourFullName": "Your full name",
+  "atLeast8Characters": "At least 8 characters",
+  "shopNameRequired": "Shop name is required",
+  "yourNameRequired": "Your name is required",
+  "passwordMinLength": "Password must be at least 8 characters",
+  "createShopAndAccount": "Create shop & account",
+  "backToLogin": "Back to login",
+
+  "workOrders": "Work Orders",
+  "clients": "Clients",
+  "vehicles": "Vehicles",
+  "catalog": "Catalog",
+  "reports": "Reports",
+  "logOut": "Log out",
+  "language": "Language",
+
+  "edit": "Edit",
+  "delete": "Delete",
+  "cancel": "Cancel",
+
+  "searchByNamePhoneOrEmail": "Search by name, phone, or email",
+  "noClientsYet": "No clients yet",
+
+  "clientsVehicles": "Client's Vehicles",
+  "searchByLicensePlate": "Search by license plate",
+  "noVehiclesFound": "No vehicles found",
+
+  "vehicleHistory": "Vehicle History",
+  "engine": "Engine: {value}",
+  "@engine": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "yearLabel": "Year: {value}",
+  "@yearLabel": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "currentMileage": "Current mileage: {km} km",
+  "@currentMileage": {
+    "placeholders": { "km": { "type": "String" } }
+  },
+  "serviceHistoryCount": "Service History ({count})",
+  "@serviceHistoryCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "noWorkOrdersYet": "No work orders yet",
+  "mileageKm": "Mileage: {km} km",
+  "@mileageKm": {
+    "placeholders": { "km": { "type": "String" } }
+  },
+
+  "serviceAndPartsCatalog": "Service & Parts Catalog",
+  "all": "All",
+  "services": "Services",
+  "parts": "Parts",
+  "noCatalogItemsYet": "No catalog items yet",
+
+  "newWorkOrder": "New Work Order",
+  "noWorkOrders": "No work orders",
+  "paymentMethodTitle": "Payment method",
+  "deleteWorkOrderTitle": "Delete work order?",
+  "deleteWorkOrderBody": "Order #{orderNo} will be permanently deleted.",
+  "@deleteWorkOrderBody": {
+    "placeholders": { "orderNo": { "type": "int" } }
+  },
+  "markAs": "Mark as {status}",
+  "@markAs": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "orderNo": "Order #{no}",
+  "@orderNo": {
+    "placeholders": { "no": { "type": "int" } }
+  },
+  "clientLabel": "Client: {name}",
+  "@clientLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "vehicleLabel": "Vehicle: {info}",
+  "@vehicleLabel": {
+    "placeholders": { "info": { "type": "String" } }
+  },
+  "mileageAtService": "Mileage at service: {km} km",
+  "@mileageAtService": {
+    "placeholders": { "km": { "type": "int" } }
+  },
+  "dateLabel": "Date: {date}",
+  "@dateLabel": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "lineItems": "Line Items",
+  "subtotal": "Subtotal",
+  "discount": "Discount",
+  "taxWithRate": "Tax ({rate}%)",
+  "@taxWithRate": {
+    "placeholders": { "rate": { "type": "String" } }
+  },
+  "grandTotal": "Grand Total",
+  "notes": "Notes",
+  "printPdf": "Print / PDF",
+
+  "revenue": "Revenue",
+  "paymentStatus": "Payment Status",
+  "partsUsage": "Parts Usage",
+  "fromDate": "From: {date}",
+  "@fromDate": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "toDate": "To: {date}",
+  "@toDate": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "clearFilter": "Clear",
+  "day": "Day",
+  "week": "Week",
+  "month": "Month",
+  "totalRevenue": "Total revenue",
+  "noPaidWorkOrdersInRange": "No paid work orders in this range",
+  "noUsageInRange": "No usage in this range",
+  "qtyUsed": "Qty used: {qty}",
+  "@qtyUsed": {
+    "placeholders": { "qty": { "type": "String" } }
+  },
+  "orderCount": "{count} orders",
+  "@orderCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "draft": "Draft",
+  "completed": "Completed",
+  "paid": "Paid",
+  "completedUnpaid": "Completed (unpaid)",
+  "totalOutstanding": "Total outstanding",
+  "anyDate": "Any",
+  "cash": "Cash",
+  "card": "Card",
+  "bankTransfer": "Bank transfer",
+  "other": "Other"
+}

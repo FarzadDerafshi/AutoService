@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../generated/app_localizations.dart';
 import '../../auth/application/auth_provider.dart';
 import '../application/vehicles_provider.dart';
 import 'vehicle_form_sheet.dart';
@@ -13,6 +14,8 @@ class VehiclesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+
     // Sync the incoming route filter into shared state once per build.
     final currentFilter = ref.read(vehiclesFilterProvider);
     if (clientId != currentFilter.clientId) {
@@ -26,15 +29,15 @@ class VehiclesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(clientId != null ? "Client's Vehicles" : 'Vehicles'),
+        title: Text(clientId != null ? l.clientsVehicles : l.vehicles),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Search by license plate',
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: l.searchByLicensePlate,
                 isDense: true,
               ),
               textCapitalization: TextCapitalization.characters,
@@ -62,7 +65,7 @@ class VehiclesScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(vehiclesListProvider),
         data: (vehicles) {
           if (vehicles.isEmpty) {
-            return const Center(child: Text('No vehicles found'));
+            return Center(child: Text(l.noVehiclesFound));
           }
           return ListView.separated(
             itemCount: vehicles.length,
@@ -97,9 +100,9 @@ class VehiclesScreen extends ConsumerWidget {
                             }
                           }
                         },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(value: 'edit', child: Text(l.edit)),
+                          PopupMenuItem(value: 'delete', child: Text(l.delete)),
                         ],
                       )
                     : null,

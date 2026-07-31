@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../generated/app_localizations.dart';
 import '../application/work_orders_provider.dart';
 import '../data/work_order_model.dart';
 
@@ -14,12 +15,13 @@ class WorkOrdersMasterList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final ordersAsync = ref.watch(workOrdersListProvider);
     final statusFilter = ref.watch(workOrdersStatusFilterProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Work Orders'),
+        title: Text(l.workOrders),
         actions: [IconButton(onPressed: onCreate, icon: const Icon(Icons.add))],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
@@ -29,11 +31,10 @@ class WorkOrdersMasterList extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _FilterChip(label: 'All', selected: statusFilter == null, onTap: () => _setFilter(ref, null)),
-                  _FilterChip(label: 'Draft', selected: statusFilter == 'draft', onTap: () => _setFilter(ref, 'draft')),
-                  _FilterChip(
-                      label: 'Completed', selected: statusFilter == 'completed', onTap: () => _setFilter(ref, 'completed')),
-                  _FilterChip(label: 'Paid', selected: statusFilter == 'paid', onTap: () => _setFilter(ref, 'paid')),
+                  _FilterChip(label: l.all,       selected: statusFilter == null,        onTap: () => _setFilter(ref, null)),
+                  _FilterChip(label: l.draft,      selected: statusFilter == 'draft',     onTap: () => _setFilter(ref, 'draft')),
+                  _FilterChip(label: l.completed,  selected: statusFilter == 'completed', onTap: () => _setFilter(ref, 'completed')),
+                  _FilterChip(label: l.paid,       selected: statusFilter == 'paid',      onTap: () => _setFilter(ref, 'paid')),
                 ],
               ),
             ),
@@ -45,7 +46,7 @@ class WorkOrdersMasterList extends ConsumerWidget {
         onRetry: () => ref.invalidate(workOrdersListProvider),
         data: (orders) {
           if (orders.isEmpty) {
-            return const Center(child: Text('No work orders yet'));
+            return Center(child: Text(l.noWorkOrders));
           }
           return ListView.separated(
             itemCount: orders.length,
@@ -94,10 +95,10 @@ class _StatusDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      'draft' => Colors.grey,
+      'draft'     => Colors.grey,
       'completed' => Colors.orange,
-      'paid' => Colors.green,
-      _ => Colors.grey,
+      'paid'      => Colors.green,
+      _           => Colors.grey,
     };
     return CircleAvatar(radius: 6, backgroundColor: color);
   }

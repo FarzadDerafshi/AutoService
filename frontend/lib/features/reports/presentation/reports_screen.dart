@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../generated/app_localizations.dart';
 import '../application/reports_provider.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -9,15 +10,16 @@ class ReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Reports'),
-          bottom: const TabBar(tabs: [
-            Tab(text: 'Revenue'),
-            Tab(text: 'Payment Status'),
-            Tab(text: 'Parts Usage'),
+          title: Text(l.reports),
+          bottom: TabBar(tabs: [
+            Tab(text: l.revenue),
+            Tab(text: l.paymentStatus),
+            Tab(text: l.partsUsage),
           ]),
         ),
         body: Column(
@@ -37,11 +39,13 @@ class ReportsScreen extends ConsumerWidget {
   }
 }
 
-String _formatDate(DateTime? d) => d == null ? 'Any' : d.toIso8601String().split('T').first;
+String _formatDate(DateTime? d, String anyLabel) =>
+    d == null ? anyLabel : d.toIso8601String().split('T').first;
 
 class _DateRangeBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final range = ref.watch(reportsDateRangeProvider);
 
     return Padding(
@@ -52,7 +56,7 @@ class _DateRangeBar extends ConsumerWidget {
         children: [
           TextButton.icon(
             icon: const Icon(Icons.calendar_today, size: 16),
-            label: Text('From: ${_formatDate(range.from)}'),
+            label: Text(l.fromDate(_formatDate(range.from, l.anyDate))),
             onPressed: () async {
               final picked = await showDatePicker(
                 context: context,
@@ -67,7 +71,7 @@ class _DateRangeBar extends ConsumerWidget {
           ),
           TextButton.icon(
             icon: const Icon(Icons.calendar_today, size: 16),
-            label: Text('To: ${_formatDate(range.to)}'),
+            label: Text(l.toDate(_formatDate(range.to, l.anyDate))),
             onPressed: () async {
               final picked = await showDatePicker(
                 context: context,
@@ -83,7 +87,7 @@ class _DateRangeBar extends ConsumerWidget {
           if (range.from != null || range.to != null)
             TextButton(
               onPressed: () => ref.read(reportsDateRangeProvider.notifier).state = const DateRange(),
-              child: const Text('Clear'),
+              child: Text(l.clearFilter),
             ),
         ],
       ),
@@ -96,6 +100,7 @@ class _RevenueTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final groupBy = ref.watch(revenueGroupByProvider);
     final revenueAsync = ref.watch(revenueReportProvider);
 
@@ -106,10 +111,10 @@ class _RevenueTab extends ConsumerWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'day', label: Text('Day')),
-                ButtonSegment(value: 'week', label: Text('Week')),
-                ButtonSegment(value: 'month', label: Text('Month')),
+              segments: [
+                ButtonSegment(value: 'day', label: Text(l.day)),
+                ButtonSegment(value: 'week', label: Text(l.week)),
+                ButtonSegment(value: 'month', label: Text(l.month)),
               ],
               selected: {groupBy},
               onSelectionChanged: (s) => ref.read(revenueGroupByProvider.notifier).state = s.first,
@@ -121,19 +126,19 @@ class _RevenueTab extends ConsumerWidget {
             value: revenueAsync,
             onRetry: () => ref.invalidate(revenueReportProvider),
             data: (points) {
-              if (points.isEmpty) return const Center(child: Text('No paid work orders in this range'));
+              if (points.isEmpty) return Center(child: Text(l.noPaidWorkOrdersInRange));
               final total = points.fold<double>(0, (sum, p) => sum + p.revenue);
               return ListView(
                 children: [
                   ListTile(
-                    title: const Text('Total revenue'),
+                    title: Text(l.totalRevenue),
                     trailing: Text(formatCurrency(total), style: Theme.of(context).textTheme.titleMedium),
                   ),
                   const Divider(),
                   for (final point in points)
                     ListTile(
                       title: Text(point.period.toLocal().toString().split(' ').first),
-                      subtitle: Text('${point.orderCount} orders'),
+                      subtitle: Text(l.orderCount(point.orderCount)),
                       trailing: Text(formatCurrency(point.revenue)),
                     ),
                 ],
@@ -151,6 +156,7 @@ class _PaymentStatusTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final statusAsync = ref.watch(paymentStatusReportProvider);
     return AsyncValueWidget(
       value: statusAsync,
@@ -158,10 +164,10 @@ class _PaymentStatusTab extends ConsumerWidget {
       data: (report) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _StatCard(label: 'Draft', value: report.draft.toString()),
-          _StatCard(label: 'Completed (unpaid)', value: report.completed.toString()),
-          _StatCard(label: 'Paid', value: report.paid.toString()),
-          _StatCard(label: 'Total outstanding', value: formatCurrency(report.totalOutstanding), emphasize: true),
+          _StatCard(label: l.draft, value: report.draft.toString()),
+          _StatCard(label: l.completedUnpaid, value: report.completed.toString()),
+          _StatCard(label: l.paid, value: report.paid.toString()),
+          _StatCard(label: l.totalOutstanding, value: formatCurrency(report.totalOutstanding), emphasize: true),
         ],
       ),
     );
@@ -173,12 +179,13 @@ class _PartsUsageTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final usageAsync = ref.watch(partsUsageReportProvider);
     return AsyncValueWidget(
       value: usageAsync,
       onRetry: () => ref.invalidate(partsUsageReportProvider),
       data: (rows) {
-        if (rows.isEmpty) return const Center(child: Text('No usage in this range'));
+        if (rows.isEmpty) return Center(child: Text(l.noUsageInRange));
         return ListView.separated(
           itemCount: rows.length,
           separatorBuilder: (_, _) => const Divider(height: 1),
@@ -186,7 +193,7 @@ class _PartsUsageTab extends ConsumerWidget {
             final row = rows[index];
             return ListTile(
               title: Text(row.name),
-              subtitle: Text('Qty used: ${row.totalQuantity}'),
+              subtitle: Text(l.qtyUsed(row.totalQuantity.toString())),
               trailing: Text(formatCurrency(row.totalRevenue)),
             );
           },

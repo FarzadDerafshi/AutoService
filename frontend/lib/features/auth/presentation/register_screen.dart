@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/locale/locale_provider.dart';
+import '../../../generated/app_localizations.dart';
 import '../application/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -47,11 +49,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
+    final currentLocale = ref.watch(localeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create your shop')),
+      appBar: AppBar(
+        title: Text(l.createYourShop),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'en', label: Text('EN')),
+                ButtonSegment(value: 'tr', label: Text('TR')),
+              ],
+              selected: {currentLocale.languageCode},
+              onSelectionChanged: (s) =>
+                  ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
+            ),
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
@@ -63,36 +83,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'This creates a new shop and its first owner account.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  Text(l.createShopDescription, style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _shopNameController,
-                    decoration: const InputDecoration(labelText: 'Shop name'),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Shop name is required' : null,
+                    decoration: InputDecoration(labelText: l.shopName),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? l.shopNameRequired : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _fullNameController,
-                    decoration: const InputDecoration(labelText: 'Your full name'),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Your name is required' : null,
+                    decoration: InputDecoration(labelText: l.yourFullName),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? l.yourNameRequired : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: InputDecoration(labelText: l.email),
                     keyboardType: TextInputType.emailAddress,
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Email is required' : null,
+                    validator: (v) => (v == null || v.trim().isEmpty) ? l.emailRequired : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password', helperText: 'At least 8 characters'),
+                    decoration: InputDecoration(labelText: l.password, helperText: l.atLeast8Characters),
                     obscureText: true,
-                    validator: (v) =>
-                        (v == null || v.length < 8) ? 'Password must be at least 8 characters' : null,
+                    validator: (v) => (v == null || v.length < 8) ? l.passwordMinLength : null,
                   ),
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 12),
@@ -102,17 +118,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   FilledButton(
                     onPressed: isLoading ? null : _submit,
                     child: isLoading
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Create shop & account'),
+                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(l.createShopAndAccount),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: isLoading ? null : () => context.pop(),
-                    child: const Text('Back to login'),
+                    child: Text(l.backToLogin),
                   ),
                 ],
               ),

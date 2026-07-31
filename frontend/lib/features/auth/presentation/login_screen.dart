@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/locale/locale_provider.dart';
+import '../../../generated/app_localizations.dart';
 import '../application/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -41,66 +43,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
+    final currentLocale = ref.watch(localeProvider);
 
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Icon(Icons.build_circle, size: 48, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(height: 8),
-                  Text('AutoService', style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
-                  const SizedBox(height: 24),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Email is required' : null,
+      body: Stack(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(Icons.build_circle, size: 48, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(height: 8),
+                      Text(l.appTitle, style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
+                      const SizedBox(height: 24),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(labelText: l.email),
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        validator: (v) => (v == null || v.trim().isEmpty) ? l.emailRequired : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(labelText: l.password),
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.password],
+                        onFieldSubmitted: (_) => _submit(),
+                        validator: (v) => (v == null || v.isEmpty) ? l.passwordRequired : null,
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(_errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                      ],
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: isLoading ? null : _submit,
+                        child: isLoading
+                            ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : Text(l.logIn),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: isLoading ? null : () => context.push('/register'),
+                        child: Text(l.newShopCreateAccount),
+                      ),
+                      const SizedBox(height: 16),
+                      // Language selector
+                      Center(
+                        child: SegmentedButton<String>(
+                          segments: const [
+                            ButtonSegment(value: 'en', label: Text('EN')),
+                            ButtonSegment(value: 'tr', label: Text('TR')),
+                          ],
+                          selected: {currentLocale.languageCode},
+                          onSelectionChanged: (s) =>
+                              ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    obscureText: true,
-                    autofillHints: const [AutofillHints.password],
-                    onFieldSubmitted: (_) => _submit(),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Password is required' : null,
-                  ),
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(_errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                  ],
-                  const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed: isLoading ? null : _submit,
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Log in'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: isLoading ? null : () => context.push('/register'),
-                    child: const Text("New shop? Create an account"),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

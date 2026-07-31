@@ -5,6 +5,54 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.4.0] — 2026-07-31  *(PWA + Turkish Language Support)*
+
+### Added
+
+#### Frontend
+- **Progressive Web App (PWA)**
+  The Flutter web build is now installable as a standalone app on Android,
+  iOS, Windows, macOS, and Chrome OS.
+  - `manifest.json` updated: `name`, `short_name`, `description`, `orientation: any`,
+    `background_color` set to match the Material Dark theme.
+  - `index.html` updated: correct `<title>`, `apple-mobile-web-app-capable` meta,
+    `theme-color` meta, and maskable `apple-touch-icon` links.
+  Flutter automatically generates `flutter_service_worker.js` on each release
+  build, providing offline asset caching.
+  _Files: `frontend/web/manifest.json`, `frontend/web/index.html`_
+
+- **Turkish / English language switching (i18n)**
+  The app is now fully localised in English and Turkish.
+  A language selector (`[EN] [TR]` segmented button) appears on the login and
+  registration screens. Inside the app, language can be changed from the user
+  menu (top-right) under *Language → English / Türkçe*. The selection is
+  persisted between sessions via `localStorage`.
+
+  Implementation details:
+  - `flutter_localizations` (SDK package) + `generate: true` in `pubspec.yaml`.
+  - `l10n.yaml` config; ~70-key ARB files for `en` and `tr` under `lib/l10n/`.
+  - `flutter gen-l10n` generates `lib/generated/app_localizations.dart` at build
+    time — no checked-in generated file.
+  - `LocaleNotifier` (Riverpod `StateNotifierProvider`) loads/persists the locale
+    code via the same conditional `_storage_web` / `_storage_stub` pattern used
+    for JWT tokens.
+  - All screens updated to use `AppLocalizations.of(context)!` — zero hardcoded
+    UI strings remain in the codebase.
+  _Files: `frontend/pubspec.yaml`, `frontend/l10n.yaml`,
+  `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/core/locale/locale_provider.dart`, `frontend/lib/app.dart`,
+  and all feature screen files_
+
+### Fixed
+- **`intl` version conflict** — `flutter_localizations` from the SDK pins
+  `intl` to `0.20.2`; bumped constraint in `pubspec.yaml` from `^0.19.0`
+  to `^0.20.2`.
+- **Missing `go_router` import in `register_screen.dart`** — `context.pop()`
+  requires the `go_router` extension; import was absent, causing a compile
+  error caught at build time.
+
+---
+
 ## [0.3.0] — 2026-07-30  *(LAN Access & Detail View Fix)*
 
 ### Fixed

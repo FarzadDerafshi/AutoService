@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../generated/app_localizations.dart';
 import '../../auth/application/auth_provider.dart';
 import '../application/catalog_provider.dart';
 import 'catalog_item_form_sheet.dart';
@@ -12,13 +13,14 @@ class CatalogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final itemsAsync = ref.watch(catalogListProvider);
     final typeFilter = ref.watch(catalogTypeFilterProvider);
     final canManage = ref.watch(currentUserProvider)?.canManage ?? false;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Service & Parts Catalog'),
+        title: Text(l.serviceAndPartsCatalog),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Padding(
@@ -26,10 +28,10 @@ class CatalogScreen extends ConsumerWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: SegmentedButton<String?>(
-                segments: const [
-                  ButtonSegment(value: null, label: Text('All')),
-                  ButtonSegment(value: 'service', label: Text('Services')),
-                  ButtonSegment(value: 'part', label: Text('Parts')),
+                segments: [
+                  ButtonSegment(value: null, label: Text(l.all)),
+                  ButtonSegment(value: 'service', label: Text(l.services)),
+                  ButtonSegment(value: 'part', label: Text(l.parts)),
                 ],
                 selected: {typeFilter},
                 onSelectionChanged: (s) => ref.read(catalogTypeFilterProvider.notifier).state = s.first,
@@ -58,7 +60,7 @@ class CatalogScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(catalogListProvider),
         data: (items) {
           if (items.isEmpty) {
-            return const Center(child: Text('No catalog items yet'));
+            return Center(child: Text(l.noCatalogItemsYet));
           }
           return ListView.separated(
             itemCount: items.length,
@@ -94,9 +96,9 @@ class CatalogScreen extends ConsumerWidget {
                             }
                           }
                         },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(value: 'edit', child: Text(l.edit)),
+                          PopupMenuItem(value: 'delete', child: Text(l.delete)),
                         ],
                       ),
                   ],
