@@ -35,6 +35,11 @@
 
   "searchByNamePhoneOrEmail": "Search by name, phone, or email",
   "noClientsYet": "Ghost town! Let's get some drivers in here.",
+  "newClient": "New Client",
+  "editClient": "Edit Client",
+  "fullNameLabel": "Full name",
+  "phoneLabel": "Phone",
+  "addressLabel": "Address",
 
   "clientsVehicles": "Client's Vehicles",
   "searchByLicensePlate": "Search by license plate",
@@ -77,6 +82,13 @@
     "placeholders": { "km": { "type": "String" } }
   },
 
+  "garageCompleteness": "Garage Completeness",
+  "fullyTuned": "Fully tuned! 🔧",
+  "addFieldsToLevelUp": "Add {fields} to level up.",
+  "@addFieldsToLevelUp": {
+    "placeholders": { "fields": { "type": "String" } }
+  },
+
   "serviceAndPartsCatalog": "Service & Parts Catalog",
   "all": "All",
   "services": "Services",
@@ -96,6 +108,8 @@
 
   "newWorkOrder": "Wrench a New Job",
   "noWorkOrders": "No work orders",
+  "thePitStop": "THE PIT STOP",
+  "dayStreak": "DAY STREAK",
   "paymentMethodTitle": "Payment method",
   "deleteWorkOrderTitle": "Scrap work order?",
   "deleteWorkOrderBody": "Order #{orderNo} will be permanently deleted.",

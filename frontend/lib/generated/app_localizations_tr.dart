@@ -98,6 +98,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Dükkan sinek avlıyor! Hadi içeri birkaç müşteri çekelim.';
 
   @override
+  String get newClient => 'Yeni Müşteri';
+
+  @override
+  String get editClient => 'Müşteriyi Düzenle';
+
+  @override
+  String get fullNameLabel => 'Ad soyad';
+
+  @override
+  String get phoneLabel => 'Telefon';
+
+  @override
+  String get addressLabel => 'Adres';
+
+  @override
   String get clientsVehicles => 'Müşteri Araçları';
 
   @override
@@ -174,6 +189,17 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get garageCompleteness => 'Garaj Puanı';
+
+  @override
+  String get fullyTuned => 'Motor tam kıvamında! 🔧';
+
+  @override
+  String addFieldsToLevelUp(String fields) {
+    return 'Seviye atlamak için $fields ekle.';
+  }
+
+  @override
   String get serviceAndPartsCatalog => 'Servis ve Parça Kataloğu';
 
   @override
@@ -228,6 +254,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noWorkOrders => 'Servis kaydı yok';
+
+  @override
+  String get thePitStop => 'PİT DURAĞI';
+
+  @override
+  String get dayStreak => 'GÜN SERİSİ';
 
   @override
   String get paymentMethodTitle => 'Ödeme yöntemi';
@@ -373,4 +405,96 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get other => 'Diğer';
+}
+
+/// The translations for Turkish, as used in Clipperton Island (`tr_CP`).
+class AppLocalizationsTrCp extends AppLocalizationsTr {
+  AppLocalizationsTrCp() : super('tr_CP');
+
+  @override
+  String get logIn => 'Giriş Yap';
+
+  @override
+  String get createYourShop => 'İşletmenizi oluşturun';
+
+  @override
+  String get createShopAndAccount => 'İşletme ve hesap oluştur';
+
+  @override
+  String get edit => 'Düzenle';
+
+  @override
+  String get delete => 'Sil';
+
+  @override
+  String get noClientsYet => 'Henüz müşteri yok';
+
+  @override
+  String get noVehiclesFound => 'Araç bulunamadı';
+
+  @override
+  String failedToLoadClients(Object error) {
+    return 'Müşteriler yüklenemedi: $error';
+  }
+
+  @override
+  String get noWorkOrdersYet => 'Henüz servis kaydı yok';
+
+  @override
+  String get garageCompleteness => 'Profil Tamamlanma Durumu';
+
+  @override
+  String get fullyTuned => 'Profil tamamlandı.';
+
+  @override
+  String addFieldsToLevelUp(String fields) {
+    return 'Profili tamamlamak için $fields ekleyin.';
+  }
+
+  @override
+  String get noCatalogItemsYet => 'Henüz katalog öğesi yok';
+
+  @override
+  String get required => 'Zorunlu';
+
+  @override
+  String get enterValidNumber => 'Geçerli bir sayı girin';
+
+  @override
+  String get save => 'Kaydet';
+
+  @override
+  String get newWorkOrder => 'Yeni Servis Kaydı';
+
+  @override
+  String get thePitStop => 'DURUM';
+
+  @override
+  String get dayStreak => 'ARDIŞIK GÜN';
+
+  @override
+  String get deleteWorkOrderTitle => 'Servis kaydı silinsin mi?';
+
+  @override
+  String markAs(String status) {
+    return '$status olarak işaretle';
+  }
+
+  @override
+  String get printPdf => 'Yazdır / PDF';
+
+  @override
+  String get noPaidWorkOrdersInRange => 'Bu aralıkta ödenmiş servis kaydı yok';
+
+  @override
+  String get draft => 'Taslak';
+
+  @override
+  String get completed => 'Tamamlandı';
+
+  @override
+  String get paid => 'Ödendi';
+
+  @override
+  String get completedUnpaid => 'Tamamlandı (ödenmemiş)';
 }

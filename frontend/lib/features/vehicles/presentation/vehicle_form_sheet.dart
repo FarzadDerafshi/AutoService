@@ -65,14 +65,14 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     super.dispose();
   }
 
-  List<(String, bool)> get _completenessFields => [
-        ('owner', _clientId != null),
-        ('license plate', _plate.text.trim().isNotEmpty),
-        ('make', _make.text.trim().isNotEmpty),
-        ('model', _model.text.trim().isNotEmpty),
-        ('engine type', _engineType.text.trim().isNotEmpty),
-        ('year', _year.text.trim().isNotEmpty),
-        ('mileage', _mileage.text.trim().isNotEmpty),
+  List<(String, bool)> _completenessFields(AppLocalizations l) => [
+        (l.owner, _clientId != null),
+        (l.licensePlate, _plate.text.trim().isNotEmpty),
+        (l.make, _make.text.trim().isNotEmpty),
+        (l.model, _model.text.trim().isNotEmpty),
+        (l.engineLabel, _engineType.text.trim().isNotEmpty),
+        (l.yearFieldLabel, _year.text.trim().isNotEmpty),
+        (l.currentMileageKmLabel, _mileage.text.trim().isNotEmpty),
       ];
 
   void _submit() {
@@ -110,7 +110,7 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
           children: [
             Text(widget.existing == null ? l10n.newVehicle : l10n.editVehicle, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 14),
-            ProfileCompletenessBar(fields: _completenessFields, title: 'Profile Completeness'),
+            ProfileCompletenessBar(fields: _completenessFields(l10n), title: l10n.garageCompleteness),
             const SizedBox(height: 16),
             clientsAsync.when(
               data: (clients) => DropdownButtonFormField<String>(

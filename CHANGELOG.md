@@ -5,6 +5,95 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.9.0] — 2026-08-01  *(Corporate/Garage Voice Toggle + Full Gamification Localization)*
+
+### Added
+- **A second, independent toggle for the app's *tone*** ("Corporate" vs.
+  "Garage"/street), orthogonal to the EN/TR language toggle — e.g. Turkish +
+  Corporate, English + Garage, and every other combination all work. Implemented
+  by piggy-backing on Flutter's real locale-variant mechanism (the same trick
+  Facebook used for its old "Pirate English" locale): "Corporate" is a locale
+  *country-code* variant (`en_CP` / `tr_CP`), so every existing
+  `AppLocalizations.of(context)!.xyz` call in the app keeps working completely
+  unchanged — no refactor needed across the ~15 screens that already call it.
+  - New: `frontend/lib/core/locale/tone_provider.dart` (`AppTone` enum +
+    `ToneNotifier`, mirrors the existing `LocaleNotifier` pattern, persisted
+    separately under `tone_mode` in the same storage `LocaleNotifier` uses).
+  - New: `frontend/lib/l10n/app_en_CP.arb` / `app_tr_CP.arb` — **partial**
+    ARB overrides containing only the ~31 keys per language that actually
+    differ between tones. Everything else inherits from the base
+    `AppLocalizationsEn`/`Tr` class at codegen time
+    (`AppLocalizationsEnCp extends AppLocalizationsEn`) — confirmed this is
+    how `flutter gen-l10n` is designed to work (a locale ARB missing a key
+    just emits an "N untranslated message(s)" warning, not an error, and the
+    generated subclass simply doesn't override that getter) before writing
+    all the content, so there was zero duplication of the ~100 keys that
+    read identically in both tones.
+  - New: `frontend/lib/core/widgets/tone_toggle.dart` — compact icon-only
+    `SegmentedButton<AppTone>` (💼/🔧), added next to the language selector
+    on the login screen, the register screen's AppBar, and as a new "Voice"
+    section in the authenticated app bar's user menu (parallel to the
+    existing "Language" section).
+  - `app.dart` computes the effective `Locale` each build:
+    `tone == corporate ? Locale(lang, 'CP') : Locale(lang)`.
+  - Default is `AppTone.street` — matches what was already shipped in
+    v0.8.1, so existing users see no change unless they open the new toggle.
+  - Verified in-browser: switched between all four combinations
+    (EN-Garage/EN-Corporate/TR-Garage/TR-Corporate) live via the app bar
+    menu and confirmed status chips, the streak badge, and the client-form
+    completeness bar all update correctly and immediately, and that the
+    choice survives a full page reload independent of the language choice.
+
+### Changed
+
+#### Frontend
+- **Every remaining gamification string is now a real ARB key**, in both
+  tones and both languages (was previously flagged as a known gap):
+  `ProfileCompletenessBar`'s title ("Garage Completeness" ⇄ "Profile
+  Completeness") and "Fully tuned! 🔧" / "Add {fields} to level up." nudge,
+  `PitStopStepper`'s "THE PIT STOP" ⇄ "STATUS" header, `StreakBadge`'s "DAY
+  STREAK" ⇄ "CONSECUTIVE DAYS" label. New shared key `garageCompleteness`
+  also fixes a pre-existing inconsistency where the Client form and Vehicle
+  form showed two different hardcoded titles ("Garage Completeness" vs.
+  "Profile Completeness") for the identical widget.
+- **`client_form_sheet.dart` is now fully localized** — it previously had
+  *no* `AppLocalizations` usage at all (every field label and the "New
+  Client"/"Edit Client" title were hardcoded English, a pre-existing gap
+  noted in DECISIONS.md when the gamified redesign was applied). New keys:
+  `newClient`, `editClient`, `fullNameLabel`, `phoneLabel`, `addressLabel`
+  (identical text in both tones — matches the existing pattern where entity
+  titles/field labels stayed neutral even in the original playful pass);
+  reused the existing `email`/`notes`/`required`/`save` keys rather than
+  duplicating them.
+- **Fixed a real localization bug in `PitStopStepper`**: the three stop
+  labels (Draft/Completed/Paid) were built by capitalizing the raw English
+  status enum value (`label[0].toUpperCase() + ...`), completely bypassing
+  localization — a Turkish user would see "Draft" hardcoded inside the
+  stepper even though the identical status already renders correctly
+  ("Taslak") in the work-order list's filter chips one screen over. Now
+  uses the same `l.draft`/`l.completed`/`l.paid` getters everywhere else in
+  the app uses.
+- **Removed a leftover dev-note that was shipping as real UI text**:
+  `PitStopStepper` rendered `'✨ micro-animation slot: confetti / Lottie
+  burst plays here on status change'` as an actual `Text` widget below the
+  status button — this was clearly implementation commentary for a future
+  Lottie integration, not user-facing copy, and was about to ship
+  translated into 4 language/tone combinations. Deleted the widget; the
+  underlying "leave room for a future success animation" intent is
+  unaffected since nothing else depended on that text being there.
+  _Files: `frontend/lib/core/locale/tone_provider.dart` (new),
+  `frontend/lib/core/widgets/tone_toggle.dart` (new),
+  `frontend/lib/l10n/app_en_CP.arb`, `frontend/lib/l10n/app_tr_CP.arb` (new),
+  `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/generated/app_localizations*.dart`, `frontend/lib/app.dart`,
+  `frontend/lib/core/widgets/{app_shell,profile_completeness_bar,
+  pit_stop_stepper,streak_badge}.dart`,
+  `frontend/lib/features/auth/presentation/{login_screen,register_screen}.dart`,
+  `frontend/lib/features/clients/presentation/client_form_sheet.dart`,
+  `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`_
+
+---
+
 ## [0.8.1] — 2026-08-01  *(Playful Copy Pass — "Garage Voice" Localization)*
 
 ### Changed

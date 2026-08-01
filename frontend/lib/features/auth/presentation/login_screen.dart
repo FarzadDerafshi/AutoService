@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/locale/locale_provider.dart';
+import '../../../core/widgets/tone_toggle.dart';
 import '../../../generated/app_localizations.dart';
 import '../application/auth_provider.dart';
 
@@ -111,6 +112,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      // Voice/tone selector — corporate vs. playful "garage" copy
+                      const Center(child: ToneToggle()),
                     ],
                   ),
                 ),

@@ -97,6 +97,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noClientsYet => 'Ghost town! Let\'s get some drivers in here.';
 
   @override
+  String get newClient => 'New Client';
+
+  @override
+  String get editClient => 'Edit Client';
+
+  @override
+  String get fullNameLabel => 'Full name';
+
+  @override
+  String get phoneLabel => 'Phone';
+
+  @override
+  String get addressLabel => 'Address';
+
+  @override
   String get clientsVehicles => 'Client\'s Vehicles';
 
   @override
@@ -173,6 +188,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get garageCompleteness => 'Garage Completeness';
+
+  @override
+  String get fullyTuned => 'Fully tuned! 🔧';
+
+  @override
+  String addFieldsToLevelUp(String fields) {
+    return 'Add $fields to level up.';
+  }
+
+  @override
   String get serviceAndPartsCatalog => 'Service & Parts Catalog';
 
   @override
@@ -227,6 +253,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noWorkOrders => 'No work orders';
+
+  @override
+  String get thePitStop => 'THE PIT STOP';
+
+  @override
+  String get dayStreak => 'DAY STREAK';
 
   @override
   String get paymentMethodTitle => 'Payment method';
@@ -372,4 +404,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get other => 'Other';
+}
+
+/// The translations for English, as used in Clipperton Island (`en_CP`).
+class AppLocalizationsEnCp extends AppLocalizationsEn {
+  AppLocalizationsEnCp() : super('en_CP');
+
+  @override
+  String get logIn => 'Log in';
+
+  @override
+  String get createYourShop => 'Create your shop';
+
+  @override
+  String get createShopAndAccount => 'Create shop & account';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get noClientsYet => 'No clients yet';
+
+  @override
+  String get noVehiclesFound => 'No vehicles found';
+
+  @override
+  String failedToLoadClients(Object error) {
+    return 'Failed to load clients: $error';
+  }
+
+  @override
+  String get noWorkOrdersYet => 'No work orders yet';
+
+  @override
+  String get garageCompleteness => 'Profile Completeness';
+
+  @override
+  String get fullyTuned => 'Profile complete.';
+
+  @override
+  String addFieldsToLevelUp(String fields) {
+    return 'Add $fields to complete this profile.';
+  }
+
+  @override
+  String get noCatalogItemsYet => 'No catalog items yet';
+
+  @override
+  String get required => 'Required';
+
+  @override
+  String get enterValidNumber => 'Enter a valid number';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get newWorkOrder => 'New Work Order';
+
+  @override
+  String get thePitStop => 'STATUS';
+
+  @override
+  String get dayStreak => 'CONSECUTIVE DAYS';
+
+  @override
+  String get deleteWorkOrderTitle => 'Delete work order?';
+
+  @override
+  String get printPdf => 'Print / PDF';
+
+  @override
+  String get noPaidWorkOrdersInRange => 'No paid work orders in this range';
+
+  @override
+  String get draft => 'Draft';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get paid => 'Paid';
+
+  @override
+  String get completedUnpaid => 'Completed (unpaid)';
 }

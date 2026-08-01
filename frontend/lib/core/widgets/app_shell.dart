@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/locale/locale_provider.dart';
+import '../../core/locale/tone_provider.dart';
 import '../../features/auth/application/auth_provider.dart';
 import '../../features/reports/application/reports_provider.dart';
 import '../../generated/app_localizations.dart';
@@ -31,6 +32,7 @@ class AppShell extends ConsumerWidget {
     final isWide = MediaQuery.of(context).size.width >= MasterDetailScaffold.desktopBreakpoint;
     final user = ref.watch(currentUserProvider);
     final currentLocale = ref.watch(localeProvider);
+    final currentTone = ref.watch(toneProvider);
     final streakDays = ref.watch(streakDaysProvider).valueOrNull ?? 0;
 
     final destinations = [
@@ -67,6 +69,10 @@ class AppShell extends ConsumerWidget {
               ref.read(localeProvider.notifier).setLocale(const Locale('en'));
             } else if (action == 'lang_tr') {
               ref.read(localeProvider.notifier).setLocale(const Locale('tr'));
+            } else if (action == 'tone_corporate') {
+              ref.read(toneProvider.notifier).setTone(AppTone.corporate);
+            } else if (action == 'tone_street') {
+              ref.read(toneProvider.notifier).setTone(AppTone.street);
             }
           },
           itemBuilder: (context) => [
@@ -91,6 +97,35 @@ class AppShell extends ConsumerWidget {
               child: Row(children: [
                 const Text('🇹🇷  Türkçe'),
                 if (currentLocale.languageCode == 'tr') ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 16),
+                ],
+              ]),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              enabled: false,
+              child: Text('Voice', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            PopupMenuItem(
+              value: 'tone_corporate',
+              child: Row(children: [
+                const Icon(Icons.business_center, size: 16),
+                const SizedBox(width: 10),
+                const Text('Corporate'),
+                if (currentTone == AppTone.corporate) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 16),
+                ],
+              ]),
+            ),
+            PopupMenuItem(
+              value: 'tone_street',
+              child: Row(children: [
+                const Icon(Icons.build, size: 16),
+                const SizedBox(width: 10),
+                const Text('Garage'),
+                if (currentTone == AppTone.street) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 16),
                 ],

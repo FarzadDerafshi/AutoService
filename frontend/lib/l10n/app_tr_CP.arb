@@ -1,0 +1,39 @@
+{
+  "@@locale": "tr_CP",
+
+  "logIn": "Giriş Yap",
+  "createYourShop": "İşletmenizi oluşturun",
+  "createShopAndAccount": "İşletme ve hesap oluştur",
+
+  "edit": "Düzenle",
+  "delete": "Sil",
+
+  "noClientsYet": "Henüz müşteri yok",
+  "noVehiclesFound": "Araç bulunamadı",
+  "failedToLoadClients": "Müşteriler yüklenemedi: {error}",
+
+  "noWorkOrdersYet": "Henüz servis kaydı yok",
+  "noCatalogItemsYet": "Henüz katalog öğesi yok",
+
+  "garageCompleteness": "Profil Tamamlanma Durumu",
+  "fullyTuned": "Profil tamamlandı.",
+  "addFieldsToLevelUp": "Profili tamamlamak için {fields} ekleyin.",
+
+  "required": "Zorunlu",
+  "enterValidNumber": "Geçerli bir sayı girin",
+  "save": "Kaydet",
+
+  "newWorkOrder": "Yeni Servis Kaydı",
+  "thePitStop": "DURUM",
+  "dayStreak": "ARDIŞIK GÜN",
+  "deleteWorkOrderTitle": "Servis kaydı silinsin mi?",
+  "markAs": "{status} olarak işaretle",
+  "printPdf": "Yazdır / PDF",
+
+  "noPaidWorkOrdersInRange": "Bu aralıkta ödenmiş servis kaydı yok",
+
+  "draft": "Taslak",
+  "completed": "Tamamlandı",
+  "paid": "Ödendi",
+  "completedUnpaid": "Tamamlandı (ödenmemiş)"
+}

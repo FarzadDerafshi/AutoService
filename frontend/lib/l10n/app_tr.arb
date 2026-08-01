@@ -35,6 +35,11 @@
 
   "searchByNamePhoneOrEmail": "İsim, telefon veya e-posta ile ara",
   "noClientsYet": "Dükkan sinek avlıyor! Hadi içeri birkaç müşteri çekelim.",
+  "newClient": "Yeni Müşteri",
+  "editClient": "Müşteriyi Düzenle",
+  "fullNameLabel": "Ad soyad",
+  "phoneLabel": "Telefon",
+  "addressLabel": "Adres",
 
   "clientsVehicles": "Müşteri Araçları",
   "searchByLicensePlate": "Plakaya göre ara",
@@ -59,6 +64,10 @@
   "noWorkOrdersYet": "Bugün eller fazla temiz kaldı. Hadi bir kaput açalım!",
   "mileageKm": "Kilometre: {km} km",
 
+  "garageCompleteness": "Garaj Puanı",
+  "fullyTuned": "Motor tam kıvamında! 🔧",
+  "addFieldsToLevelUp": "Seviye atlamak için {fields} ekle.",
+
   "serviceAndPartsCatalog": "Servis ve Parça Kataloğu",
   "all": "Tümü",
   "services": "Servisler",
@@ -78,6 +87,8 @@
 
   "newWorkOrder": "Yeni İş Emri Patlat",
   "noWorkOrders": "Servis kaydı yok",
+  "thePitStop": "PİT DURAĞI",
+  "dayStreak": "GÜN SERİSİ",
   "paymentMethodTitle": "Ödeme yöntemi",
   "deleteWorkOrderTitle": "Servis kaydı hurdaya ayrılsın mı?",
   "deleteWorkOrderBody": "#{orderNo} numaralı servis kaydı kalıcı olarak silinecek.",

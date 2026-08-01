@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/locale/locale_provider.dart';
+import '../../../core/widgets/tone_toggle.dart';
 import '../../../generated/app_localizations.dart';
 import '../application/auth_provider.dart';
 
@@ -59,7 +60,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         title: Text(l.createYourShop),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 8),
             child: SegmentedButton<String>(
               segments: const [
                 ButtonSegment(value: 'en', label: Text('EN')),
@@ -69,6 +70,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               onSelectionChanged: (s) =>
                   ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
             ),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: ToneToggle(),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/profile_completeness_bar.dart';
+import '../../../generated/app_localizations.dart';
 import '../data/client_model.dart';
 
 class ClientFormResult {
@@ -55,12 +56,12 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
     super.dispose();
   }
 
-  List<(String, bool)> get _completenessFields => [
-        ('full name', _fullName.text.trim().isNotEmpty),
-        ('phone', _phone.text.trim().isNotEmpty),
-        ('email', _email.text.trim().isNotEmpty),
-        ('address', _address.text.trim().isNotEmpty),
-        ('notes', _notes.text.trim().isNotEmpty),
+  List<(String, bool)> _completenessFields(AppLocalizations l) => [
+        (l.fullNameLabel, _fullName.text.trim().isNotEmpty),
+        (l.phoneLabel, _phone.text.trim().isNotEmpty),
+        (l.email, _email.text.trim().isNotEmpty),
+        (l.addressLabel, _address.text.trim().isNotEmpty),
+        (l.notes, _notes.text.trim().isNotEmpty),
       ];
 
   void _submit() {
@@ -78,6 +79,7 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -91,25 +93,25 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(widget.existing == null ? 'New Client' : 'Edit Client', style: Theme.of(context).textTheme.titleLarge),
+            Text(widget.existing == null ? l.newClient : l.editClient, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 14),
-            ProfileCompletenessBar(fields: _completenessFields),
+            ProfileCompletenessBar(fields: _completenessFields(l), title: l.garageCompleteness),
             const SizedBox(height: 16),
             TextFormField(
               controller: _fullName,
-              decoration: const InputDecoration(labelText: 'Full name'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              decoration: InputDecoration(labelText: l.fullNameLabel),
+              validator: (v) => (v == null || v.trim().isEmpty) ? l.required : null,
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _phone, decoration: const InputDecoration(labelText: 'Phone')),
+            TextFormField(controller: _phone, decoration: InputDecoration(labelText: l.phoneLabel)),
             const SizedBox(height: 12),
-            TextFormField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
+            TextFormField(controller: _email, decoration: InputDecoration(labelText: l.email)),
             const SizedBox(height: 12),
-            TextFormField(controller: _address, decoration: const InputDecoration(labelText: 'Address'), maxLines: 2),
+            TextFormField(controller: _address, decoration: InputDecoration(labelText: l.addressLabel), maxLines: 2),
             const SizedBox(height: 12),
-            TextFormField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes'), maxLines: 2),
+            TextFormField(controller: _notes, decoration: InputDecoration(labelText: l.notes), maxLines: 2),
             const SizedBox(height: 20),
-            FilledButton(onPressed: _submit, child: const Text('Save')),
+            FilledButton(onPressed: _submit, child: Text(l.save)),
           ],
         ),
       ),

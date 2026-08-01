@@ -1,0 +1,38 @@
+{
+  "@@locale": "en_CP",
+
+  "logIn": "Log in",
+  "createYourShop": "Create your shop",
+  "createShopAndAccount": "Create shop & account",
+
+  "edit": "Edit",
+  "delete": "Delete",
+
+  "noClientsYet": "No clients yet",
+  "noVehiclesFound": "No vehicles found",
+  "failedToLoadClients": "Failed to load clients: {error}",
+
+  "noWorkOrdersYet": "No work orders yet",
+  "noCatalogItemsYet": "No catalog items yet",
+
+  "garageCompleteness": "Profile Completeness",
+  "fullyTuned": "Profile complete.",
+  "addFieldsToLevelUp": "Add {fields} to complete this profile.",
+
+  "required": "Required",
+  "enterValidNumber": "Enter a valid number",
+  "save": "Save",
+
+  "newWorkOrder": "New Work Order",
+  "thePitStop": "STATUS",
+  "dayStreak": "CONSECUTIVE DAYS",
+  "deleteWorkOrderTitle": "Delete work order?",
+  "printPdf": "Print / PDF",
+
+  "noPaidWorkOrdersInRange": "No paid work orders in this range",
+
+  "draft": "Draft",
+  "completed": "Completed",
+  "paid": "Paid",
+  "completedUnpaid": "Completed (unpaid)"
+}

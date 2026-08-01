@@ -95,7 +95,9 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('en', 'CP'),
     Locale('tr'),
+    Locale('tr', 'CP'),
   ];
 
   /// No description provided for @appTitle.
@@ -272,6 +274,36 @@ abstract class AppLocalizations {
   /// **'Ghost town! Let\'s get some drivers in here.'**
   String get noClientsYet;
 
+  /// No description provided for @newClient.
+  ///
+  /// In en, this message translates to:
+  /// **'New Client'**
+  String get newClient;
+
+  /// No description provided for @editClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Client'**
+  String get editClient;
+
+  /// No description provided for @fullNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get fullNameLabel;
+
+  /// No description provided for @phoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phoneLabel;
+
+  /// No description provided for @addressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get addressLabel;
+
   /// No description provided for @clientsVehicles.
   ///
   /// In en, this message translates to:
@@ -398,6 +430,24 @@ abstract class AppLocalizations {
   /// **'Mileage: {km} km'**
   String mileageKm(String km);
 
+  /// No description provided for @garageCompleteness.
+  ///
+  /// In en, this message translates to:
+  /// **'Garage Completeness'**
+  String get garageCompleteness;
+
+  /// No description provided for @fullyTuned.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully tuned! 🔧'**
+  String get fullyTuned;
+
+  /// No description provided for @addFieldsToLevelUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {fields} to level up.'**
+  String addFieldsToLevelUp(String fields);
+
   /// No description provided for @serviceAndPartsCatalog.
   ///
   /// In en, this message translates to:
@@ -505,6 +555,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No work orders'**
   String get noWorkOrders;
+
+  /// No description provided for @thePitStop.
+  ///
+  /// In en, this message translates to:
+  /// **'THE PIT STOP'**
+  String get thePitStop;
+
+  /// No description provided for @dayStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'DAY STREAK'**
+  String get dayStreak;
 
   /// No description provided for @paymentMethodTitle.
   ///
@@ -765,6 +827,26 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'en':
+      {
+        switch (locale.countryCode) {
+          case 'CP':
+            return AppLocalizationsEnCp();
+        }
+        break;
+      }
+    case 'tr':
+      {
+        switch (locale.countryCode) {
+          case 'CP':
+            return AppLocalizationsTrCp();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':

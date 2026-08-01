@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/locale/locale_provider.dart';
+import 'core/locale/tone_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_shell.dart';
 import 'features/auth/application/auth_provider.dart';
@@ -111,7 +112,13 @@ class AutoServiceApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
 
-    final locale = ref.watch(localeProvider);
+    final baseLocale = ref.watch(localeProvider);
+    final tone = ref.watch(toneProvider);
+    // "Corporate" tone is implemented as a locale country-code variant (the
+    // 'CP' suffix) so every existing AppLocalizations.of(context)!.xyz call
+    // site keeps working unchanged — see core/locale/tone_provider.dart.
+    final effectiveLocale =
+        tone == AppTone.corporate ? Locale(baseLocale.languageCode, 'CP') : baseLocale;
 
     return MaterialApp.router(
       title: 'AutoService',
@@ -120,7 +127,7 @@ class AutoServiceApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.dark,
       routerConfig: router,
-      locale: locale,
+      locale: effectiveLocale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

@@ -207,16 +207,58 @@ flutter pub deps | grep intl
 The `intl` constraint in `pubspec.yaml` must match (`^0.20.2` as of Flutter
 3.41.x).
 
-**Voice/tone (v0.8.1):** the app's copy is deliberately playful/"garage
-voice" (e.g. `logIn` = "Punch In", `delete` = "Scrap it", work-order statuses
-"On the Lift"/"Fixed & Ready"/"Cashed Out"), not neutral SaaS wording — this
-was a deliberate choice, supplied as ARB-key-matched JSON exports and merged
-key-by-key into both ARBs. **Match this tone for any new string** — check
-the existing wording nearby before adding a plain/neutral label. The
-gamification-specific strings added alongside the v0.8.0 dark redesign
-(`ProfileCompletenessBar`, `PitStopStepper`, `StreakBadge`) are still
-English-only hardcoded literals, not ARB keys — turning those into proper
-localized (and Turkish-"garage-voice") keys is unfinished follow-up work.
+**Voice/tone — two selectable sets, independent of language (v0.9.0):**
+the app ships with two complete copy sets per language: the default
+"street"/"garage" voice (e.g. `logIn` = "Punch In", `delete` = "Scrap it",
+work-order statuses "On the Lift"/"Fixed & Ready"/"Cashed Out") and a
+"corporate" voice (the original neutral SaaS wording: "Log in", "Delete",
+"Draft"/"Completed"/"Paid"). Users toggle between them independently of
+EN/TR via the "Voice" control (`core/widgets/tone_toggle.dart`) — visible on
+the login screen, the register screen's AppBar, and the authenticated app
+bar's user menu.
+
+**How it's implemented — read this before touching any tone-related code:**
+"Corporate" is *not* a custom string-resolution layer. It's a real Flutter
+`Locale` **country-code variant**: `en_CP` / `tr_CP` ("CP" for
+"Corporate") — the exact same mechanism real apps have used for silly/fun
+locale variants for years (Facebook's old "Pirate English" was `en_PI`).
+`core/locale/tone_provider.dart` holds an `AppTone` enum (`street`/
+`corporate`, independent `StateNotifierProvider`, persisted under
+`tone_mode` — a different storage key than `LocaleNotifier`'s `locale_code`,
+so language and tone are fully decoupled). `app.dart` combines them each
+build: `tone == corporate ? Locale(lang.languageCode, 'CP') : lang`, and
+passes that as `MaterialApp.router`'s `locale:`.
+
+**Why this approach, and what it buys you:** every existing
+`AppLocalizations.of(context)!.xyz` call site across the ~15 screens that
+already use it keeps working completely unchanged — gen-l10n auto-generates
+`AppLocalizationsEnCp extends AppLocalizationsEn` (and the `tr` equivalent),
+so `en_CP` inherits every key from `en` except the ones you explicitly
+override. **This is why `app_en_CP.arb`/`app_tr_CP.arb` only contain the
+~31 keys per language that actually read differently between tones** — not
+a full duplicate of the ~140-key template. `flutter gen-l10n` treats a
+locale ARB missing a key as a warning ("N untranslated message(s)"), not an
+error, and simply doesn't generate an override for it — confirmed this
+before writing any real content, by testing a 2-key partial ARB first.
+`GlobalMaterialLocalizations`/`GlobalWidgetsLocalizations`/
+`GlobalCupertinoLocalizations` (built-in widget strings like date-picker
+buttons) match on `languageCode` alone, ignoring the country code, so they
+work unaffected. `Intl.defaultLocale` is never set anywhere in this app
+(see `currency_formatter.dart`), so `NumberFormat.currency` isn't
+locale-driven either — the fake country code can't break currency
+formatting.
+
+**Adding a new tone-varying string:** add the key + street-tone value to
+`app_en.arb`/`app_tr.arb` as normal (these are the base/default classes).
+Only add an entry to `app_en_CP.arb`/`app_tr_CP.arb` **if the corporate
+wording actually differs** — if it doesn't (most field labels and entity
+titles don't — e.g. "Owner"/"Sahip", "Make"/"Marka" read the same in both
+tones), leave it out of the `_CP` files entirely and it inherits correctly.
+Match the existing tone for any new street-voice string — check nearby
+wording before adding a plain/neutral label to the default files.
+
+**Known gap:** `TopWrenchLeaderboard` (see below) is still unlocalized —
+low priority since it's also unwired to any real data source.
 
 ### Progressive Web App (PWA)
 
@@ -369,12 +411,11 @@ computation over the last 60 days of daily points, not a dedicated backend
 endpoint; if a longer lookback or a backend-computed streak is ever needed,
 add a real endpoint instead of widening the client-side window indefinitely.
 
-**Not localized:** all-new gamification copy ("Garage Completeness", "Fully
-tuned! 🔧", "THE PIT STOP", "DAY STREAK", etc.) is English-only hardcoded
-strings, same as the pre-existing unlocalized parts of `client_form_sheet.dart`.
-Not in scope of applying the redesign; would need new ARB keys in both
-`app_en.arb`/`app_tr.arb` like every other localized string in this app (see
-the i18n section above).
+**Localized in v0.9.0:** the gamification copy ("Garage Completeness",
+"Fully tuned! 🔧", "THE PIT STOP", "DAY STREAK") and `client_form_sheet.dart`
+(which had *no* localization at all when this section was first written) are
+now fully wired to `AppLocalizations`, in both languages and both voice
+tones — see the i18n section above.
 
 ---
 

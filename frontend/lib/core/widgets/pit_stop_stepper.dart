@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import '../../generated/app_localizations.dart';
 import '../theme/app_theme.dart';
 
 const kWorkOrderStatusOrder = ['draft', 'completed', 'paid'];
 const _kStopIcon = {'draft': Icons.edit_note, 'completed': Icons.check_circle, 'paid': Icons.payments};
 
+String _statusLabel(AppLocalizations l, String status) => switch (status) {
+      'draft' => l.draft,
+      'completed' => l.completed,
+      'paid' => l.paid,
+      _ => status,
+    };
+
 /// "The Pit Stop" — replaces the old flat status Chip with a game-style
 /// progression stepper (Draft -> Completed -> Paid). [onAdvance] is called
 /// when the CTA is tapped; the caller still owns confirmation dialogs
 /// (e.g. payment method) exactly as WorkOrderDetailPanel did before.
-///
-/// Drop a Lottie burst (confetti / checkered-flag) in [onAdvance]'s caller
-/// right after the status mutation succeeds — this widget just leaves the
-/// visual room for it via the hint row underneath.
 class PitStopStepper extends StatelessWidget {
   const PitStopStepper({
     required this.status,
@@ -26,6 +30,7 @@ class PitStopStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final currentIndex = kWorkOrderStatusOrder.indexOf(status);
 
     return Container(
@@ -38,17 +43,17 @@ class PitStopStepper extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Row(children: [
-            Text('🏁', style: TextStyle(fontSize: 13)),
-            SizedBox(width: 6),
-            Text('THE PIT STOP', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: AppColors.textMuted)),
+          Row(children: [
+            const Text('🏁', style: TextStyle(fontSize: 13)),
+            const SizedBox(width: 6),
+            Text(l.thePitStop, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: AppColors.textMuted)),
           ]),
           const SizedBox(height: 18),
           Row(
             children: [
               for (var i = 0; i < kWorkOrderStatusOrder.length; i++) ...[
                 _Stop(
-                  label: kWorkOrderStatusOrder[i],
+                  label: _statusLabel(l, kWorkOrderStatusOrder[i]),
                   icon: _kStopIcon[kWorkOrderStatusOrder[i]]!,
                   state: i < currentIndex
                       ? _StopState.done
@@ -89,11 +94,6 @@ class PitStopStepper extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              '✨ micro-animation slot: confetti / Lottie burst plays here on status change',
-              style: TextStyle(fontSize: 10.5, color: AppColors.textFaint),
-            ),
           ],
         ],
       ),
@@ -130,7 +130,7 @@ class _Stop extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          label[0].toUpperCase() + label.substring(1),
+          label,
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: active ? AppColors.textHigh : AppColors.textFaint),
         ),
       ],
