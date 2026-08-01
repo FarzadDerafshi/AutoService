@@ -118,6 +118,7 @@ class AutoServiceApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.dark,
       routerConfig: router,
       locale: locale,
       localizationsDelegates: const [

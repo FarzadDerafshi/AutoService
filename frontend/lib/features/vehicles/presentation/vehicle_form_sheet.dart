@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/profile_completeness_bar.dart';
 import '../../../generated/app_localizations.dart';
 import '../../clients/application/clients_provider.dart';
 import '../data/vehicle_model.dart';
@@ -47,6 +49,9 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     _engineType = TextEditingController(text: e?.engineType ?? '');
     _year = TextEditingController(text: e?.year?.toString() ?? '');
     _mileage = TextEditingController(text: e?.currentMileageKm.toString() ?? '');
+    for (final c in [_plate, _make, _model, _engineType, _year, _mileage]) {
+      c.addListener(() => setState(() {}));
+    }
   }
 
   @override
@@ -59,6 +64,16 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     _mileage.dispose();
     super.dispose();
   }
+
+  List<(String, bool)> get _completenessFields => [
+        ('owner', _clientId != null),
+        ('license plate', _plate.text.trim().isNotEmpty),
+        ('make', _make.text.trim().isNotEmpty),
+        ('model', _model.text.trim().isNotEmpty),
+        ('engine type', _engineType.text.trim().isNotEmpty),
+        ('year', _year.text.trim().isNotEmpty),
+        ('mileage', _mileage.text.trim().isNotEmpty),
+      ];
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
@@ -94,6 +109,8 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(widget.existing == null ? l10n.newVehicle : l10n.editVehicle, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 14),
+            ProfileCompletenessBar(fields: _completenessFields, title: 'Profile Completeness'),
             const SizedBox(height: 16),
             clientsAsync.when(
               data: (clients) => DropdownButtonFormField<String>(
@@ -111,6 +128,7 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
               controller: _plate,
               decoration: InputDecoration(labelText: l10n.licensePlate),
               textCapitalization: TextCapitalization.characters,
+              style: AppFonts.mono(const TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.6)),
               validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
             ),
             const SizedBox(height: 12),

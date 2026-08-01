@@ -3,13 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/locale/locale_provider.dart';
 import '../../features/auth/application/auth_provider.dart';
+import '../../features/reports/application/reports_provider.dart';
 import '../../generated/app_localizations.dart';
+import '../theme/app_theme.dart';
 import 'global_search_bar.dart';
 import 'master_detail_scaffold.dart';
+import 'streak_badge.dart';
 
 String _initial(String? name) => (name == null || name.isEmpty) ? '?' : name[0].toUpperCase();
 
-/// Persistent shell around every authenticated screen.
+/// Persistent shell around every authenticated screen. Same routing/rail
+/// structure as before — restyled for the dark "garage" theme and carrying
+/// the Grease Monkey streak badge in the AppBar.
 class AppShell extends ConsumerWidget {
   const AppShell({required this.location, required this.child, super.key});
   final String location;
@@ -26,22 +31,35 @@ class AppShell extends ConsumerWidget {
     final isWide = MediaQuery.of(context).size.width >= MasterDetailScaffold.desktopBreakpoint;
     final user = ref.watch(currentUserProvider);
     final currentLocale = ref.watch(localeProvider);
+    final streakDays = ref.watch(streakDaysProvider).valueOrNull ?? 0;
 
     final destinations = [
       (path: '/work-orders', icon: Icons.receipt_long, label: l.workOrders),
-      (path: '/clients',     icon: Icons.people,       label: l.clients),
-      (path: '/vehicles',    icon: Icons.directions_car, label: l.vehicles),
-      (path: '/catalog',     icon: Icons.build,         label: l.catalog),
-      (path: '/reports',     icon: Icons.bar_chart,     label: l.reports),
+      (path: '/clients', icon: Icons.people, label: l.clients),
+      (path: '/vehicles', icon: Icons.directions_car, label: l.vehicles),
+      (path: '/catalog', icon: Icons.build, label: l.catalog),
+      (path: '/reports', icon: Icons.bar_chart, label: l.reports),
     ];
 
     final appBar = AppBar(
-      title: Text(l.appTitle),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset('assets/branding/logo.png', height: 28),
+          const SizedBox(width: 10),
+          Text(l.appTitle),
+        ],
+      ),
       actions: [
         const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: GlobalSearchBar()),
-        const SizedBox(width: 12),
+        const SizedBox(width: 14),
+        StreakBadge(days: streakDays),
+        const SizedBox(width: 14),
         PopupMenuButton<String>(
-          icon: CircleAvatar(child: Text(_initial(user?.fullName))),
+          icon: CircleAvatar(
+            backgroundColor: AppColors.surfaceRaised,
+            child: Text(_initial(user?.fullName), style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.w700)),
+          ),
           onSelected: (action) async {
             if (action == 'logout') {
               ref.read(authControllerProvider.notifier).logout();
@@ -100,7 +118,7 @@ class AppShell extends ConsumerWidget {
                   NavigationRailDestination(icon: Icon(d.icon), label: Text(d.label)),
               ],
             ),
-            const VerticalDivider(width: 1),
+            const VerticalDivider(width: 1, color: AppColors.border),
             Expanded(child: child),
           ],
         ),

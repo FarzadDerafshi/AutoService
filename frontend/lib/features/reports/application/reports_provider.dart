@@ -30,3 +30,27 @@ final partsUsageReportProvider = FutureProvider.autoDispose((ref) {
   final range = ref.watch(reportsDateRangeProvider);
   return ref.watch(reportsRepositoryProvider).partsUsage(dateFrom: range.from, dateTo: range.to);
 });
+
+/// "Grease Monkey" streak (shown in the AppBar via StreakBadge): the number
+/// of consecutive days, ending today, with at least one work order marked
+/// paid. Derived from the same day-grouped revenue report the Reports
+/// screen uses — independent of that screen's own date-range filter.
+final streakDaysProvider = FutureProvider.autoDispose<int>((ref) async {
+  final today = DateTime.now();
+  final from = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 60));
+  final points = await ref.watch(reportsRepositoryProvider).revenue(dateFrom: from, groupBy: 'day');
+  final paidDays = {
+    for (final p in points)
+      if (p.orderCount > 0) _dateKey(p.period.toLocal()),
+  };
+
+  var streak = 0;
+  var cursor = DateTime(today.year, today.month, today.day);
+  while (paidDays.contains(_dateKey(cursor))) {
+    streak++;
+    cursor = cursor.subtract(const Duration(days: 1));
+  }
+  return streak;
+});
+
+String _dateKey(DateTime d) => '${d.year}-${d.month}-${d.day}';

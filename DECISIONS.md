@@ -207,6 +207,17 @@ flutter pub deps | grep intl
 The `intl` constraint in `pubspec.yaml` must match (`^0.20.2` as of Flutter
 3.41.x).
 
+**Voice/tone (v0.8.1):** the app's copy is deliberately playful/"garage
+voice" (e.g. `logIn` = "Punch In", `delete` = "Scrap it", work-order statuses
+"On the Lift"/"Fixed & Ready"/"Cashed Out"), not neutral SaaS wording — this
+was a deliberate choice, supplied as ARB-key-matched JSON exports and merged
+key-by-key into both ARBs. **Match this tone for any new string** — check
+the existing wording nearby before adding a plain/neutral label. The
+gamification-specific strings added alongside the v0.8.0 dark redesign
+(`ProfileCompletenessBar`, `PitStopStepper`, `StreakBadge`) are still
+English-only hardcoded literals, not ARB keys — turning those into proper
+localized (and Turkish-"garage-voice") keys is unfinished follow-up work.
+
 ### Progressive Web App (PWA)
 
 Flutter generates a service worker (`flutter_service_worker.js`) automatically
@@ -223,40 +234,75 @@ The Flutter web build must be rebuilt (`flutter build web --release`) and the
 nginx container restarted (`docker restart repairshop_web`) for PWA changes to
 take effect.
 
-### Brand icon/logo (v0.6.0)
+### Brand icon/logo (v0.7.0 — real logo, replaces the v0.6.0 placeholder)
 
-`assets/branding/logo.svg` is the source of truth for the app icon — a
-1024×1024 wrench mark on the app's SeaGreen brand colour (`#2E8B57`, same
-seed as `app_theme.dart`). Every consumer (web favicon/manifest icons,
-Android `mipmap-*/ic_launcher.png`, Windows `app_icon.ico`) is a rendering of
-this one file — edit the SVG, not the individual PNG/ICO outputs, and
-re-render all of them together so they stay in sync (the same mistake as the
-ARB/generated-file gotcha above, just for images instead of translations).
+`assets/branding/logo-master.png` is the source of truth for the app icon —
+the actual provided mascot artwork (robot spark plug, thumbs up + wrench,
+neon-green on dark navy), supplied as a transparent 1024×1024 PNG (no vector
+source this time, unlike the v0.6.0 SVG placeholder it replaced).
+`assets/branding/logo-square-1024.png` is a derived, centered/padded square
+crop (tight alpha bbox + 12% margin) that every other size is resized from.
+**If the master art ever changes, regenerate `logo-square-1024.png` and every
+downstream consumer from it together** — same rule as the ARB/generated-file
+gotcha above, just for images instead of translations.
 
-No SVG rasterizer (ImageMagick/Inkscape/rsvg-convert) is installed on this
-machine. Regenerate with Node + `sharp` (PNG rendering) and `png-to-ico`
-(Windows ICO packaging) — install them as a one-off in a scratch directory,
-not as project dependencies, since this is an infrequent manual step:
-```bash
-npm install --prefix <scratch-dir> sharp png-to-ico
-node -e "
-  const sharp = require('<scratch-dir>/node_modules/sharp');
-  sharp('assets/branding/logo.svg').resize(SIZE, SIZE).png().toFile(OUT_PATH);
-"
-# Windows ICO (auto-generates the full 16..256 size set from one square PNG):
-node -e "
-  const pngToIco = require('<scratch-dir>/node_modules/png-to-ico').default;
-  pngToIco('assets/branding/logo-1024.png').then(buf =>
-    require('fs').writeFileSync('frontend/windows/runner/resources/app_icon.ico', buf));
-"
+No SVG/rasterizer tooling was needed this time — Pillow (Python) was already
+installed on this machine. Regeneration approach (rerun if the master changes):
+```python
+from PIL import Image
+master = Image.open("assets/branding/logo-master.png").convert("RGBA")
+# 1. crop to the tight opaque-content bbox (alpha > 128) + ~12% padding, pad to square
+# 2. logo_square = that crop, used as the base for every resize below
+# 3. per target: resize logo_square to `fill_frac * target_size`, composite
+#    centered onto a `target_size`x`target_size` canvas — transparent for the
+#    in-app asset, opaque navy (#040E21, sampled from the provided flat/
+#    background logo variant) for every icon that needs a solid backdrop
+render_icon(192, fill_frac=0.82)   # plain icons / favicon / mipmaps / ICO
+render_icon(192, fill_frac=0.62)   # maskable icons — stays inside the safe
+                                     # zone under a circular mask
+render_icon(512, fill_frac=0.96, opaque=False)  # in-app Flutter asset
 ```
-Target paths and sizes: `frontend/web/favicon.png` (48px), `frontend/web/icons/Icon-{,maskable-}{192,512}.png`
-(maskable and plain icons share the same art — the design already keeps the
-wrench inside the maskable safe zone against a full-bleed background),
+Windows ICO is written directly by Pillow — `Image.save(path, sizes=[(16,16),
+(32,32),(48,48),(64,64),(128,128),(256,256)])` on a single high-res source
+image produces the full multi-resolution `.ico`; no external tool needed.
+
+Target paths and sizes: `frontend/web/favicon.png` (48px), `frontend/web/icons/Icon-{,maskable-}{192,512}.png`,
+`frontend/web/og-image.png` (1200×630 landscape banner, `fill_frac≈0.72`, for
+social share previews — see below),
 `frontend/android/app/src/main/res/mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher.png`
-(48/72/96/144/192px), `frontend/windows/runner/resources/app_icon.ico`.
+(48/72/96/144/192px), `frontend/windows/runner/resources/app_icon.ico`, and
+`frontend/assets/branding/logo.png` (512px, transparent, `fill_frac=0.96`) —
+the copy actually bundled into the Flutter app and shown in-app (see below).
 Same rebuild-and-restart step as any other web asset change applies
 afterward.
+
+**`theme_color`/`background_color`** should always track the app's actual
+Material chrome color, not the icon artwork's own backdrop — that was the
+whole point of the v0.6.0 fix (Flutter's leftover blue vs. the app's real
+green) and why they were *not* changed to navy in v0.7.0 even though the new
+logo's backdrop is navy (the app was still SeaGreen-themed then). **They
+since changed again in v0.8.0's dark "garage" redesign** — see below — to
+`#0D1318` (the new `AppBarTheme.backgroundColor`) / `#0A0F13`
+(`AppColors.bg`). If the Material theme's colors change again, update these
+two to match the new actual chrome, not the other way around.
+
+**Social share preview (new in v0.7.0):** `index.html` had no Open Graph or
+Twitter Card meta tags before this — shared links (WhatsApp, Telegram,
+Facebook, Slack, ...) rendered as bare text. Added `og:title`/`og:description`/
+`og:image` and `twitter:card`/`twitter:image`, pointing at the new
+`frontend/web/og-image.png`. No `og:url` is set — the app runs on a LAN IP
+that varies per deployment, so there's no single canonical URL to declare;
+scrapers fall back to the page's actual fetch URL.
+
+**Logo inside the app:** `frontend/assets/branding/logo.png` is a real
+Flutter asset (declared via `assets/branding/` in `pubspec.yaml`, not just a
+generation input) — kept transparent so it works unmodified on both the
+light and dark Material themes. Used in `login_screen.dart` (replacing the
+`Icons.build_circle` placeholder above the sign-in form) and in
+`app_shell.dart`'s app bar title (next to the app name, on every
+authenticated screen). Any future in-app logo usage should reference this
+same asset (`Image.asset('assets/branding/logo.png')`) rather than adding
+another copy.
 
 ### State management
 Riverpod `AsyncNotifier` is used for auth state. The initial `build()` call
@@ -283,6 +329,52 @@ entry. **Any new "jump to a work order from elsewhere" entry point must use
 the direct path route `/work-orders/:id` (→ `WorkOrderDetailScreen`)**, not
 the `?id=` query-param form — this is what `global_search_bar.dart` and
 `work_orders_master_list.dart`'s own mobile branch already do correctly.
+
+### "GarajOS" gamified dark theme (v0.8.0)
+
+The Material theme (`core/theme/app_theme.dart`) and several screens were
+replaced with a dark "garage" redesign Farzad supplied as a set of
+ready-to-drop-in Dart files (originally `Desktop\logs\GarajOS gamified
+redesign.zip`). `AppTheme.dark()` is now the actual theme (`app.dart` sets
+`themeMode: ThemeMode.dark`); `AppTheme.light()` still exists but is dead
+code unless that's changed back to `ThemeMode.system` — it was **not**
+restyled to match, so don't rely on it looking finished.
+
+**Fonts — use `AppFonts`, never a raw `fontFamily: 'X'` string.** The
+supplied files reference `'Montserrat'`/`'Poppins'`/`'RobotoMono'` as literal
+strings; those aren't fonts Flutter has anywhere unless something actually
+registers them, so every literal reference would silently fall back to the
+platform default. `google_fonts` was added and `AppFonts.header()` /
+`.body()` / `.mono()` (`core/theme/app_theme.dart`) wrap the corresponding
+`GoogleFonts.montserrat/poppins/robotoMono` calls — every text style that
+needs one of these three typefaces should go through `AppFonts`, not a
+string literal, or it'll silently render in the wrong font with no error.
+
+**Gamified widgets** (`core/widgets/`): `StreakBadge`, `ProfileCompletenessBar`,
+`PitStopStepper` are wired into real screens (AppBar, Client/Vehicle forms,
+work order detail respectively — see CHANGELOG v0.8.0). `TopWrenchLeaderboard`
+is **not** wired anywhere — `work_orders` has no assigned-mechanic/technician
+column, so there's no real per-mechanic data to group by. Don't fake data
+into it to make it "look done"; wire it up once that column exists (would
+need a migration + `createWorkOrder`/`updateStatus` changes + a new reports
+query grouping paid work orders by assignee).
+
+**Streak is real data, not a mock** (fixed the supplied `const streakDays =
+12;` placeholder): `streakDaysProvider`
+(`features/reports/application/reports_provider.dart`) counts consecutive
+days, ending today, with at least one work order marked `paid` — derived
+from the same day-grouped `/reports/revenue` endpoint the Reports screen
+uses, independent of that screen's own date-range filter. It's a client-side
+computation over the last 60 days of daily points, not a dedicated backend
+endpoint; if a longer lookback or a backend-computed streak is ever needed,
+add a real endpoint instead of widening the client-side window indefinitely.
+
+**Not localized:** all-new gamification copy ("Garage Completeness", "Fully
+tuned! 🔧", "THE PIT STOP", "DAY STREAK", etc.) is English-only hardcoded
+strings, same as the pre-existing unlocalized parts of `client_form_sheet.dart`.
+Not in scope of applying the redesign; would need new ARB keys in both
+`app_en.arb`/`app_tr.arb` like every other localized string in this app (see
+the i18n section above).
 
 ---
 

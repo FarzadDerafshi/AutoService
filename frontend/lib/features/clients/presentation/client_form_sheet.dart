@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/profile_completeness_bar.dart';
 import '../data/client_model.dart';
 
 class ClientFormResult {
@@ -39,6 +40,9 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
     _email = TextEditingController(text: e?.email ?? '');
     _address = TextEditingController(text: e?.address ?? '');
     _notes = TextEditingController(text: e?.notes ?? '');
+    for (final c in [_fullName, _phone, _email, _address, _notes]) {
+      c.addListener(() => setState(() {}));
+    }
   }
 
   @override
@@ -50,6 +54,14 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
     _notes.dispose();
     super.dispose();
   }
+
+  List<(String, bool)> get _completenessFields => [
+        ('full name', _fullName.text.trim().isNotEmpty),
+        ('phone', _phone.text.trim().isNotEmpty),
+        ('email', _email.text.trim().isNotEmpty),
+        ('address', _address.text.trim().isNotEmpty),
+        ('notes', _notes.text.trim().isNotEmpty),
+      ];
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
@@ -80,6 +92,8 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(widget.existing == null ? 'New Client' : 'Edit Client', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 14),
+            ProfileCompletenessBar(fields: _completenessFields),
             const SizedBox(height: 16),
             TextFormField(
               controller: _fullName,

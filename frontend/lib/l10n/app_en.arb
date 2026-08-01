@@ -7,10 +7,10 @@
   "password": "Password",
   "emailRequired": "Email is required",
   "passwordRequired": "Password is required",
-  "logIn": "Log in",
+  "logIn": "Punch In",
   "newShopCreateAccount": "New shop? Create an account",
 
-  "createYourShop": "Create your shop",
+  "createYourShop": "Build Your Garage",
   "createShopDescription": "This creates a new shop and its first owner account.",
   "shopName": "Shop name",
   "yourFullName": "Your full name",
@@ -18,7 +18,7 @@
   "shopNameRequired": "Shop name is required",
   "yourNameRequired": "Your name is required",
   "passwordMinLength": "Password must be at least 8 characters",
-  "createShopAndAccount": "Create shop & account",
+  "createShopAndAccount": "Hand me the keys (Create Shop)",
   "backToLogin": "Back to login",
 
   "workOrders": "Work Orders",
@@ -29,21 +29,21 @@
   "logOut": "Log out",
   "language": "Language",
 
-  "edit": "Edit",
-  "delete": "Delete",
+  "edit": "Tweak",
+  "delete": "Scrap it",
   "cancel": "Cancel",
 
   "searchByNamePhoneOrEmail": "Search by name, phone, or email",
-  "noClientsYet": "No clients yet",
+  "noClientsYet": "Ghost town! Let's get some drivers in here.",
 
   "clientsVehicles": "Client's Vehicles",
   "searchByLicensePlate": "Search by license plate",
-  "noVehiclesFound": "No vehicles found",
+  "noVehiclesFound": "No cars? The lifts are getting cold.",
   "newVehicle": "New Vehicle",
   "editVehicle": "Edit Vehicle",
   "owner": "Owner",
   "selectAnOwner": "Select an owner",
-  "failedToLoadClients": "Failed to load clients: {error}",
+  "failedToLoadClients": "Whoops, dropped the client list in the oil pan: {error}",
   "@failedToLoadClients": {
     "placeholders": { "error": { "type": "Object" } }
   },
@@ -71,7 +71,7 @@
   "@serviceHistoryCount": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "noWorkOrdersYet": "No work orders yet",
+  "noWorkOrdersYet": "Clean hands today? Time to pop a hood and start a job!",
   "mileageKm": "Mileage: {km} km",
   "@mileageKm": {
     "placeholders": { "km": { "type": "String" } }
@@ -81,23 +81,23 @@
   "all": "All",
   "services": "Services",
   "parts": "Parts",
-  "noCatalogItemsYet": "No catalog items yet",
+  "noCatalogItemsYet": "The toolboxes are empty! Add some parts and services.",
   "newCatalogItem": "New Catalog Item",
   "editCatalogItem": "Edit Catalog Item",
   "service": "Service",
   "part": "Part",
   "nameLabel": "Name",
-  "required": "Required",
+  "required": "Can't run without this!",
   "skuOptional": "SKU (optional)",
   "unit": "Unit",
   "defaultPrice": "Default price",
-  "enterValidNumber": "Enter a valid number",
-  "save": "Save",
+  "enterValidNumber": "Unless you're paying in washers, use a real number.",
+  "save": "Lock it in",
 
-  "newWorkOrder": "New Work Order",
+  "newWorkOrder": "Wrench a New Job",
   "noWorkOrders": "No work orders",
   "paymentMethodTitle": "Payment method",
-  "deleteWorkOrderTitle": "Delete work order?",
+  "deleteWorkOrderTitle": "Scrap work order?",
   "deleteWorkOrderBody": "Order #{orderNo} will be permanently deleted.",
   "@deleteWorkOrderBody": {
     "placeholders": { "orderNo": { "type": "int" } }
@@ -135,7 +135,7 @@
   },
   "grandTotal": "Grand Total",
   "notes": "Notes",
-  "printPdf": "Print / PDF",
+  "printPdf": "Print the Bill",
 
   "revenue": "Revenue",
   "paymentStatus": "Payment Status",
@@ -153,7 +153,7 @@
   "week": "Week",
   "month": "Month",
   "totalRevenue": "Total revenue",
-  "noPaidWorkOrdersInRange": "No paid work orders in this range",
+  "noPaidWorkOrdersInRange": "No cash flowing in these dates. Let's close some tickets!",
   "noUsageInRange": "No usage in this range",
   "qtyUsed": "Qty used: {qty}",
   "@qtyUsed": {
@@ -163,10 +163,10 @@
   "@orderCount": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "draft": "Draft",
-  "completed": "Completed",
-  "paid": "Paid",
-  "completedUnpaid": "Completed (unpaid)",
+  "draft": "On the Lift",
+  "completed": "Fixed & Ready",
+  "paid": "Cashed Out",
+  "completedUnpaid": "Fixed (unpaid)",
   "totalOutstanding": "Total outstanding",
   "anyDate": "Any",
   "cash": "Cash",

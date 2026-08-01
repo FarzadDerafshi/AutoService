@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @logIn.
   ///
   /// In en, this message translates to:
-  /// **'Log in'**
+  /// **'Punch In'**
   String get logIn;
 
   /// No description provided for @newShopCreateAccount.
@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @createYourShop.
   ///
   /// In en, this message translates to:
-  /// **'Create your shop'**
+  /// **'Build Your Garage'**
   String get createYourShop;
 
   /// No description provided for @createShopDescription.
@@ -191,7 +191,7 @@ abstract class AppLocalizations {
   /// No description provided for @createShopAndAccount.
   ///
   /// In en, this message translates to:
-  /// **'Create shop & account'**
+  /// **'Hand me the keys (Create Shop)'**
   String get createShopAndAccount;
 
   /// No description provided for @backToLogin.
@@ -245,13 +245,13 @@ abstract class AppLocalizations {
   /// No description provided for @edit.
   ///
   /// In en, this message translates to:
-  /// **'Edit'**
+  /// **'Tweak'**
   String get edit;
 
   /// No description provided for @delete.
   ///
   /// In en, this message translates to:
-  /// **'Delete'**
+  /// **'Scrap it'**
   String get delete;
 
   /// No description provided for @cancel.
@@ -269,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @noClientsYet.
   ///
   /// In en, this message translates to:
-  /// **'No clients yet'**
+  /// **'Ghost town! Let\'s get some drivers in here.'**
   String get noClientsYet;
 
   /// No description provided for @clientsVehicles.
@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @noVehiclesFound.
   ///
   /// In en, this message translates to:
-  /// **'No vehicles found'**
+  /// **'No cars? The lifts are getting cold.'**
   String get noVehiclesFound;
 
   /// No description provided for @newVehicle.
@@ -317,7 +317,7 @@ abstract class AppLocalizations {
   /// No description provided for @failedToLoadClients.
   ///
   /// In en, this message translates to:
-  /// **'Failed to load clients: {error}'**
+  /// **'Whoops, dropped the client list in the oil pan: {error}'**
   String failedToLoadClients(Object error);
 
   /// No description provided for @licensePlate.
@@ -389,7 +389,7 @@ abstract class AppLocalizations {
   /// No description provided for @noWorkOrdersYet.
   ///
   /// In en, this message translates to:
-  /// **'No work orders yet'**
+  /// **'Clean hands today? Time to pop a hood and start a job!'**
   String get noWorkOrdersYet;
 
   /// No description provided for @mileageKm.
@@ -425,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @noCatalogItemsYet.
   ///
   /// In en, this message translates to:
-  /// **'No catalog items yet'**
+  /// **'The toolboxes are empty! Add some parts and services.'**
   String get noCatalogItemsYet;
 
   /// No description provided for @newCatalogItem.
@@ -461,7 +461,7 @@ abstract class AppLocalizations {
   /// No description provided for @required.
   ///
   /// In en, this message translates to:
-  /// **'Required'**
+  /// **'Can\'t run without this!'**
   String get required;
 
   /// No description provided for @skuOptional.
@@ -485,19 +485,19 @@ abstract class AppLocalizations {
   /// No description provided for @enterValidNumber.
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid number'**
+  /// **'Unless you\'re paying in washers, use a real number.'**
   String get enterValidNumber;
 
   /// No description provided for @save.
   ///
   /// In en, this message translates to:
-  /// **'Save'**
+  /// **'Lock it in'**
   String get save;
 
   /// No description provided for @newWorkOrder.
   ///
   /// In en, this message translates to:
-  /// **'New Work Order'**
+  /// **'Wrench a New Job'**
   String get newWorkOrder;
 
   /// No description provided for @noWorkOrders.
@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteWorkOrderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete work order?'**
+  /// **'Scrap work order?'**
   String get deleteWorkOrderTitle;
 
   /// No description provided for @deleteWorkOrderBody.
@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @printPdf.
   ///
   /// In en, this message translates to:
-  /// **'Print / PDF'**
+  /// **'Print the Bill'**
   String get printPdf;
 
   /// No description provided for @revenue.
@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @noPaidWorkOrdersInRange.
   ///
   /// In en, this message translates to:
-  /// **'No paid work orders in this range'**
+  /// **'No cash flowing in these dates. Let\'s close some tickets!'**
   String get noPaidWorkOrdersInRange;
 
   /// No description provided for @noUsageInRange.
@@ -689,25 +689,25 @@ abstract class AppLocalizations {
   /// No description provided for @draft.
   ///
   /// In en, this message translates to:
-  /// **'Draft'**
+  /// **'On the Lift'**
   String get draft;
 
   /// No description provided for @completed.
   ///
   /// In en, this message translates to:
-  /// **'Completed'**
+  /// **'Fixed & Ready'**
   String get completed;
 
   /// No description provided for @paid.
   ///
   /// In en, this message translates to:
-  /// **'Paid'**
+  /// **'Cashed Out'**
   String get paid;
 
   /// No description provided for @completedUnpaid.
   ///
   /// In en, this message translates to:
-  /// **'Completed (unpaid)'**
+  /// **'Fixed (unpaid)'**
   String get completedUnpaid;
 
   /// No description provided for @totalOutstanding.

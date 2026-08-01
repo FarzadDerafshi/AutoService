@@ -24,13 +24,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Password is required';
 
   @override
-  String get logIn => 'Log in';
+  String get logIn => 'Punch In';
 
   @override
   String get newShopCreateAccount => 'New shop? Create an account';
 
   @override
-  String get createYourShop => 'Create your shop';
+  String get createYourShop => 'Build Your Garage';
 
   @override
   String get createShopDescription =>
@@ -55,7 +55,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordMinLength => 'Password must be at least 8 characters';
 
   @override
-  String get createShopAndAccount => 'Create shop & account';
+  String get createShopAndAccount => 'Hand me the keys (Create Shop)';
 
   @override
   String get backToLogin => 'Back to login';
@@ -82,10 +82,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
-  String get edit => 'Edit';
+  String get edit => 'Tweak';
 
   @override
-  String get delete => 'Delete';
+  String get delete => 'Scrap it';
 
   @override
   String get cancel => 'Cancel';
@@ -94,7 +94,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchByNamePhoneOrEmail => 'Search by name, phone, or email';
 
   @override
-  String get noClientsYet => 'No clients yet';
+  String get noClientsYet => 'Ghost town! Let\'s get some drivers in here.';
 
   @override
   String get clientsVehicles => 'Client\'s Vehicles';
@@ -103,7 +103,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchByLicensePlate => 'Search by license plate';
 
   @override
-  String get noVehiclesFound => 'No vehicles found';
+  String get noVehiclesFound => 'No cars? The lifts are getting cold.';
 
   @override
   String get newVehicle => 'New Vehicle';
@@ -119,7 +119,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String failedToLoadClients(Object error) {
-    return 'Failed to load clients: $error';
+    return 'Whoops, dropped the client list in the oil pan: $error';
   }
 
   @override
@@ -164,7 +164,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get noWorkOrdersYet => 'No work orders yet';
+  String get noWorkOrdersYet =>
+      'Clean hands today? Time to pop a hood and start a job!';
 
   @override
   String mileageKm(String km) {
@@ -184,7 +185,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parts => 'Parts';
 
   @override
-  String get noCatalogItemsYet => 'No catalog items yet';
+  String get noCatalogItemsYet =>
+      'The toolboxes are empty! Add some parts and services.';
 
   @override
   String get newCatalogItem => 'New Catalog Item';
@@ -202,7 +204,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nameLabel => 'Name';
 
   @override
-  String get required => 'Required';
+  String get required => 'Can\'t run without this!';
 
   @override
   String get skuOptional => 'SKU (optional)';
@@ -214,13 +216,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get defaultPrice => 'Default price';
 
   @override
-  String get enterValidNumber => 'Enter a valid number';
+  String get enterValidNumber =>
+      'Unless you\'re paying in washers, use a real number.';
 
   @override
-  String get save => 'Save';
+  String get save => 'Lock it in';
 
   @override
-  String get newWorkOrder => 'New Work Order';
+  String get newWorkOrder => 'Wrench a New Job';
 
   @override
   String get noWorkOrders => 'No work orders';
@@ -229,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethodTitle => 'Payment method';
 
   @override
-  String get deleteWorkOrderTitle => 'Delete work order?';
+  String get deleteWorkOrderTitle => 'Scrap work order?';
 
   @override
   String deleteWorkOrderBody(int orderNo) {
@@ -287,7 +290,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notes => 'Notes';
 
   @override
-  String get printPdf => 'Print / PDF';
+  String get printPdf => 'Print the Bill';
 
   @override
   String get revenue => 'Revenue';
@@ -324,7 +327,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalRevenue => 'Total revenue';
 
   @override
-  String get noPaidWorkOrdersInRange => 'No paid work orders in this range';
+  String get noPaidWorkOrdersInRange =>
+      'No cash flowing in these dates. Let\'s close some tickets!';
 
   @override
   String get noUsageInRange => 'No usage in this range';
@@ -340,16 +344,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get draft => 'Draft';
+  String get draft => 'On the Lift';
 
   @override
-  String get completed => 'Completed';
+  String get completed => 'Fixed & Ready';
 
   @override
-  String get paid => 'Paid';
+  String get paid => 'Cashed Out';
 
   @override
-  String get completedUnpaid => 'Completed (unpaid)';
+  String get completedUnpaid => 'Fixed (unpaid)';
 
   @override
   String get totalOutstanding => 'Total outstanding';

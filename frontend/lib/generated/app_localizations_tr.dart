@@ -24,13 +24,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get passwordRequired => 'Şifre gereklidir';
 
   @override
-  String get logIn => 'Giriş Yap';
+  String get logIn => 'Mesaiye Başla';
 
   @override
   String get newShopCreateAccount => 'Yeni işletme? Hesap oluştur';
 
   @override
-  String get createYourShop => 'İşletmenizi oluşturun';
+  String get createYourShop => 'Dükkanı Kur';
 
   @override
   String get createShopDescription =>
@@ -55,7 +55,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get passwordMinLength => 'Şifre en az 8 karakter olmalıdır';
 
   @override
-  String get createShopAndAccount => 'İşletme ve hesap oluştur';
+  String get createShopAndAccount => 'Anahtarları Ver (Dükkanı Aç)';
 
   @override
   String get backToLogin => 'Girişe dön';
@@ -82,10 +82,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get language => 'Dil';
 
   @override
-  String get edit => 'Düzenle';
+  String get edit => 'Ayar Çek';
 
   @override
-  String get delete => 'Sil';
+  String get delete => 'Hurdaya Ayır';
 
   @override
   String get cancel => 'İptal';
@@ -94,7 +94,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get searchByNamePhoneOrEmail => 'İsim, telefon veya e-posta ile ara';
 
   @override
-  String get noClientsYet => 'Henüz müşteri yok';
+  String get noClientsYet =>
+      'Dükkan sinek avlıyor! Hadi içeri birkaç müşteri çekelim.';
 
   @override
   String get clientsVehicles => 'Müşteri Araçları';
@@ -103,7 +104,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get searchByLicensePlate => 'Plakaya göre ara';
 
   @override
-  String get noVehiclesFound => 'Araç bulunamadı';
+  String get noVehiclesFound => 'Ortalık çok sessiz. Lifter pas tutacak!';
 
   @override
   String get newVehicle => 'Yeni Araç';
@@ -119,7 +120,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String failedToLoadClients(Object error) {
-    return 'Müşteriler yüklenemedi: $error';
+    return 'Müşteri defteri yağ karterine düştü galiba: $error';
   }
 
   @override
@@ -164,7 +165,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get noWorkOrdersYet => 'Henüz servis kaydı yok';
+  String get noWorkOrdersYet =>
+      'Bugün eller fazla temiz kaldı. Hadi bir kaput açalım!';
 
   @override
   String mileageKm(String km) {
@@ -184,7 +186,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get parts => 'Parçalar';
 
   @override
-  String get noCatalogItemsYet => 'Henüz katalog öğesi yok';
+  String get noCatalogItemsYet =>
+      'Takım çantası boş! Hemen birkaç parça ve servis ekle.';
 
   @override
   String get newCatalogItem => 'Yeni Katalog Öğesi';
@@ -202,7 +205,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get nameLabel => 'İsim';
 
   @override
-  String get required => 'Zorunlu';
+  String get required => 'Bu parça eksik, motor çalışmaz!';
 
   @override
   String get skuOptional => 'SKU (isteğe bağlı)';
@@ -214,13 +217,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get defaultPrice => 'Varsayılan fiyat';
 
   @override
-  String get enterValidNumber => 'Geçerli bir sayı girin';
+  String get enterValidNumber =>
+      'Somunla ödeme almıyorsak geçerli bir rakam girelim.';
 
   @override
-  String get save => 'Kaydet';
+  String get save => 'Sıkıştır (Kaydet)';
 
   @override
-  String get newWorkOrder => 'Yeni Servis Kaydı';
+  String get newWorkOrder => 'Yeni İş Emri Patlat';
 
   @override
   String get noWorkOrders => 'Servis kaydı yok';
@@ -229,7 +233,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get paymentMethodTitle => 'Ödeme yöntemi';
 
   @override
-  String get deleteWorkOrderTitle => 'Servis kaydı silinsin mi?';
+  String get deleteWorkOrderTitle => 'Servis kaydı hurdaya ayrılsın mı?';
 
   @override
   String deleteWorkOrderBody(int orderNo) {
@@ -238,7 +242,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String markAs(String status) {
-    return '$status olarak işaretle';
+    return '$status İşaretle';
   }
 
   @override
@@ -287,7 +291,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notes => 'Notlar';
 
   @override
-  String get printPdf => 'Yazdır / PDF';
+  String get printPdf => 'Hesabı Kes (PDF)';
 
   @override
   String get revenue => 'Gelir';
@@ -324,7 +328,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get totalRevenue => 'Toplam gelir';
 
   @override
-  String get noPaidWorkOrdersInRange => 'Bu aralıkta ödenmiş servis kaydı yok';
+  String get noPaidWorkOrdersInRange =>
+      'Bu tarihlerde kasaya giren bir şey yok. Hadi birkaç iş bitirelim!';
 
   @override
   String get noUsageInRange => 'Bu aralıkta kullanım yok';
@@ -340,16 +345,16 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get draft => 'Taslak';
+  String get draft => 'Lifte Alındı';
 
   @override
-  String get completed => 'Tamamlandı';
+  String get completed => 'Tamir Tamam';
 
   @override
-  String get paid => 'Ödendi';
+  String get paid => 'Kasa Doldu';
 
   @override
-  String get completedUnpaid => 'Tamamlandı (ödenmemiş)';
+  String get completedUnpaid => 'Tamir Tamam (ödenmemiş)';
 
   @override
   String get totalOutstanding => 'Toplam bekleyen';

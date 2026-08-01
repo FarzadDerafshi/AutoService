@@ -5,6 +5,187 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.1] — 2026-08-01  *(Playful Copy Pass — "Garage Voice" Localization)*
+
+### Changed
+
+#### Frontend
+- **Rewrote ~22 of the app's existing English and Turkish strings in a
+  playful "garage" voice**, from JSON exports Farzad supplied
+  (`Desktop\logs\app_argo_{en,tr}.json`) — goal is to read as a garage's own
+  tool, not generic SaaS copy. Examples: `logIn` "Log in" → "Punch In" /
+  "Giriş Yap" → "Mesaiye Başla"; `delete` "Delete" → "Scrap it" / "Sil" →
+  "Hurdaya Ayır"; the three work-order status labels `draft`/`completed`/`paid`
+  "Draft/Completed/Paid" → "On the Lift"/"Fixed & Ready"/"Cashed Out" (Turkish:
+  "Taslak/Tamamlandı/Ödendi" → "Lifte Alındı"/"Tamir Tamam"/"Kasa Doldu");
+  several empty-state messages became one-liners ("No work orders yet" →
+  "Clean hands today? Time to pop a hood and start a job!").
+  Merged key-by-key into `app_en.arb`/`app_tr.arb` (not a wholesale file
+  replace) — verified first that both supplied JSON files have exactly the
+  same key set as the existing ARBs (no additions, no drops) and that every
+  `{placeholder}` token in each changed value still matches its ARB
+  `@key`/`placeholders` metadata, so nothing here required touching the
+  metadata blocks or breaking `flutter gen-l10n`. Regenerated
+  `lib/generated/app_localizations*.dart` from the merged ARBs.
+  Verified in-browser in both languages: work-order status filter chips read
+  "On the Lift / Fixed & Ready / Cashed Out" in English and "Lifte Alındı /
+  Tamir Tamam / Kasa Doldu" in Turkish.
+
+  **Not included:** the gamification-specific strings added in v0.8.0
+  (`ProfileCompletenessBar`'s "Garage Completeness"/"Fully tuned! 🔧",
+  `PitStopStepper`'s "THE PIT STOP", `StreakBadge`'s "DAY STREAK") — the
+  supplied JSON files only covered the pre-existing ARB keys, not those new
+  hardcoded strings. Still a known gap, see DECISIONS.md.
+  _Files: `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/generated/app_localizations.dart`,
+  `frontend/lib/generated/app_localizations_en.dart`,
+  `frontend/lib/generated/app_localizations_tr.dart`_
+
+---
+
+## [0.8.0] — 2026-08-01  *("GarajOS" Gamified Redesign — Dark Theme, Streak/Completeness/Pit-Stop Widgets*)
+
+### Added
+- **Full dark "garage" visual redesign**, applied from a set of pre-built
+  screen/theme files Farzad supplied (`Desktop\logs\GarajOS gamified
+  redesign.zip`). `core/theme/app_theme.dart` was rewritten around a new
+  `AppColors` palette (deep navy/slate background, neon-green primary,
+  electric-blue/vivid-orange accents) instead of the old SeaGreen
+  `ColorScheme.fromSeed` Material default, with matching `cardTheme`,
+  `chipTheme`, `navigationRailTheme`/`navigationBarTheme`, and
+  `inputDecorationTheme`. `app.dart` now sets `themeMode: ThemeMode.dark`
+  (the redesign is dark-mode-first by design; `AppTheme.light()` is kept only
+  as an inert fallback in case that's ever changed back to
+  `ThemeMode.system`).
+- **New gamified widgets** (`frontend/lib/core/widgets/`):
+  - `StreakBadge` — flame pill in the AppBar showing a "day streak."
+  - `ProfileCompletenessBar` — "Garage Completeness" progress bar on the
+    Client and Vehicle forms, live-updating as required-ish fields fill in.
+  - `PitStopStepper` — replaces the flat status `Chip` on the work order
+    detail screen with a Draft → Completed → Paid progression stepper.
+  - `TopWrenchLeaderboard` — weekly mechanic leaderboard by jobs closed.
+    **Not wired into any screen**: `work_orders` has no assigned-mechanic
+    column (see DECISIONS.md), so there's no real data to feed it yet: it
+    sits in the widget library, unused, for whenever that column exists.
+
+  **Completed two things the supplied files left as TODOs, rather than
+  shipping them broken/fake:**
+  1. **Fonts.** The supplied files reference `fontFamily: 'Montserrat'` /
+     `'Poppins'` / `'RobotoMono'` as raw string literals — those aren't real
+     registered fonts, so every one would have silently fallen back to the
+     platform default (the files' own comments flagged this as needing
+     `google_fonts` or bundled assets, not yet wired up). Added the
+     `google_fonts` package and an `AppFonts` helper
+     (`core/theme/app_theme.dart`) that every such call site now goes
+     through, so headers/body/numeric text actually render in the intended
+     typefaces.
+  2. **The streak was hardcoded.** `app_shell.dart` shipped with
+     `const streakDays = 12;` and a `// TODO: wire to a real
+     streakDaysProvider`. Added that provider
+     (`features/reports/application/reports_provider.dart`): it derives the
+     streak from the existing day-grouped revenue report — consecutive days,
+     ending today, with at least one work order actually marked paid — so
+     the badge shows real per-shop data (0 for a brand-new shop) instead of
+     a fabricated number.
+  - `app_shell.dart`'s title emoji (`🔌`) and `work_orders_master_list.dart`'s
+    empty-state emoji were both swapped for the real logo asset
+    (`assets/branding/logo.png`, added in v0.7.0) instead of shipping the
+    placeholder emoji the supplied files used — the "swap the emoji for the
+    real illustration asset once it lands" comment in the master list file
+    was already satisfied by the time this was applied.
+- **Not localized:** the gamified copy (`"Garage Completeness"`, `"Fully
+  tuned! 🔧"`, `"THE PIT STOP"`, `"DAY STREAK"`, client/vehicle form field
+  labels) is English-only, same as the pre-existing (already-unlocalized)
+  parts of `client_form_sheet.dart` it was added to. Not addressed in this
+  pass — full i18n coverage for the new gamification strings is future work.
+
+Verified: `flutter analyze` clean (zero issues beyond one pre-existing
+unrelated `dart:html` deprecation info), `flutter build web --release`
+succeeds, and manually exercised in-browser end-to-end — registered a fresh
+test shop, confirmed the dark theme renders on login/register, created a
+client (watched `ProfileCompletenessBar` update live 0% → 20% → 40%),
+created a vehicle (confirmed the license-plate field renders in the real
+monospace font, confirmed `ProfileCompletenessBar` reuse), and confirmed the
+AppBar's `StreakBadge` correctly shows a real **0** for the brand-new shop
+(no paid work orders yet) rather than a fake number.
+_Files: `frontend/lib/core/theme/app_theme.dart`,
+`frontend/lib/core/widgets/{app_shell,streak_badge,profile_completeness_bar,
+pit_stop_stepper,top_wrench_leaderboard}.dart` (4 new),
+`frontend/lib/features/reports/application/reports_provider.dart`,
+`frontend/lib/features/clients/presentation/client_form_sheet.dart`,
+`frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+`frontend/lib/features/work_orders/presentation/{work_order_detail_panel,
+work_orders_master_list}.dart`, `frontend/lib/app.dart`,
+`frontend/pubspec.yaml`_
+
+---
+
+## [0.7.0] — 2026-08-01  *(Real Brand Logo — Replaces Placeholder Mascot Icon, Adds Social Share Preview)*
+
+### Added
+- **Swapped the v0.6.0 placeholder wrench-mascot icon for the actual provided
+  brand logo** — a robot-spark-plug mascot (thumbs up + wrench, neon-green on
+  dark navy) supplied as `GarajOS Logo NB.PNG` (transparent) and
+  `GarajOS App Logo.PNG` (flat background) in `Desktop\logs`. The transparent
+  variant is the new source of truth: `assets/branding/logo-master.png`
+  (raster; no vector source was provided this time, unlike the v0.6.0 SVG).
+  `assets/branding/logo-square-1024.png` is a derived, centered/padded square
+  crop (tight content bbox + 12% margin) that every other size is resized
+  from — regenerate it (and everything downstream) if the master art changes.
+  Old `assets/branding/logo.svg` and `logo-1024.png` deleted (superseded).
+  - **Regenerated every consumer** from the new master: `frontend/web/favicon.png`,
+    `frontend/web/icons/{Icon-192,Icon-512,Icon-maskable-192,Icon-maskable-512}.png`,
+    `frontend/android/app/src/main/res/mipmap-*/ic_launcher.png`,
+    `frontend/windows/runner/resources/app_icon.ico`. Plain/mipmap/ICO icons
+    render the mascot at 82% of the canvas on an opaque navy backdrop
+    (`#040E21`, sampled from the provided flat logo); maskable icons use 62%
+    to stay inside the safe zone under a circular mask.
+  - **Windows ICO generated natively with Pillow** this time
+    (`Image.save(..., sizes=[(16,16)...(256,256)])`) instead of the
+    `sharp` + `png-to-ico` Node scratch-script from v0.6.0 — Pillow was
+    already available on this machine and produces the full multi-resolution
+    ICO from one call.
+- **Social share preview (WhatsApp / Telegram / Facebook / Slack link
+  unfurling)** — new `frontend/web/og-image.png` (1200×630, mascot centered
+  on the navy backdrop) plus `og:title`/`og:description`/`og:image` and
+  `twitter:card`/`twitter:image` meta tags added to `frontend/web/index.html`.
+  This app previously had no Open Graph tags at all, so shared links rendered
+  as bare text with no preview card.
+- **Logo now appears inside the app, not just as an icon:**
+  - `login_screen.dart` — replaced the generic `Icons.build_circle` Material
+    icon above the sign-in form with the real mascot logo.
+  - `app_shell.dart` — the authenticated app bar's title now shows the logo
+    next to the app name, on every screen.
+  - New Flutter asset `frontend/assets/branding/logo.png` (512×512,
+    transparent) registered via `assets/branding/` in `pubspec.yaml` — kept
+    transparent (unlike the opaque icon renders) so it reads correctly on
+    both the light and dark Material themes without a mismatched background
+    box.
+
+  **Not changed:** `manifest.json`'s `theme_color`/`background_color` and
+  `index.html`'s `<meta name="theme-color">` stay at the existing SeaGreen
+  `#2E8B57` — that value mirrors `app_theme.dart`'s actual Material seed
+  color (the real in-app chrome color), not the new logo artwork's own dark
+  backdrop, so changing it would reintroduce the exact mismatch v0.6.0 fixed
+  in the other direction. Only the icon glyphs and the dedicated OG banner
+  use the new navy backdrop.
+
+  Verified: rebuilt the web bundle, restarted the `web` container, hard-
+  reloaded past the service worker, and confirmed in-browser that the login
+  page shows the new mascot and that `favicon.png`/`og-image.png`/the new
+  icon PNGs all serve with the regenerated bytes.
+  _Files: `assets/branding/logo-master.png`, `assets/branding/logo-square-1024.png`
+  (new); `assets/branding/logo.svg`, `logo-1024.png` (deleted);
+  `frontend/web/favicon.png`, `frontend/web/icons/*.png`,
+  `frontend/web/og-image.png` (new), `frontend/web/index.html`,
+  `frontend/android/app/src/main/res/mipmap-*/ic_launcher.png`,
+  `frontend/windows/runner/resources/app_icon.ico`,
+  `frontend/assets/branding/logo.png` (new), `frontend/pubspec.yaml`,
+  `frontend/lib/features/auth/presentation/login_screen.dart`,
+  `frontend/lib/core/widgets/app_shell.dart`_
+
+---
+
 ## [0.6.0] — 2026-07-31  *(Branded App Icon — Replaces Flutter Placeholder Artwork)*
 
 ### Added

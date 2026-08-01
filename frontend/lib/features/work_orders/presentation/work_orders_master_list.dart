@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../generated/app_localizations.dart';
@@ -31,10 +32,10 @@ class WorkOrdersMasterList extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _FilterChip(label: l.all,       selected: statusFilter == null,        onTap: () => _setFilter(ref, null)),
-                  _FilterChip(label: l.draft,      selected: statusFilter == 'draft',     onTap: () => _setFilter(ref, 'draft')),
-                  _FilterChip(label: l.completed,  selected: statusFilter == 'completed', onTap: () => _setFilter(ref, 'completed')),
-                  _FilterChip(label: l.paid,       selected: statusFilter == 'paid',      onTap: () => _setFilter(ref, 'paid')),
+                  _FilterChip(label: l.all, selected: statusFilter == null, onTap: () => _setFilter(ref, null)),
+                  _FilterChip(label: l.draft, selected: statusFilter == 'draft', onTap: () => _setFilter(ref, 'draft')),
+                  _FilterChip(label: l.completed, selected: statusFilter == 'completed', onTap: () => _setFilter(ref, 'completed')),
+                  _FilterChip(label: l.paid, selected: statusFilter == 'paid', onTap: () => _setFilter(ref, 'paid')),
                 ],
               ),
             ),
@@ -46,20 +47,36 @@ class WorkOrdersMasterList extends ConsumerWidget {
         onRetry: () => ref.invalidate(workOrdersListProvider),
         data: (orders) {
           if (orders.isEmpty) {
-            return Center(child: Text(l.noWorkOrders));
+            return _EmptyState(message: l.noWorkOrders);
           }
-          return ListView.separated(
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             itemCount: orders.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final order = orders[index];
-              return ListTile(
-                selected: order.id == selectedId,
-                leading: _StatusDot(status: order.status),
-                title: Text('#${order.orderNo} — ${order.clientName ?? order.clientId}'),
-                subtitle: Text(order.vehiclePlate ?? order.vehicleId),
-                trailing: Text(formatCurrency(order.grandTotal)),
-                onTap: () => onSelect(order),
+              final selected = order.id == selectedId;
+              final color = AppColors.statusColor(order.status);
+              return Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(
+                  color: selected ? const Color(0xFF152A1B) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: selected ? AppColors.neonGreenDim.withValues(alpha: 0.35) : Colors.transparent),
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  leading: _StatusDot(color: color),
+                  title: Text('#${order.orderNo} — ${order.clientName ?? order.clientId}'),
+                  subtitle: Text(
+                    order.vehiclePlate ?? order.vehicleId,
+                    style: AppFonts.mono(const TextStyle(color: AppColors.textMuted, letterSpacing: 0.4)),
+                  ),
+                  trailing: Text(
+                    formatCurrency(order.grandTotal),
+                    style: AppFonts.mono(const TextStyle(fontWeight: FontWeight.w700, color: AppColors.neonGreen)),
+                  ),
+                  onTap: () => onSelect(order),
+                ),
               );
             },
           );
@@ -89,17 +106,51 @@ class _FilterChip extends StatelessWidget {
 }
 
 class _StatusDot extends StatelessWidget {
-  const _StatusDot({required this.status});
-  final String status;
+  const _StatusDot({required this.color});
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      'draft'     => Colors.grey,
-      'completed' => Colors.orange,
-      'paid'      => Colors.green,
-      _           => Colors.grey,
-    };
-    return CircleAvatar(radius: 6, backgroundColor: color);
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.65), blurRadius: 6, spreadRadius: 1)],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const RadialGradient(colors: [Color(0xFF6BFFA0), Color(0xFF12A34E)], center: Alignment(-0.3, -0.4)),
+                boxShadow: [BoxShadow(color: AppColors.neonGreen.withValues(alpha: 0.4), blurRadius: 18, spreadRadius: 3)],
+              ),
+              padding: const EdgeInsets.all(14),
+              child: Image.asset('assets/branding/logo.png'),
+            ),
+            const SizedBox(height: 12),
+            Text(message, style: const TextStyle(color: AppColors.textMuted), textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../core/widgets/pit_stop_stepper.dart';
 import '../../../generated/app_localizations.dart';
 import '../../auth/application/auth_provider.dart';
 import '../application/work_orders_provider.dart';
@@ -38,7 +40,6 @@ class _DetailContent extends ConsumerWidget {
   final VoidCallback? onClose;
 
   Future<void> _advanceStatus(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context)!;
     final next = _nextStatus[order.status];
     if (next == null) return;
 
@@ -60,13 +61,15 @@ class _DetailContent extends ConsumerWidget {
       await ref.read(workOrdersRepositoryProvider).updateStatus(order.id, status: next, paymentMethod: paymentMethod);
       ref.invalidate(workOrderDetailProvider(order.id));
       ref.invalidate(workOrdersListProvider);
+      // TODO: fire the Lottie confetti / checkered-flag burst here on success,
+      // e.g. showing a transient overlay — this is the moment the game
+      // wants a payoff for the mechanic advancing a work order.
     } catch (e) {
       if (context.mounted) _showError(context, e);
     }
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -127,19 +130,15 @@ class _DetailContent extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              Chip(label: Text(order.status.toUpperCase())),
-              if (order.paymentMethod != null) Chip(label: Text(order.paymentMethod!)),
-              if (next != null)
-                FilledButton.icon(
-                  onPressed: () => _advanceStatus(context, ref),
-                  icon: const Icon(Icons.arrow_forward),
-                  label: Text(l.markAs(next)),
-                ),
-            ],
+          if (order.paymentMethod != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Chip(label: Text(order.paymentMethod!.toUpperCase())),
+            ),
+          PitStopStepper(
+            status: order.status,
+            nextLabel: next == null ? null : l.markAs(next),
+            onAdvance: () => _advanceStatus(context, ref),
           ),
           const SizedBox(height: 16),
           Card(
@@ -152,8 +151,7 @@ class _DetailContent extends ConsumerWidget {
                   Text(l.vehicleLabel(
                     '${order.vehiclePlate ?? order.vehicleId} ${order.vehicleMake ?? ''} ${order.vehicleModel ?? ''}'.trim(),
                   )),
-                  if (order.mileageAtService != null)
-                    Text(l.mileageAtService(order.mileageAtService!)),
+                  if (order.mileageAtService != null) Text(l.mileageAtService(order.mileageAtService!)),
                   Text(l.dateLabel(order.createdAt.toLocal().toString().split('.').first)),
                 ],
               ),
@@ -169,7 +167,7 @@ class _DetailContent extends ConsumerWidget {
                   ListTile(
                     title: Text(item.description),
                     subtitle: Text('${item.quantity} x ${formatCurrency(item.unitPrice)}'),
-                    trailing: Text(formatCurrency(item.lineTotal)),
+                    trailing: Text(formatCurrency(item.lineTotal), style: AppFonts.mono(const TextStyle(fontWeight: FontWeight.w600))),
                   ),
               ],
             ),
@@ -210,15 +208,17 @@ class _TotalRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = emphasize
-        ? Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
-        : Theme.of(context).textTheme.bodyMedium;
+    final style = AppFonts.mono(TextStyle(
+      fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
+      fontSize: emphasize ? 16 : 13,
+      color: emphasize ? AppColors.neonGreen : AppColors.textHigh,
+    ));
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text('$label: ', style: style),
+          Text('$label: ', style: AppFonts.body(style.copyWith(color: emphasize ? AppColors.textHigh : AppColors.textMuted))),
           SizedBox(width: 90, child: Text(formatCurrency(amount), style: style, textAlign: TextAlign.right)),
         ],
       ),
