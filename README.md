@@ -5,7 +5,7 @@ work orders (repair slips) with PDF printing, and basic revenue/parts reporting.
 
 **Stack:** Flutter (Web + Mobile + PWA) · Node.js/TypeScript (Express) · PostgreSQL · Docker Compose
 
-**Features:** English / Turkish language switching · Installable as a PWA on any device · LAN access from any browser
+**Features:** English / Turkish language switching · Corporate/Garage voice toggle (two full copy sets per language) · Installable as a PWA on any device · LAN access from any browser
 
 See [`SETUP.md`](./SETUP.md) for a full step-by-step guide to installing prerequisites and
 running the project locally in VS Code.
@@ -67,6 +67,14 @@ worker caches all app assets for offline use after the first load.
 Use the **`[EN] [TR]`** toggle on the login or registration screen, or open the
 user menu (top-right inside the app) and select *Language → English / Türkçe*.
 The choice is persisted between sessions.
+
+### Switching voice (Corporate ↔ Garage)
+
+Independent of language, the app has two complete copy sets: the default
+playful "Garage" voice and a neutral "Corporate" voice. Toggle with the 💼/🔧
+control next to the language selector (login/registration screens), or via
+*Voice → Corporate / Garage* in the user menu. Persisted independently of the
+language choice, so any language + voice combination is possible.
 
 ### Rebuilding after changes
 
