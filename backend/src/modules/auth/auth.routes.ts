@@ -8,3 +8,5 @@ authRoutes.post("/register", authController.register);
 authRoutes.post("/login", authController.login);
 authRoutes.post("/logout", authenticate, authController.logout);
 authRoutes.get("/me", authenticate, authController.me);
+authRoutes.patch("/me", authenticate, authController.updateMe);
+authRoutes.post("/me/password", authenticate, authController.changePassword);

@@ -67,6 +67,25 @@ class AuthController extends AsyncNotifier<AuthState?> {
     });
   }
 
+  Future<void> updateProfile({required String fullName}) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final user = await ref.read(authRepositoryProvider).updateProfile(fullName: fullName);
+      return AuthState(token: current.token, user: user);
+    });
+  }
+
+  /// Doesn't touch [state] — the caller (a dialog) handles its own loading/error
+  /// UI directly and neither the token nor the displayed user changes on success.
+  Future<void> changePassword({required String currentPassword, required String newPassword}) {
+    return ref.read(authRepositoryProvider).changePassword(
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        );
+  }
+
   Future<void> logout() async {
     final client = ref.read(apiClientProvider);
     try {

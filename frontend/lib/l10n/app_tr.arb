@@ -134,5 +134,23 @@
   "cash": "Nakit",
   "card": "Kart",
   "bankTransfer": "Banka transferi",
-  "other": "Diğer"
+  "other": "Diğer",
+
+  "profile": "Profil",
+  "myAccount": "Hesabım",
+  "shopDetails": "İşletme Bilgileri",
+  "changePassword": "Şifre Değiştir",
+  "currentPassword": "Mevcut şifre",
+  "newPassword": "Yeni şifre",
+  "confirmPassword": "Yeni şifreyi onayla",
+  "passwordsDoNotMatch": "Şifreler eşleşmiyor",
+  "passwordChanged": "Şifre değiştirildi",
+  "taxId": "Vergi No",
+  "taxOffice": "Vergi Dairesi",
+  "uploadLogo": "Logo yükle",
+  "removeLogo": "Logoyu kaldır",
+  "noLogoUploaded": "Logo yüklenmedi",
+  "profileUpdated": "Profil güncellendi",
+  "shopUpdated": "İşletme bilgileri güncellendi",
+  "viewOnlyShopDetails": "Sadece görüntüleme — değişiklik için işletme sahibi veya yöneticisiyle görüşün"
 }

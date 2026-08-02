@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
+import multer from "multer";
 import { AppError } from "../utils/errors";
 import { logger } from "../utils/logger";
 
@@ -19,6 +20,10 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       error: err.message,
       ...(err.details ? { details: err.details } : {}),
     });
+  }
+
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ error: err.message });
   }
 
   // Postgres unique_violation surfaced without being wrapped as a ConflictError

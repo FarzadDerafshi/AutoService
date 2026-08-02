@@ -89,6 +89,45 @@ for any direct API client (e.g. Postman, mobile apps hitting the API directly).
 Tokens are signed with HS256 and expire in 8 hours (`JWT_EXPIRES_IN`).
 Logout is best-effort (stateless JWT — no server-side token revocation).
 
+### File uploads — shop logo (v0.10.0)
+`backend/src/config/uploads.ts` defines `UPLOADS_DIR` (`path.resolve(process.cwd(),
+"uploads")`) and `SHOP_LOGOS_DIR` (`UPLOADS_DIR/shop-logos`) — both single
+sources of truth, imported by the shop module (multer's disk storage
+destination), `workOrders.pdf.ts` (reads the file back to embed in the
+printed letterhead), and `app.ts` (the static-serve mount). `process.cwd()`
+resolves to `/app` in the container (matches `WORKDIR` in `Dockerfile`,
+which also `mkdir -p /app/uploads` and `chown`s it to the `node` user
+before dropping root) and to `backend/` in local dev — both align with the
+`./backend/uploads:/app/uploads` volume Docker Compose already mounted
+(originally captioned "PDF/print output & attachments," unused until now).
+
+**Multer 2.x, not 1.x:** `npm install multer` currently resolves to a 1.x
+version that's deprecated with known CVEs (patched in 2.x); pinned
+`"multer": "^2.0.1"` explicitly instead of accepting whatever `^1.x` a bare
+install would have picked.
+
+**Filename = `${shopId}.<ext>`, one file per shop:** simplest possible
+scheme — no history/versioning needed for a logo. `shop.service.ts`'s
+`setShopLogo`/`clearShopLogo` unlink the previous file if its extension
+differs from the new one (e.g. replacing a `.png` with a `.jpg`), so
+switching image formats doesn't leak orphaned files.
+
+**Served publicly, no auth:** `/api/v1/uploads` is mounted via
+`express.static` *before* the authenticated route mounts in `app.ts`, with
+no `authenticate` middleware — same treatment as the app's own static
+branding assets (`frontend/web/icons/*`, `og-image.png`). A shop's logo
+isn't sensitive, and both the browser `<img>` tag and the PDF's on-disk
+`fs.existsSync`/`doc.image()` read need it reachable without attaching a
+JWT.
+
+**Multer errors surfaced properly:** `errorHandler.ts` gained a
+`multer.MulterError` branch (400 with the library's own message) ahead of
+the generic 500 fallback — file-too-large / wrong-mimetype rejections would
+otherwise read as an opaque "Internal server error" to the client. The
+mimetype rejection itself (`fileFilter` in `shop.routes.ts`) throws a
+`ValidationError` directly instead, so it's handled by the existing
+`AppError` branch.
+
 ---
 
 ## Frontend
@@ -188,6 +227,20 @@ when testing via automation, unregister the service worker / fetch with
 `cache: 'no-store'` and check the response for the expected string before
 trusting what renders on screen.
 
+**Gotcha (hit in practice, v0.10.1): a `fetch(url, {cache:'no-store'})`
+check from the browser console does *not* prove the running app loaded the
+new build.** `main.dart.js` is referenced from `flutter_bootstrap.js` with
+a plain, non-hashed URL (`mainJsPath: "main.dart.js"`) and nginx sends no
+explicit `Cache-Control` header, so the actual `<script src="main.dart.js">`
+tag load is subject to the browser's own HTTP heuristic caching —
+independent of, and not bypassed by, a manual `fetch()` call elsewhere on
+the same page (that fetch has its own cache decision; it doesn't invalidate
+what a `<script>` tag will get on the next navigation). A stale-bundle bug
+can look "fixed" by every diagnostic check except reloading the actual app.
+The only reliable way to rule this out is a genuine hard reload
+(Ctrl+Shift+R, which sends cache-defeating request headers) immediately
+before the real test, not a side-channel fetch check.
+
 **Locale persistence** uses the same `_storage_web` / `_storage_stub`
 conditional import pattern as JWT token storage — `localStorage` on web,
 `flutter_secure_storage` on native. The locale language code (`"en"` / `"tr"`)
@@ -277,6 +330,54 @@ wording before adding a plain/neutral label to the default files.
 
 **Known gap:** `TopWrenchLeaderboard` (see below) is still unlocalized —
 low priority since it's also unwired to any real data source.
+
+### Flutter Web plugin registration — stale build cache (hit in practice, v0.10.1)
+
+A plugin that has a web implementation (`file_picker`, `flutter_secure_storage`,
+`url_launcher`, ...) only actually works on Flutter Web if it's listed in
+the **generated** `web_plugin_registrant.dart`
+(`.dart_tool/flutter_build/<content-hash>/web_plugin_registrant.dart`),
+which is what calls e.g. `FilePickerWeb.registerWith(registrar)` at app
+startup and makes `FilePicker.platform` actually resolve to the web
+implementation instead of silently doing nothing. This file is *derived*
+from `.flutter-plugins-dependencies` (itself written by `flutter pub get`)
+— it is possible for `.flutter-plugins-dependencies` to correctly list a
+newly-added plugin under its `"web"` platform entry while the cached
+`web_plugin_registrant.dart` under `.dart_tool/flutter_build/` doesn't get
+regenerated to match, if Flutter's build-cache hash computation doesn't
+detect the change. Symptoms when this happens: the plugin's method calls
+either silently no-op or throw a low-level, generically-formatted
+JS-style exception ("Error" with a minified stack, no Dart-level message)
+that isn't caught by a normal `try/catch` around the call site — because
+the failure happens below the plugin-interface layer the try/catch is
+wrapping, not inside a rejected Dart `Future` the `await` would surface.
+`flutter analyze`/`flutter build web` both succeed normally; nothing in the
+build output flags it.
+
+**How this was diagnosed (v0.10.1, `file_picker`'s "Upload logo" button
+doing nothing):** confirmed the exception was tied to that one button (not
+spontaneous, not reproduced by other buttons), then directly compared
+`.flutter-plugins-dependencies` (correct) against the actual generated
+`.dart_tool/flutter_build/<hash>/web_plugin_registrant.dart` (missing the
+plugin's `registerWith` call) — this is the definitive check. A `grep` for
+the plugin's own distinguishing runtime strings
+(`file_picker`'s `__file_picker_web-file-input` DOM id, in this case)
+against the compiled `main.dart.js` corroborates it: if those strings are
+completely absent, the web implementation was never wired in and likely
+tree-shaken away.
+
+**Fix:** `flutter clean` (deletes `.dart_tool/`, forcing every cached
+build artifact including the registrant to regenerate) → `flutter pub get`
+→ rebuild. Re-check the regenerated registrant file directly before
+re-testing in the browser — and see the caching gotcha above, since a
+stale-served `main.dart.js` can make even a *correct* rebuild look like it
+didn't fix anything.
+
+**When to suspect this:** any time a newly-added plugin with a web
+implementation compiles fine, has no lint/analyze errors, but its calls do
+nothing or throw a generic, non-Dart-looking error specifically on Web
+(other platforms unaffected) — especially right after first adding that
+dependency to `pubspec.yaml`.
 
 ### Progressive Web App (PWA)
 
@@ -386,6 +487,32 @@ Riverpod `AsyncNotifier` is used for auth state. The initial `build()` call
 checks for a stored token and calls `/auth/me` to validate it. Errors from
 that call (expired token, network error) silently clear the token and return
 `null` (unauthenticated state).
+
+**Gotcha — a stateful form built from data that's still loading gets stuck
+blank forever (fixed v0.10.0):** every existing form sheet in this app
+(`client_form_sheet.dart`, `catalog_item_form_sheet.dart`, ...) is opened
+via a button *after* its source data (an `existing: Client?` etc.) is
+already sitting in memory, so seeding a `TextEditingController` once in
+`initState` is safe. The new Profile screen's "My Account" card broke that
+assumption: it's a `ConsumerStatefulWidget` built unconditionally as soon
+as `/profile` mounts, reading `currentUserProvider` (backed by
+`authControllerProvider`, an `AsyncNotifier`) — and if that screen is
+reached before the initial `/auth/me` check resolves (e.g. a direct
+navigation to `/profile` on a cold load, before `AuthController.build()`'s
+Future completes), `initState` captures an empty/null user, and the
+controller **never gets revisited** once the real data arrives a moment
+later, because Flutter reuses the same `State` object across parent
+rebuilds by default. `TextFormField`'s `initialValue:` prop has the exact
+same one-shot behaviour when no external controller is given.
+
+Fix: give the stateful child a `key: ValueKey(user?.id)` from the parent
+`ConsumerWidget` (which *does* rebuild reactively on `ref.watch`). The key
+changes from `ValueKey(null)` to `ValueKey('<uuid>')` once auth data
+resolves, which makes Flutter discard the stale `State` and run `initState`
+again with the now-available data. Any future screen that seeds
+controllers from a `Provider`/`Riverpod`-backed value *without* going
+through an `AsyncValueWidget`-style `data:` builder (which structurally
+can't render before the data exists) needs this same treatment.
 
 ### Routing
 `go_router` with a `redirect` guard re-evaluates auth state on every

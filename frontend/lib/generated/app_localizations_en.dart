@@ -419,6 +419,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get other => 'Other';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get myAccount => 'My Account';
+
+  @override
+  String get shopDetails => 'Shop Details';
+
+  @override
+  String get changePassword => 'Change Password';
+
+  @override
+  String get currentPassword => 'Current password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmPassword => 'Confirm new password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get passwordChanged => 'Password changed';
+
+  @override
+  String get taxId => 'Tax ID';
+
+  @override
+  String get taxOffice => 'Tax office';
+
+  @override
+  String get uploadLogo => 'Upload logo';
+
+  @override
+  String get removeLogo => 'Remove logo';
+
+  @override
+  String get noLogoUploaded => 'No logo uploaded';
+
+  @override
+  String get profileUpdated => 'Profile updated';
+
+  @override
+  String get shopUpdated => 'Shop details updated';
+
+  @override
+  String get viewOnlyShopDetails =>
+      'View only — ask an owner or manager to make changes';
 }
 
 /// The translations for English, as used in Clipperton Island (`en_CP`).

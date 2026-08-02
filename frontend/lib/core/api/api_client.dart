@@ -21,6 +21,11 @@ String get apiBaseUrl {
   return _dartDefineBaseUrl;
 }
 
+/// Scheme+host(+port) only, with no `/api/v1` suffix — for building absolute
+/// URLs to static assets served outside the JSON API (e.g. an uploaded shop
+/// logo at `/api/v1/uploads/...`), whose path already includes that prefix.
+String get apiOrigin => apiBaseUrl.replaceFirst(RegExp(r'/api/v\d+/?$'), '');
+
 /// Thin wrapper around Dio that attaches the current JWT (if any) to every
 /// request and normalizes errors into [ApiException]. The token is injected
 /// by whoever owns auth state (see auth_provider.dart) via [setToken]/[clearToken]

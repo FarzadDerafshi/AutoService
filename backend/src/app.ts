@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { env } from "./config/env";
+import { UPLOADS_DIR } from "./config/uploads";
 import { errorHandler } from "./middleware/errorHandler";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { clientsRoutes } from "./modules/clients/clients.routes";
@@ -11,6 +12,7 @@ import { catalogRoutes } from "./modules/catalog/catalog.routes";
 import { workOrdersRoutes } from "./modules/workOrders/workOrders.routes";
 import { reportsRoutes } from "./modules/reports/reports.routes";
 import { searchRoutes } from "./modules/search/search.routes";
+import { shopRoutes } from "./modules/shop/shop.routes";
 
 export const app = express();
 
@@ -42,6 +44,11 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+// Publicly readable (no auth) — same treatment as the app's own static
+// branding assets. Shop logos aren't sensitive, and the printed PDF/browser
+// need to load them without attaching a JWT.
+app.use("/api/v1/uploads", express.static(UPLOADS_DIR));
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/clients", clientsRoutes);
 app.use("/api/v1/vehicles", vehiclesRoutes);
@@ -49,6 +56,7 @@ app.use("/api/v1/catalog", catalogRoutes);
 app.use("/api/v1/work-orders", workOrdersRoutes);
 app.use("/api/v1/reports", reportsRoutes);
 app.use("/api/v1/search", searchRoutes);
+app.use("/api/v1/shop", shopRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });

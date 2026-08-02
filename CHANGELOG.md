@@ -5,6 +5,106 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.10.1] — 2026-08-02  *(Fix — "Upload Logo" Did Nothing on Web)*
+
+### Fixed
+- **Pressing "Upload logo" on the new Profile screen silently did nothing**
+  — no file dialog, no error visible to the user. Farzad caught this
+  immediately after v0.10.0 shipped. Root cause: `file_picker`'s Flutter
+  Web implementation is wired up via a generated file,
+  `.dart_tool/flutter_build/<hash>/web_plugin_registrant.dart`, which
+  registers `FilePickerWeb` as `FilePicker.platform` at app startup.
+  `.flutter-plugins-dependencies` correctly listed `file_picker` as a web
+  plugin (added in v0.10.0), but the registrant file itself was served from
+  a **stale cached build** and never regenerated to include it — so
+  `FilePicker.platform` silently stayed unwired on web, and every click on
+  "Upload logo" threw an uncaught low-level exception (visible in the
+  browser console, but with no app-level try/catch around the call to
+  surface it) before the native OS file dialog could even open.
+  Confirmed by checking the generated registrant file directly: it listed
+  `FlutterSecureStorageWeb`/`UrlLauncherPlugin` but not `FilePickerWeb`,
+  and the compiled `main.dart.js` had zero references to file_picker's web
+  DOM markers, even though the source/dependency files were all correct.
+
+  Fix: `flutter clean` (clears `.dart_tool/flutter_build`) + fresh
+  `flutter pub get` + rebuild, which forced the registrant to regenerate
+  correctly. Also added a `try/catch` around the `FilePicker.platform.pickFiles()`
+  call itself (`profile_screen.dart`), so if picking ever fails again for
+  any reason (user cancels via some browsers' cancel-as-error path, browser
+  security restriction, etc.) it surfaces as a snackbar instead of an
+  uncaught exception.
+
+  Verified: rebuilt, hard-reloaded (Ctrl+Shift+R, to rule out the browser
+  serving a cached pre-fix `main.dart.js` — `main.dart.js` has no
+  cache-busting hash in its URL and nginx sends no explicit
+  `Cache-Control`, so it's subject to normal HTTP heuristic caching), and
+  Farzad confirmed the upload now works end-to-end on his machine.
+  _Files: `frontend/lib/features/shop/presentation/profile_screen.dart`_
+
+---
+
+## [0.10.0] — 2026-08-02  *(User & Shop Profile Page — Editable Letterhead + Logo Upload)*
+
+### Added
+- **Shop profile management** — `shops` gained `tax_office`, `address`,
+  `phone`, `email`, `logo_path`, and `updated_at` columns
+  (`db/init/009_shop_profile.sql`), plus a new backend module
+  (`backend/src/modules/shop/`) exposing `GET/PATCH /api/v1/shop` and
+  `POST/DELETE /api/v1/shop/logo`. Shop edits and logo changes are
+  restricted to `owner`/`manager` roles (`authorize("owner", "manager")`,
+  same pattern as `catalog`'s write routes); `technician` can view but not
+  edit. Logo uploads go through `multer` (new dependency, v2.x to avoid the
+  known CVEs in the 1.x line) with disk storage under
+  `backend/uploads/shop-logos/` — the volume Docker Compose already mounted
+  for this purpose — validated to PNG/JPEG/WebP, 2MB max, one file per shop
+  (`${shopId}.<ext>`, overwritten on replace). Served back publicly via a
+  new `express.static` mount at `/api/v1/uploads` (no auth — same treatment
+  as any other static branding asset; nothing sensitive lives there).
+- **Account self-service** — `PATCH /api/v1/auth/me` (rename) and
+  `POST /api/v1/auth/me/password` (change password, requires the current
+  password) added to the existing `auth` module.
+- **New "Profile" screen** (`frontend/lib/features/shop/`), reachable from
+  a new item in the account popup menu (`app_shell.dart`) and routed at
+  `/profile` inside the existing `ShellRoute`. Two cards: **My Account**
+  (name, read-only email, change-password dialog) and **Shop Details**
+  (name/tax ID/tax office/address/phone/email + logo preview with
+  upload/remove, all read-only for `technician`). Logo picking uses the new
+  `file_picker` dependency (not `image_picker` — no Windows desktop
+  support, and this app targets Web + Android + Windows).
+- **Work-order PDF letterhead** — `workOrders.pdf.ts` now draws the shop's
+  logo (if uploaded) plus name/address/phone/tax-office/tax-ID at the top
+  of every printed work order, replacing the previous bare shop-name
+  heading. Matches the minimum bar set by the handwritten reference slip
+  Farzad supplied (`Desktop\logs\VW Tech Servis kaydi.JPG`): logo + brand
+  name + full address/phone + tax info.
+
+### Fixed
+- **`POST /auth/login` never returned the user's email** (only
+  `id`/`fullName`/`role`/`shopId`) — unlike `register`/`getCurrentUser`,
+  which both already included it. Caught immediately by the new Profile
+  screen's read-only email field showing blank right after a fresh login.
+  Now included, matching the other two endpoints.
+  _File: `backend/src/modules/auth/auth.service.ts`_
+- **Profile screen's "My Account" fields stayed blank forever if the page
+  was reached before the stored-token auth check finished resolving** (e.g.
+  navigating straight to `/profile` on a cold load) — the name/email
+  controllers were populated once from `currentUserProvider` in `initState`
+  and never revisited once the real user data arrived a moment later.
+  Fixed by keying `_MyAccountCard` on the user id
+  (`ValueKey(user?.id)`), so Flutter discards and re-initializes the
+  card's state once auth data actually resolves.
+  _File: `frontend/lib/features/shop/presentation/profile_screen.dart`_
+_Files: `db/init/009_shop_profile.sql`, `backend/src/config/uploads.ts` (new),
+`backend/src/modules/shop/*` (new), `backend/src/modules/auth/auth.{schema,service,controller,routes}.ts`,
+`backend/src/modules/workOrders/workOrders.pdf.ts`, `backend/src/app.ts`,
+`backend/src/middleware/errorHandler.ts`, `backend/package.json`,
+`frontend/lib/features/shop/*` (new), `frontend/lib/features/auth/{data/auth_repository,application/auth_provider}.dart`,
+`frontend/lib/core/widgets/app_shell.dart`, `frontend/lib/app.dart`,
+`frontend/lib/core/api/api_client.dart`, `frontend/lib/l10n/app_{en,tr}.arb`,
+`frontend/lib/generated/app_localizations*.dart`, `frontend/pubspec.yaml`_
+
+---
+
 ## [0.9.3] — 2026-08-02  *(Login Logo Size + Home-Screen Icon Investigation)*
 
 ### Changed

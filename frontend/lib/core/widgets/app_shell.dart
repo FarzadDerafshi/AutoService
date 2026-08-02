@@ -63,7 +63,9 @@ class AppShell extends ConsumerWidget {
             child: Text(_initial(user?.fullName), style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.w700)),
           ),
           onSelected: (action) async {
-            if (action == 'logout') {
+            if (action == 'profile') {
+              context.go('/profile');
+            } else if (action == 'logout') {
               ref.read(authControllerProvider.notifier).logout();
             } else if (action == 'lang_en') {
               ref.read(localeProvider.notifier).setLocale(const Locale('en'));
@@ -77,6 +79,15 @@ class AppShell extends ConsumerWidget {
           },
           itemBuilder: (context) => [
             PopupMenuItem(enabled: false, child: Text(user?.fullName ?? '')),
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'profile',
+              child: Row(children: [
+                const Icon(Icons.person, size: 16),
+                const SizedBox(width: 10),
+                Text(l.profile),
+              ]),
+            ),
             const PopupMenuDivider(),
             PopupMenuItem(
               enabled: false,

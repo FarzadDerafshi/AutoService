@@ -5,7 +5,7 @@ import { pool, withTransaction } from "../../config/db";
 import { env } from "../../config/env";
 import { ConflictError, UnauthorizedError } from "../../utils/errors";
 import { UserRole } from "../../types";
-import { RegisterInput, LoginInput } from "./auth.schema";
+import { RegisterInput, LoginInput, UpdateMeInput, ChangePasswordInput } from "./auth.schema";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -82,6 +82,7 @@ export async function login(input: LoginInput) {
     user: {
       id: user.id,
       fullName: user.full_name,
+      email: user.email,
       role: user.role,
       shopId: user.shop_id,
     },
@@ -104,4 +105,46 @@ export async function getCurrentUser(userId: string, shopId: string) {
     role: user.role,
     shopId: user.shop_id,
   };
+}
+
+export async function updateCurrentUser(userId: string, shopId: string, input: UpdateMeInput) {
+  const { rows } = await pool.query(
+    `UPDATE users SET full_name = $1 WHERE id = $2 AND shop_id = $3
+     RETURNING id, full_name, email, role, shop_id`,
+    [input.fullName, userId, shopId]
+  );
+  const user = rows[0];
+  if (!user) {
+    throw new UnauthorizedError("User no longer exists");
+  }
+  return {
+    id: user.id,
+    fullName: user.full_name,
+    email: user.email,
+    role: user.role,
+    shopId: user.shop_id,
+  };
+}
+
+export async function changePassword(userId: string, shopId: string, input: ChangePasswordInput) {
+  const { rows } = await pool.query(`SELECT password_hash FROM users WHERE id = $1 AND shop_id = $2`, [
+    userId,
+    shopId,
+  ]);
+  const user = rows[0];
+  if (!user) {
+    throw new UnauthorizedError("User no longer exists");
+  }
+
+  const valid = await bcrypt.compare(input.currentPassword, user.password_hash);
+  if (!valid) {
+    throw new UnauthorizedError("Current password is incorrect");
+  }
+
+  const passwordHash = await bcrypt.hash(input.newPassword, BCRYPT_ROUNDS);
+  await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2 AND shop_id = $3`, [
+    passwordHash,
+    userId,
+    shopId,
+  ]);
 }

@@ -420,6 +420,58 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get other => 'Diğer';
+
+  @override
+  String get profile => 'Profil';
+
+  @override
+  String get myAccount => 'Hesabım';
+
+  @override
+  String get shopDetails => 'İşletme Bilgileri';
+
+  @override
+  String get changePassword => 'Şifre Değiştir';
+
+  @override
+  String get currentPassword => 'Mevcut şifre';
+
+  @override
+  String get newPassword => 'Yeni şifre';
+
+  @override
+  String get confirmPassword => 'Yeni şifreyi onayla';
+
+  @override
+  String get passwordsDoNotMatch => 'Şifreler eşleşmiyor';
+
+  @override
+  String get passwordChanged => 'Şifre değiştirildi';
+
+  @override
+  String get taxId => 'Vergi No';
+
+  @override
+  String get taxOffice => 'Vergi Dairesi';
+
+  @override
+  String get uploadLogo => 'Logo yükle';
+
+  @override
+  String get removeLogo => 'Logoyu kaldır';
+
+  @override
+  String get noLogoUploaded => 'Logo yüklenmedi';
+
+  @override
+  String get profileUpdated => 'Profil güncellendi';
+
+  @override
+  String get shopUpdated => 'İşletme bilgileri güncellendi';
+
+  @override
+  String get viewOnlyShopDetails =>
+      'Sadece görüntüleme — değişiklik için işletme sahibi veya yöneticisiyle görüşün';
 }
 
 /// The translations for Turkish, as used in Clipperton Island (`tr_CP`).

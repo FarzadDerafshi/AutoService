@@ -191,5 +191,23 @@
   "cash": "Cash",
   "card": "Card",
   "bankTransfer": "Bank transfer",
-  "other": "Other"
+  "other": "Other",
+
+  "profile": "Profile",
+  "myAccount": "My Account",
+  "shopDetails": "Shop Details",
+  "changePassword": "Change Password",
+  "currentPassword": "Current password",
+  "newPassword": "New password",
+  "confirmPassword": "Confirm new password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "passwordChanged": "Password changed",
+  "taxId": "Tax ID",
+  "taxOffice": "Tax office",
+  "uploadLogo": "Upload logo",
+  "removeLogo": "Remove logo",
+  "noLogoUploaded": "No logo uploaded",
+  "profileUpdated": "Profile updated",
+  "shopUpdated": "Shop details updated",
+  "viewOnlyShopDetails": "View only — ask an owner or manager to make changes"
 }

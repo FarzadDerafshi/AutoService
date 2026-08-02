@@ -13,6 +13,7 @@ import 'features/auth/presentation/register_screen.dart';
 import 'features/catalog/presentation/catalog_screen.dart';
 import 'features/clients/presentation/clients_screen.dart';
 import 'features/reports/presentation/reports_screen.dart';
+import 'features/shop/presentation/profile_screen.dart';
 import 'features/vehicles/presentation/vehicle_history_screen.dart';
 import 'features/vehicles/presentation/vehicles_screen.dart';
 import 'features/work_orders/application/work_orders_provider.dart';
@@ -79,6 +80,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(path: '/catalog', builder: (context, state) => const CatalogScreen()),
           GoRoute(path: '/reports', builder: (context, state) => const ReportsScreen()),
+          GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
         ],
       ),
     ],

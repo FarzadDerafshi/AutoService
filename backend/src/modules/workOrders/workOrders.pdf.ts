@@ -1,7 +1,10 @@
+import fs from "fs";
+import path from "path";
 import PDFDocument from "pdfkit";
 import { PoolClient } from "pg";
 import { Response } from "express";
 import { NotFoundError } from "../../utils/errors";
+import { SHOP_LOGOS_DIR } from "../../config/uploads";
 
 interface PdfWorkOrder {
   order_no: number;
@@ -16,6 +19,11 @@ interface PdfWorkOrder {
   notes: string | null;
   created_at: Date;
   shop_name: string;
+  shop_address: string | null;
+  shop_phone: string | null;
+  shop_tax_id: string | null;
+  shop_tax_office: string | null;
+  shop_logo_path: string | null;
   client_name: string;
   client_phone: string | null;
   license_plate: string;
@@ -39,7 +47,8 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
     `SELECT wo.order_no, wo.status, wo.payment_method, wo.mileage_at_service,
             wo.subtotal, wo.discount_amount, wo.tax_rate, wo.tax_amount, wo.grand_total,
             wo.notes, wo.created_at,
-            s.name AS shop_name,
+            s.name AS shop_name, s.address AS shop_address, s.phone AS shop_phone,
+            s.tax_id AS shop_tax_id, s.tax_office AS shop_tax_office, s.logo_path AS shop_logo_path,
             c.full_name AS client_name, c.phone AS client_phone,
             v.license_plate, v.make, v.model
      FROM work_orders wo
@@ -65,8 +74,40 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
   const doc = new PDFDocument({ size: "A4", margin: 50 });
   doc.pipe(res);
 
-  doc.fontSize(18).text(order.shop_name, { align: "left" });
-  doc.fontSize(10).fillColor("#555").text("Work Order / Repair Slip", { align: "left" });
+  // Letterhead: logo (if the shop has uploaded one) + name/address/phone/tax
+  // info, replacing the old bare shop-name heading.
+  const LOGO_SIZE = 50;
+  const CONTENT_RIGHT = 545;
+  const headerTop = doc.y;
+  let textX = 50;
+
+  if (order.shop_logo_path) {
+    const logoAbsPath = path.join(SHOP_LOGOS_DIR, path.basename(order.shop_logo_path));
+    if (fs.existsSync(logoAbsPath)) {
+      doc.image(logoAbsPath, 50, headerTop, { fit: [LOGO_SIZE, LOGO_SIZE] });
+      textX = 50 + LOGO_SIZE + 12;
+    }
+  }
+
+  doc.fontSize(16).fillColor("#000").text(order.shop_name, textX, headerTop, { width: CONTENT_RIGHT - textX });
+
+  const contactLine = [order.shop_address, order.shop_phone].filter(Boolean).join("   •   ");
+  if (contactLine) {
+    doc.fontSize(9).fillColor("#555").text(contactLine, textX, doc.y, { width: CONTENT_RIGHT - textX });
+  }
+
+  const taxLine = [
+    order.shop_tax_office ? `Vergi Dairesi: ${order.shop_tax_office}` : null,
+    order.shop_tax_id ? `Vergi No: ${order.shop_tax_id}` : null,
+  ]
+    .filter(Boolean)
+    .join("   •   ");
+  if (taxLine) {
+    doc.fontSize(9).fillColor("#555").text(taxLine, textX, doc.y, { width: CONTENT_RIGHT - textX });
+  }
+
+  doc.y = Math.max(doc.y, headerTop + LOGO_SIZE) + 10;
+  doc.fontSize(10).fillColor("#555").text("Work Order / Repair Slip", 50, doc.y);
   doc.moveDown(1.5);
 
   doc.fillColor("#000").fontSize(14).text(`Work Order #${order.order_no}`);

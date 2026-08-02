@@ -47,6 +47,18 @@ class AuthRepository {
     return AuthUser.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<AuthUser> updateProfile({required String fullName}) async {
+    final response = await _client.dio.patch('/auth/me', data: {'fullName': fullName});
+    return AuthUser.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
+    await _client.dio.post('/auth/me/password', data: {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+  }
+
   Future<void> logout() async {
     await _client.dio.post('/auth/logout');
   }

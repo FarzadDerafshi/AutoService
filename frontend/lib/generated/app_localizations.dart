@@ -837,6 +837,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get other;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @myAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'My Account'**
+  String get myAccount;
+
+  /// No description provided for @shopDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop Details'**
+  String get shopDetails;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePassword;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @passwordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed'**
+  String get passwordChanged;
+
+  /// No description provided for @taxId.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax ID'**
+  String get taxId;
+
+  /// No description provided for @taxOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax office'**
+  String get taxOffice;
+
+  /// No description provided for @uploadLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload logo'**
+  String get uploadLogo;
+
+  /// No description provided for @removeLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove logo'**
+  String get removeLogo;
+
+  /// No description provided for @noLogoUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'No logo uploaded'**
+  String get noLogoUploaded;
+
+  /// No description provided for @profileUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated'**
+  String get profileUpdated;
+
+  /// No description provided for @shopUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop details updated'**
+  String get shopUpdated;
+
+  /// No description provided for @viewOnlyShopDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View only — ask an owner or manager to make changes'**
+  String get viewOnlyShopDetails;
 }
 
 class _AppLocalizationsDelegate
