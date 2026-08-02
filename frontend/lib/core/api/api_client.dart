@@ -26,6 +26,15 @@ String get apiBaseUrl {
 /// logo at `/api/v1/uploads/...`), whose path already includes that prefix.
 String get apiOrigin => apiBaseUrl.replaceFirst(RegExp(r'/api/v\d+/?$'), '');
 
+/// Origin of *this running app* (not the API) — for building links a human
+/// is meant to open in a browser, e.g. a team-invite link. On web this is
+/// exactly the page's own origin. Native builds have no reliable way to
+/// know where the web frontend is hosted (nginx isn't necessarily
+/// co-located with the API), so this falls back to [apiOrigin] as a
+/// best-effort guess — acceptable since invite-link generation is a
+/// web-first flow in practice.
+String get appOrigin => kIsWeb ? Uri.base.origin : apiOrigin;
+
 /// Thin wrapper around Dio that attaches the current JWT (if any) to every
 /// request and normalizes errors into [ApiException]. The token is injected
 /// by whoever owns auth state (see auth_provider.dart) via [setToken]/[clearToken]

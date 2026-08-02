@@ -14,6 +14,8 @@ import 'features/catalog/presentation/catalog_screen.dart';
 import 'features/clients/presentation/clients_screen.dart';
 import 'features/reports/presentation/reports_screen.dart';
 import 'features/shop/presentation/profile_screen.dart';
+import 'features/team/presentation/join_screen.dart';
+import 'features/team/presentation/team_screen.dart';
 import 'features/vehicles/presentation/vehicle_history_screen.dart';
 import 'features/vehicles/presentation/vehicles_screen.dart';
 import 'features/work_orders/application/work_orders_provider.dart';
@@ -36,8 +38,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/work-orders',
     refreshListenable: refresh,
     redirect: (context, state) {
-      final authState = ref.read(authControllerProvider);
       final loc = state.matchedLocation;
+      // A team-invite link must work regardless of auth state: a logged-out
+      // visitor needs to reach it without being bounced to /login, and an
+      // already-logged-in visitor (e.g. opening it on a device where they're
+      // signed in as someone else) needs to reach it too, since accepting it
+      // deliberately switches the session to the new account.
+      if (loc.startsWith('/join/')) return null;
+
+      final authState = ref.read(authControllerProvider);
       final goingToAuth = loc == '/login' || loc == '/register';
 
       if (authState.isLoading) return null; // still resolving stored token
@@ -50,6 +59,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+      GoRoute(
+        path: '/join/:id',
+        builder: (context, state) => JoinScreen(inviteId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/work-orders/new',
         builder: (context, state) => const WorkOrderFormScreen(),
@@ -81,6 +94,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/catalog', builder: (context, state) => const CatalogScreen()),
           GoRoute(path: '/reports', builder: (context, state) => const ReportsScreen()),
           GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+          GoRoute(path: '/team', builder: (context, state) => const TeamScreen()),
         ],
       ),
     ],

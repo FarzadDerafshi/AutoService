@@ -939,6 +939,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View only — ask an owner or manager to make changes'**
   String get viewOnlyShopDetails;
+
+  /// No description provided for @team.
+  ///
+  /// In en, this message translates to:
+  /// **'Team'**
+  String get team;
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active;
+
+  /// No description provided for @inactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get inactive;
+
+  /// No description provided for @role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get role;
+
+  /// No description provided for @manager.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager'**
+  String get manager;
+
+  /// No description provided for @technician.
+  ///
+  /// In en, this message translates to:
+  /// **'Technician'**
+  String get technician;
+
+  /// No description provided for @deactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate'**
+  String get deactivate;
+
+  /// No description provided for @reactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate'**
+  String get reactivate;
+
+  /// No description provided for @deleteMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get deleteMember;
+
+  /// No description provided for @confirmDeleteMemberTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove team member?'**
+  String get confirmDeleteMemberTitle;
+
+  /// No description provided for @confirmDeleteMemberBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will lose access immediately. This can\'t be undone.'**
+  String confirmDeleteMemberBody(String name);
+
+  /// No description provided for @inviteTeamMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Team Member'**
+  String get inviteTeamMember;
+
+  /// No description provided for @expiresIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in'**
+  String get expiresIn;
+
+  /// No description provided for @hours24.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get hours24;
+
+  /// No description provided for @days3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 days'**
+  String get days3;
+
+  /// No description provided for @days7.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get days7;
+
+  /// No description provided for @generateInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate link'**
+  String get generateInviteLink;
+
+  /// No description provided for @inviteLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link'**
+  String get inviteLinkLabel;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copyLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get linkCopied;
+
+  /// No description provided for @shareViaWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share via WhatsApp'**
+  String get shareViaWhatsApp;
+
+  /// No description provided for @whatsAppInviteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Join {shop} on GarajOS: {link}'**
+  String whatsAppInviteMessage(String shop, String link);
+
+  /// No description provided for @pendingInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Invites'**
+  String get pendingInvites;
+
+  /// No description provided for @inviteStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get inviteStatusPending;
+
+  /// No description provided for @inviteStatusUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get inviteStatusUsed;
+
+  /// No description provided for @inviteStatusRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get inviteStatusRevoked;
+
+  /// No description provided for @inviteStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get inviteStatusExpired;
+
+  /// No description provided for @revokeInviteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revokeInviteAction;
+
+  /// No description provided for @firstName.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get firstName;
+
+  /// No description provided for @lastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get lastName;
+
+  /// No description provided for @youAreJoining.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re joining {shop} as {role}'**
+  String youAreJoining(String shop, String role);
+
+  /// No description provided for @joinAndCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get joinAndCreateAccount;
 }
 
 class _AppLocalizationsDelegate

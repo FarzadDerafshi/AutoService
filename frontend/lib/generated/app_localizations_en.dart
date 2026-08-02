@@ -471,6 +471,111 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get viewOnlyShopDetails =>
       'View only — ask an owner or manager to make changes';
+
+  @override
+  String get team => 'Team';
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get inactive => 'Inactive';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get manager => 'Manager';
+
+  @override
+  String get technician => 'Technician';
+
+  @override
+  String get deactivate => 'Deactivate';
+
+  @override
+  String get reactivate => 'Reactivate';
+
+  @override
+  String get deleteMember => 'Remove';
+
+  @override
+  String get confirmDeleteMemberTitle => 'Remove team member?';
+
+  @override
+  String confirmDeleteMemberBody(String name) {
+    return '$name will lose access immediately. This can\'t be undone.';
+  }
+
+  @override
+  String get inviteTeamMember => 'Invite Team Member';
+
+  @override
+  String get expiresIn => 'Expires in';
+
+  @override
+  String get hours24 => '24 hours';
+
+  @override
+  String get days3 => '3 days';
+
+  @override
+  String get days7 => '7 days';
+
+  @override
+  String get generateInviteLink => 'Generate link';
+
+  @override
+  String get inviteLinkLabel => 'Invite link';
+
+  @override
+  String get copyLink => 'Copy';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
+  String get shareViaWhatsApp => 'Share via WhatsApp';
+
+  @override
+  String whatsAppInviteMessage(String shop, String link) {
+    return 'Join $shop on GarajOS: $link';
+  }
+
+  @override
+  String get pendingInvites => 'Pending Invites';
+
+  @override
+  String get inviteStatusPending => 'Pending';
+
+  @override
+  String get inviteStatusUsed => 'Used';
+
+  @override
+  String get inviteStatusRevoked => 'Revoked';
+
+  @override
+  String get inviteStatusExpired => 'Expired';
+
+  @override
+  String get revokeInviteAction => 'Revoke';
+
+  @override
+  String get firstName => 'First name';
+
+  @override
+  String get lastName => 'Last name';
+
+  @override
+  String youAreJoining(String shop, String role) {
+    return 'You\'re joining $shop as $role';
+  }
+
+  @override
+  String get joinAndCreateAccount => 'Create account';
 }
 
 /// The translations for English, as used in Clipperton Island (`en_CP`).

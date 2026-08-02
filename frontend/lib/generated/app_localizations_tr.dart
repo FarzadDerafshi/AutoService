@@ -472,6 +472,111 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get viewOnlyShopDetails =>
       'Sadece görüntüleme — değişiklik için işletme sahibi veya yöneticisiyle görüşün';
+
+  @override
+  String get team => 'Ekip';
+
+  @override
+  String get members => 'Üyeler';
+
+  @override
+  String get active => 'Aktif';
+
+  @override
+  String get inactive => 'Pasif';
+
+  @override
+  String get role => 'Rol';
+
+  @override
+  String get manager => 'Yönetici';
+
+  @override
+  String get technician => 'Teknisyen';
+
+  @override
+  String get deactivate => 'Devre dışı bırak';
+
+  @override
+  String get reactivate => 'Yeniden etkinleştir';
+
+  @override
+  String get deleteMember => 'Kaldır';
+
+  @override
+  String get confirmDeleteMemberTitle => 'Ekip üyesi kaldırılsın mı?';
+
+  @override
+  String confirmDeleteMemberBody(String name) {
+    return '$name erişimini hemen kaybedecek. Bu işlem geri alınamaz.';
+  }
+
+  @override
+  String get inviteTeamMember => 'Ekip Üyesi Davet Et';
+
+  @override
+  String get expiresIn => 'Son kullanma';
+
+  @override
+  String get hours24 => '24 saat';
+
+  @override
+  String get days3 => '3 gün';
+
+  @override
+  String get days7 => '7 gün';
+
+  @override
+  String get generateInviteLink => 'Bağlantı oluştur';
+
+  @override
+  String get inviteLinkLabel => 'Davet bağlantısı';
+
+  @override
+  String get copyLink => 'Kopyala';
+
+  @override
+  String get linkCopied => 'Bağlantı kopyalandı';
+
+  @override
+  String get shareViaWhatsApp => 'WhatsApp ile paylaş';
+
+  @override
+  String whatsAppInviteMessage(String shop, String link) {
+    return '$shop işletmesine GarajOS üzerinden katıl: $link';
+  }
+
+  @override
+  String get pendingInvites => 'Bekleyen Davetler';
+
+  @override
+  String get inviteStatusPending => 'Bekliyor';
+
+  @override
+  String get inviteStatusUsed => 'Kullanıldı';
+
+  @override
+  String get inviteStatusRevoked => 'İptal edildi';
+
+  @override
+  String get inviteStatusExpired => 'Süresi doldu';
+
+  @override
+  String get revokeInviteAction => 'İptal Et';
+
+  @override
+  String get firstName => 'Ad';
+
+  @override
+  String get lastName => 'Soyad';
+
+  @override
+  String youAreJoining(String shop, String role) {
+    return '$shop işletmesine $role olarak katılıyorsunuz';
+  }
+
+  @override
+  String get joinAndCreateAccount => 'Hesap oluştur';
 }
 
 /// The translations for Turkish, as used in Clipperton Island (`tr_CP`).

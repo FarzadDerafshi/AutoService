@@ -5,6 +5,78 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.11.0] — 2026-08-02  *(Team Invites — WhatsApp Link, Self-Registration, Deactivate/Delete)*
+
+### Added
+- **Owners/managers can now bring on teammates themselves**, without any
+  hand-rolled SQL. Previously the only way to create a `manager`/
+  `technician` account was for a Claude session (or Farzad directly) to
+  insert a `users` row by hand with a manually-generated bcrypt hash —
+  Farzad flagged this as something a real shop owner needs to be able to
+  do on their own.
+  - New `shop_invites` table (`db/init/010_shop_invites.sql`) and backend
+    `invites` module (`backend/src/modules/invites/`): `POST/GET/DELETE
+    /api/v1/invites` (owner/manager, create/list/revoke) plus two
+    deliberately public routes — `GET /api/v1/invites/:id/public` and
+    `POST /api/v1/invites/:id/join` — with no `authenticate`/`tenantScope`
+    middleware, since the person accepting an invite has no account or
+    shop context yet. The invite's own UUID doubles as the link token (no
+    separate token column — same unguessable-by-design convention every
+    other PK in this app already relies on). `join` re-validates the
+    invite (not expired/used/revoked) inside a `SELECT ... FOR UPDATE`
+    transaction to close the race if two people open the same link at
+    once, then creates the user and returns a JWT so they land logged in
+    immediately — exact same `{ token, user }` shape `login`/`register`
+    already return.
+  - New **Team** screen (`frontend/lib/features/team/`, reachable from the
+    account menu, owner/manager only): member roster with
+    deactivate/reactivate/remove per row, and an "Invite Team Member"
+    dialog (role + 24h/3d/7d expiry) that generates a link and offers
+    **Share via WhatsApp** (`https://wa.me/?text=...`, the same
+    `launchUrl(..., webOnlyWindowName: '_blank')` pattern the PDF print
+    button already uses) — deliberately no email/SMS infrastructure, per
+    Farzad's own design: share the link however you already would.
+  - New public **Join** screen (`frontend/lib/features/team/presentation/join_screen.dart`,
+    route `/join/:id`, outside the authenticated shell) shows "You're
+    joining `<Shop>` as `<Role>`" and a first/last name + email + password
+    form. Works regardless of the visitor's current auth state — opening
+    an invite link while already logged in as someone else still completes
+    and switches the session to the new account (new
+    `AuthController.setSession()` in `auth_provider.dart`, reusing the
+    existing token-persistence path `login`/`register` already use).
+  - Deactivate (`is_active = false`, the column already existed —
+    `login` already checked it) and delete (`DELETE`, falling back to the
+    existing FK-violation → 409 mapping in `errorHandler.ts` if that user
+    has created work orders — same soft/hard split
+    `catalog.service.ts`'s `deleteCatalogItem` already uses) live in a new
+    `users` module (`backend/src/modules/users/`). Both refuse to target
+    an `owner` account or the caller's own account (no flow exists to
+    create a second owner, so this prevents a shop from locking itself
+    out; self-service stays on the Profile page).
+
+### Fixed
+- **Deleting a team member 409'd even with zero work-order history**,
+  caught while verifying the feature: `shop_invites.created_by`/`used_by`
+  reference `users(id)` with Postgres's default `ON DELETE RESTRICT`, so
+  the *invite audit trail itself* (who created/accepted an invite) blocked
+  deleting that user, independent of the "has created work orders" case
+  the 409 mapping was actually meant for. Changed both FKs to `ON DELETE
+  SET NULL` (and dropped the `NOT NULL` on `created_by` accordingly) —
+  the invite record survives with that pointer cleared, since it's an
+  audit reference, not data the invite depends on.
+  _File: `db/init/010_shop_invites.sql`_
+
+_Files: `db/init/010_shop_invites.sql`, `backend/src/modules/invites/*` (new),
+`backend/src/modules/users/*` (new), `backend/src/modules/auth/auth.service.ts`
+(exported `signToken`/`BCRYPT_ROUNDS` for reuse), `backend/src/app.ts`,
+`frontend/lib/features/team/*` (new), `frontend/lib/app.dart`,
+`frontend/lib/core/widgets/app_shell.dart`,
+`frontend/lib/core/api/api_client.dart` (new `appOrigin` helper),
+`frontend/lib/features/auth/application/auth_provider.dart`,
+`frontend/lib/l10n/app_{en,tr}.arb`, `frontend/lib/generated/app_localizations*.dart`_
+
+---
+
 ## [0.10.1] — 2026-08-02  *(Fix — "Upload Logo" Did Nothing on Web)*
 
 ### Fixed

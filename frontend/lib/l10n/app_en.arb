@@ -209,5 +209,48 @@
   "noLogoUploaded": "No logo uploaded",
   "profileUpdated": "Profile updated",
   "shopUpdated": "Shop details updated",
-  "viewOnlyShopDetails": "View only — ask an owner or manager to make changes"
+  "viewOnlyShopDetails": "View only — ask an owner or manager to make changes",
+
+  "team": "Team",
+  "members": "Members",
+  "active": "Active",
+  "inactive": "Inactive",
+  "role": "Role",
+  "manager": "Manager",
+  "technician": "Technician",
+  "deactivate": "Deactivate",
+  "reactivate": "Reactivate",
+  "deleteMember": "Remove",
+  "confirmDeleteMemberTitle": "Remove team member?",
+  "confirmDeleteMemberBody": "{name} will lose access immediately. This can't be undone.",
+  "@confirmDeleteMemberBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "inviteTeamMember": "Invite Team Member",
+  "expiresIn": "Expires in",
+  "hours24": "24 hours",
+  "days3": "3 days",
+  "days7": "7 days",
+  "generateInviteLink": "Generate link",
+  "inviteLinkLabel": "Invite link",
+  "copyLink": "Copy",
+  "linkCopied": "Link copied",
+  "shareViaWhatsApp": "Share via WhatsApp",
+  "whatsAppInviteMessage": "Join {shop} on GarajOS: {link}",
+  "@whatsAppInviteMessage": {
+    "placeholders": { "shop": { "type": "String" }, "link": { "type": "String" } }
+  },
+  "pendingInvites": "Pending Invites",
+  "inviteStatusPending": "Pending",
+  "inviteStatusUsed": "Used",
+  "inviteStatusRevoked": "Revoked",
+  "inviteStatusExpired": "Expired",
+  "revokeInviteAction": "Revoke",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "youAreJoining": "You're joining {shop} as {role}",
+  "@youAreJoining": {
+    "placeholders": { "shop": { "type": "String" }, "role": { "type": "String" } }
+  },
+  "joinAndCreateAccount": "Create account"
 }

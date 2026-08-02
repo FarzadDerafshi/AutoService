@@ -65,6 +65,8 @@ class AppShell extends ConsumerWidget {
           onSelected: (action) async {
             if (action == 'profile') {
               context.go('/profile');
+            } else if (action == 'team') {
+              context.go('/team');
             } else if (action == 'logout') {
               ref.read(authControllerProvider.notifier).logout();
             } else if (action == 'lang_en') {
@@ -88,6 +90,15 @@ class AppShell extends ConsumerWidget {
                 Text(l.profile),
               ]),
             ),
+            if (user?.canManage ?? false)
+              PopupMenuItem(
+                value: 'team',
+                child: Row(children: [
+                  const Icon(Icons.group, size: 16),
+                  const SizedBox(width: 10),
+                  Text(l.team),
+                ]),
+              ),
             const PopupMenuDivider(),
             PopupMenuItem(
               enabled: false,

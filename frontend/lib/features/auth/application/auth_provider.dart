@@ -67,6 +67,18 @@ class AuthController extends AsyncNotifier<AuthState?> {
     });
   }
 
+  /// Adopts an already-obtained [LoginResult] (e.g. from accepting a team
+  /// invite) as the current session — same persistence as [login]/[register],
+  /// just without making the API call itself. Overwrites whatever session
+  /// was previously active, if any.
+  Future<void> setSession(LoginResult result) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await _persist(result);
+      return AuthState(token: result.token, user: result.user);
+    });
+  }
+
   Future<void> updateProfile({required String fullName}) async {
     final current = state.valueOrNull;
     if (current == null) return;

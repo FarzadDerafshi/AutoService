@@ -7,9 +7,9 @@ import { ConflictError, UnauthorizedError } from "../../utils/errors";
 import { UserRole } from "../../types";
 import { RegisterInput, LoginInput, UpdateMeInput, ChangePasswordInput } from "./auth.schema";
 
-const BCRYPT_ROUNDS = 12;
+export const BCRYPT_ROUNDS = 12;
 
-function signToken(payload: { userId: string; shopId: string; role: UserRole }) {
+export function signToken(payload: { userId: string; shopId: string; role: UserRole }) {
   return jwt.sign(payload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions);
 }
 

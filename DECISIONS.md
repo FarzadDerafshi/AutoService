@@ -57,6 +57,34 @@ safe because the value always originates from our own signed JWT.
 All tables use `gen_random_uuid()` as their default PK. This avoids
 enumerable integer IDs in API URLs and is safe under multi-tenant inserts.
 
+**Doubling as a link token (v0.11.0):** `shop_invites.id` is also the
+public invite-link token (`/join/<id>`) — no separate token column. The
+same unguessable-by-design property that makes UUIDs safe as API-visible
+IDs elsewhere in this app makes them safe as bearer-style link tokens too;
+this avoids maintaining a second random-value scheme for one table.
+
+### Audit-pointer foreign keys should be `ON DELETE SET NULL`, not the default `RESTRICT` (hit in practice, v0.11.0)
+`shop_invites.created_by`/`used_by` reference `users(id)` to record *who*
+created/accepted an invite — pure audit metadata, not data the invite
+depends on to make sense. Left at Postgres's default `ON DELETE RESTRICT`
+(what a bare `REFERENCES users(id)` gets you), this silently blocked
+deleting a team member who had created or accepted any invite, ever — with
+a 409 "referenced by other data" error that looked exactly like the
+*intended* block (a user who has created work orders, via
+`work_orders.created_by`, which correctly should stay `RESTRICT`). Caught
+while verifying the team-invites feature: a brand-new user with zero work
+orders still failed to delete, because they were `used_by` on the invite
+they'd just accepted.
+
+Fixed by making both columns `ON DELETE SET NULL` (and dropping `NOT NULL`
+on `created_by`, required for `SET NULL` to be legal) — the invite row
+survives with the pointer cleared. **Rule of thumb for any future
+"who did this" column:** if the referencing row's own meaning doesn't
+depend on the referenced user still existing, use `SET NULL`; reserve the
+default `RESTRICT` for FKs where the referenced row genuinely can't be
+orphaned safely (e.g. `work_orders.created_by` — deleting that user while
+their work orders exist would be silently discarding who did the work).
+
 ### Work-order numbering
 `order_no` is a global `SERIAL`. Per-shop sequential numbering (e.g. #1, #2
 per shop) was deferred; it would require a `shop_counters` table and an
@@ -127,6 +155,32 @@ otherwise read as an opaque "Internal server error" to the client. The
 mimetype rejection itself (`fileFilter` in `shop.routes.ts`) throws a
 `ValidationError` directly instead, so it's handled by the existing
 `AppError` branch.
+
+### Team invites — public routes mixed into an otherwise-protected router (v0.11.0)
+`invites.routes.ts` registers `GET /:id/public` and `POST /:id/join`
+*before* calling `invitesRoutes.use(authenticate, tenantScope)` — Express
+walks a router's stack in registration order per request, so a route
+handler registered earlier runs (and, via `asyncHandler`, sends its
+response) without ever reaching a `.use()` call registered afterward. This
+is the same trick `auth.routes.ts` already uses to mix public
+`/register`/`/login` with an authenticated `/me` in one router; `invites`
+just has two public routes to `auth`'s two, in the same file rather than a
+separate one, because both need the same `:id` param space as the
+authenticated invite-management routes right below them.
+
+The public routes intentionally do **not** use `req.db` (which requires
+`tenantScope` to have already run and set `app.current_shop_id`) — they
+query through the plain `pool` import instead, exactly like
+`auth.service.ts`'s `login`/`registerShopAndOwner` do for the same reason:
+there's no shop context yet for a visitor who doesn't have an account.
+
+**Race safety on accept:** `POST /:id/join` re-checks the invite's
+validity (not expired/used/revoked) *inside* a transaction, using
+`SELECT ... FOR UPDATE` to lock the row before checking — without the
+lock, two people opening the same link within the same moment could both
+pass the "not yet used" check before either one's `UPDATE ... SET used_at`
+commits, creating two accounts off one invite. `FOR UPDATE` serializes the
+second request behind the first's transaction.
 
 ---
 
@@ -533,6 +587,31 @@ entry. **Any new "jump to a work order from elsewhere" entry point must use
 the direct path route `/work-orders/:id` (→ `WorkOrderDetailScreen`)**, not
 the `?id=` query-param form — this is what `global_search_bar.dart` and
 `work_orders_master_list.dart`'s own mobile branch already do correctly.
+
+**Team-invite links bypass the auth redirect entirely (v0.11.0):** the
+`redirect` callback checks `loc.startsWith('/join/')` *before* any of the
+existing logged-in/logged-out logic and returns `null` (no redirect)
+unconditionally for it — unlike `/login`/`/register`, which are only
+"public" in the logged-out direction (a logged-in user visiting them
+bounces back to `/work-orders`). `/join/:id` must never bounce either way:
+a logged-out visitor needs to reach the form, and a visitor who happens to
+already be logged in as someone else (e.g. opening the link on a device
+where they're signed into another account) also needs to reach it, because
+accepting the invite deliberately calls `AuthController.setSession()` to
+switch the active session to the newly-created account.
+
+**Building a link a human opens in a browser, from inside the app
+(v0.11.0):** `api_client.dart`'s existing `apiOrigin` isn't right for
+this — on native builds it resolves to the *API server's* origin (the
+dart-define `API_BASE_URL`), not wherever the web frontend happens to be
+hosted. Added a separate `appOrigin` getter (`kIsWeb ? Uri.base.origin :
+apiOrigin`) specifically for this case (used to build the `/join/<id>`
+invite link). Native's fallback to `apiOrigin` is a known-imperfect guess
+— there's no reliable way for a native client to know the web frontend's
+address without new configuration — acceptable since invite-link
+generation is a web-first flow in practice. If a native "generate invite
+link" flow becomes real usage rather than incidental, this will need an
+actual configured frontend base URL rather than a guess.
 
 ### "GarajOS" gamified dark theme (v0.8.0)
 

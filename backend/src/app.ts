@@ -13,6 +13,8 @@ import { workOrdersRoutes } from "./modules/workOrders/workOrders.routes";
 import { reportsRoutes } from "./modules/reports/reports.routes";
 import { searchRoutes } from "./modules/search/search.routes";
 import { shopRoutes } from "./modules/shop/shop.routes";
+import { invitesRoutes } from "./modules/invites/invites.routes";
+import { usersRoutes } from "./modules/users/users.routes";
 
 export const app = express();
 
@@ -39,6 +41,7 @@ const authLimiter = rateLimit({
 });
 app.use("/api/v1/auth/login", authLimiter);
 app.use("/api/v1/auth/register", authLimiter);
+app.use("/api/v1/invites/:id/join", authLimiter);
 
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
@@ -57,6 +60,8 @@ app.use("/api/v1/work-orders", workOrdersRoutes);
 app.use("/api/v1/reports", reportsRoutes);
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/shop", shopRoutes);
+app.use("/api/v1/invites", invitesRoutes);
+app.use("/api/v1/users", usersRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
