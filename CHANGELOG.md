@@ -5,6 +5,55 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.12.0] — 2026-08-02  *(Redesigned Work-Order PDF + Fix — Turkish Characters Garbled in Print)*
+
+### Added
+- **Work-order PDF completely redesigned** into a "classy, modern,
+  professional slip" (design supplied by Farzad via
+  `Desktop\logs\work-orders.pdf.redesigned.ts`): letterhead with logo +
+  shop identity on the left and a large order number + color-coded status
+  pill (draft/completed/paid) on the right under a brand-green accent
+  rule; client/vehicle shown as two side-by-side info cards instead of
+  plain stacked text; line-items table with a dark header band and
+  alternating row shading; grand total in a highlighted brand-tint box;
+  notes in a left-accented callout card; consistent footer. Replaces the
+  plain-text layout the PDF has had since v0.3.0.
+
+### Fixed
+- **Turkish characters (ı, İ, ğ, Ş, ö, ç, ü, ...) rendered as garbled
+  symbols in every printed work order** — caught from
+  `Desktop\logs\work-order-2.pdf`, e.g. the shop address
+  "Yenişehir mahallesi, Osmanlı Bulvarı..." printed as
+  "YeniöV†—"Ö†ÆÆW6'Â÷6ÖæÁ1 Bulvar...". Root cause: PDFKit's built-in
+  `"Helvetica"`/`"Helvetica-Bold"` are the PDF standard-14 fonts, encoded
+  as WinAnsi — a character set that's missing the Turkish-specific letters
+  entirely, so PDFKit either dropped them or substituted the wrong glyph.
+  This affected *every* PDF this app has ever generated for a Turkish shop
+  name, address, tax office, or any Turkish word in a client/vehicle/notes
+  field — not something introduced by the redesign.
+
+  Fix: embed a real font instead of relying on the standard-14 set.
+  Tried Google-Fonts-distributed webfont packages first
+  (`@fontsource/noto-sans`) but rejected them after verifying with
+  `fontkit`'s `hasGlyphForCodePoint`: those packages split each family into
+  disjoint per-unicode-range files (`latin` vs `latin-ext`) meant to be
+  layered together via CSS `unicode-range` in a browser — used standalone
+  (as PDFKit needs), the `latin-ext` file is missing plain ASCII and
+  punctuation, and `latin` is missing the Turkish letters, so *neither
+  alone* is usable. Settled on `dejavu-fonts-ttf` (DejaVu Sans) instead —
+  ships as one complete, non-subsetted TTF per weight with full Latin
+  Extended-A + general punctuation coverage in a single file, permissively
+  licensed (Bitstream Vera-derived, embedding/redistribution allowed).
+  Verified against the exact same work order that showed the original bug
+  (`work-order-2.pdf`'s address, "Genel Bakım", "Vergi Dairesi") — renders
+  correctly now.
+  _Files: `backend/src/config/fonts.ts` (new), `backend/package.json`_
+
+_Files: `backend/src/modules/workOrders/workOrders.pdf.ts`,
+`backend/src/config/fonts.ts` (new), `backend/package.json`_
+
+---
+
 ## [0.11.1] — 2026-08-02  *(Fix — "Pending Invites" Showed Already-Used Invites)*
 
 ### Fixed

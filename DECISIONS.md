@@ -117,6 +117,47 @@ for any direct API client (e.g. Postman, mobile apps hitting the API directly).
 Tokens are signed with HS256 and expire in 8 hours (`JWT_EXPIRES_IN`).
 Logout is best-effort (stateless JWT — no server-side token revocation).
 
+### PDF text and Turkish characters (v0.12.0)
+PDFKit's built-in `"Helvetica"`/`"Helvetica-Bold"` (and the other standard-14
+fonts) are encoded as WinAnsi, which does **not** include the Turkish
+letters ı, İ, ğ, Ğ, ş, Ş — text containing them renders as garbled symbols
+or drops the character outright. This is invisible in local testing with
+English sample data and only shows up once real Turkish shop/client/vehicle
+data goes through `renderWorkOrderPdf`. **Any PDF text in this codebase
+must use an embedded font, never a standard-14 font name.**
+
+`backend/src/config/fonts.ts` exports `FONT_REGULAR`/`FONT_BOLD` — absolute
+paths (via `require.resolve`) to `dejavu-fonts-ttf`'s `DejaVuSans.ttf`/
+`DejaVuSans-Bold.ttf`. Register them once per `PDFDocument` instance
+(`doc.registerFont("PdfSans", FONT_REGULAR)`, `workOrders.pdf.ts`) and use
+that name everywhere a `"Helvetica"`/`"Helvetica-Bold"` call would
+otherwise appear.
+
+**Gotcha — Google-Fonts-style webfont packages don't work standalone for
+this (tried and rejected, v0.12.0):** `@fontsource/*` packages (and Google
+Fonts' own CSS2 API) split every family into disjoint per-unicode-range
+files — e.g. Noto Sans ships separate `latin` and `latin-ext` files, meant
+to be layered together via CSS `unicode-range` so a browser only downloads
+what a given page needs. Used standalone (as PDFKit requires — one font
+file per `registerFont` call, no automatic fallback across files), the
+`latin-ext` file is missing plain ASCII and punctuation entirely, and
+`latin` is missing the Turkish letters — *neither file alone has what a
+Turkish work order needs*. This isn't obvious from the file names or from
+opening the font in a design tool; it only shows up as missing glyphs at
+render time. Verified this concretely with `fontkit`'s
+`hasGlyphForCodePoint(codepoint)` on each candidate file before picking a
+replacement — if evaluating a different embedded-font approach in the
+future, check coverage this way rather than assuming a "latin-ext" name
+means "full extended coverage":
+```js
+const fontkit = require("fontkit");
+const font = fontkit.openSync("path/to/font.ttf");
+font.hasGlyphForCodePoint(0x131); // ı — Turkish dotless i
+```
+DejaVu Sans was chosen instead specifically because it ships as one
+complete, non-subsetted TTF per weight (no unicode-range splitting) with
+full Latin Extended-A + general punctuation coverage in that single file.
+
 ### File uploads — shop logo (v0.10.0)
 `backend/src/config/uploads.ts` defines `UPLOADS_DIR` (`path.resolve(process.cwd(),
 "uploads")`) and `SHOP_LOGOS_DIR` (`UPLOADS_DIR/shop-logos`) — both single
