@@ -5,6 +5,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.9.2] — 2026-08-02  *(Remaining Hard-Coded English UI Strings)*
+
+### Fixed
+- **Several UI strings were hard-coded in English and never wired to
+  `AppLocalizations`, so they stayed in English even with Türkçe selected**
+  (caught from a screenshot of the Turkish-locale work-orders screen):
+  the global search bar's hint text (`'Search plate, name, phone, order #'`),
+  the master-detail empty-state message (`'Select an item to view its
+  details'`, previously a non-const-friendly hard-coded default parameter),
+  the "Voice" section header in the account popup menu, and the
+  "Corporate"/"Garage" tone-toggle option labels in that same menu. Added
+  four new ARB keys (`globalSearchHint`, `selectItemToViewDetails`,
+  `voiceToneLabel`, `toneCorporate`, `toneStreet`) to both `app_en.arb` and
+  `app_tr.arb` and regenerated via `flutter gen-l10n`.
+  `MasterDetailScaffold.emptyDetailMessage` changed from a `String` with a
+  hard-coded English default (defaults must be compile-time constants, so it
+  couldn't call `AppLocalizations.of(context)`) to a nullable `String?` that
+  falls back to the localized string inside `build()`.
+  _Files: `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/generated/app_localizations*.dart`,
+  `frontend/lib/core/widgets/global_search_bar.dart`,
+  `frontend/lib/core/widgets/master_detail_scaffold.dart`,
+  `frontend/lib/core/widgets/app_shell.dart`_
+- **Note on `tone_toggle.dart`:** that widget's icon-only Corporate/Street
+  toggle (used on the login screen) is *still* intentionally untranslated —
+  same treatment as the "EN"/"TR" language chips, since it shows no text,
+  only icons+tooltips. Only the app-shell popup menu's *text-labeled* copy
+  of this toggle was in scope here. Confirmed with Farzad before touching
+  it, since it contradicted that documented decision. Doc comment in
+  `tone_toggle.dart` updated to call out the distinction explicitly so a
+  future pass doesn't conflate the two.
+  _File: `frontend/lib/core/widgets/tone_toggle.dart`_
+
+---
+
 ## [0.9.1] — 2026-08-02  *(Brand Rename to GarajOS + Turkish Lira Currency)*
 
 ### Fixed

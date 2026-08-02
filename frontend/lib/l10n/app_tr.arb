@@ -28,6 +28,11 @@
   "reports": "Raporlar",
   "logOut": "Çıkış Yap",
   "language": "Dil",
+  "voiceToneLabel": "Ton",
+  "toneCorporate": "Kurumsal",
+  "toneStreet": "Garaj",
+  "globalSearchHint": "Plaka, isim, telefon, sipariş no ile ara",
+  "selectItemToViewDetails": "Detayları görmek için bir öğe seçin",
 
   "edit": "Ayar Çek",
   "delete": "Hurdaya Ayır",

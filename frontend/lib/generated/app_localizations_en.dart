@@ -82,6 +82,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
+  String get voiceToneLabel => 'Voice';
+
+  @override
+  String get toneCorporate => 'Corporate';
+
+  @override
+  String get toneStreet => 'Garage';
+
+  @override
+  String get globalSearchHint => 'Search plate, name, phone, order #';
+
+  @override
+  String get selectItemToViewDetails => 'Select an item to view its details';
+
+  @override
   String get edit => 'Tweak';
 
   @override

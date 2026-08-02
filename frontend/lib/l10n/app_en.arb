@@ -28,6 +28,11 @@
   "reports": "Reports",
   "logOut": "Log out",
   "language": "Language",
+  "voiceToneLabel": "Voice",
+  "toneCorporate": "Corporate",
+  "toneStreet": "Garage",
+  "globalSearchHint": "Search plate, name, phone, order #",
+  "selectItemToViewDetails": "Select an item to view its details",
 
   "edit": "Tweak",
   "delete": "Scrap it",

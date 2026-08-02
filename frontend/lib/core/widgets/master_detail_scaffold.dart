@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../generated/app_localizations.dart';
 
 /// One shared widget tree, two arrangements, switched by breakpoint — not two
 /// separate screens — so state (selected work order, filters) is never lost
@@ -6,12 +7,12 @@ import 'package:flutter/material.dart';
 class MasterDetailScaffold extends StatelessWidget {
   final Widget masterPanel;
   final Widget? detailPanel;
-  final String emptyDetailMessage;
+  final String? emptyDetailMessage;
 
   const MasterDetailScaffold({
     required this.masterPanel,
     required this.detailPanel,
-    this.emptyDetailMessage = 'Select an item to view its details',
+    this.emptyDetailMessage,
     super.key,
   });
 
@@ -32,7 +33,7 @@ class MasterDetailScaffold extends StatelessWidget {
                 child: detailPanel ??
                     Center(
                       child: Text(
-                        emptyDetailMessage,
+                        emptyDetailMessage ?? AppLocalizations.of(context)!.selectItemToViewDetails,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey),
                       ),
                     ),

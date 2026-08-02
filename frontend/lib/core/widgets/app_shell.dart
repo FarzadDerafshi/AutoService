@@ -103,16 +103,16 @@ class AppShell extends ConsumerWidget {
               ]),
             ),
             const PopupMenuDivider(),
-            const PopupMenuItem(
+            PopupMenuItem(
               enabled: false,
-              child: Text('Voice', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(l.voiceToneLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
             PopupMenuItem(
               value: 'tone_corporate',
               child: Row(children: [
                 const Icon(Icons.business_center, size: 16),
                 const SizedBox(width: 10),
-                const Text('Corporate'),
+                Text(l.toneCorporate),
                 if (currentTone == AppTone.corporate) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 16),
@@ -124,7 +124,7 @@ class AppShell extends ConsumerWidget {
               child: Row(children: [
                 const Icon(Icons.build, size: 16),
                 const SizedBox(width: 10),
-                const Text('Garage'),
+                Text(l.toneStreet),
                 if (currentTone == AppTone.street) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 16),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/search/application/search_provider.dart';
 import '../../features/search/data/search_repository.dart';
+import '../../generated/app_localizations.dart';
 
 /// Persistent global search bar (see architecture doc 4.3): queries
 /// /api/v1/search with a ~300ms debounce and shows sectioned results,
@@ -151,7 +152,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
           decoration: InputDecoration(
             isDense: true,
             filled: true,
-            hintText: 'Search plate, name, phone, order #',
+            hintText: AppLocalizations.of(context)!.globalSearchHint,
             prefixIcon: const Icon(Icons.search, size: 20),
             suffixIcon: _loading
                 ? const Padding(

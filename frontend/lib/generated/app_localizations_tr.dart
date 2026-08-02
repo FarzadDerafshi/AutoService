@@ -82,6 +82,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get language => 'Dil';
 
   @override
+  String get voiceToneLabel => 'Ton';
+
+  @override
+  String get toneCorporate => 'Kurumsal';
+
+  @override
+  String get toneStreet => 'Garaj';
+
+  @override
+  String get globalSearchHint => 'Plaka, isim, telefon, sipariş no ile ara';
+
+  @override
+  String get selectItemToViewDetails => 'Detayları görmek için bir öğe seçin';
+
+  @override
   String get edit => 'Ayar Çek';
 
   @override

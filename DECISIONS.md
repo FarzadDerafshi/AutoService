@@ -193,6 +193,24 @@ conditional import pattern as JWT token storage — `localStorage` on web,
 `flutter_secure_storage` on native. The locale language code (`"en"` / `"tr"`)
 is stored under the key `locale_code`.
 
+**Corporate/Garage tone labels — two different treatments, both intentional
+(v0.9.2):** there are two separate widgets that let a user pick the
+Corporate-vs-Garage voice tone, and they're localized differently on
+purpose:
+- `core/widgets/tone_toggle.dart` (used on the login screen) is icon-only —
+  no text is rendered, only tooltips — so it's treated like the "EN"/"TR"
+  language chips and left untranslated.
+- The account popup menu in `core/widgets/app_shell.dart` renders the actual
+  words "Corporate"/"Garage" (→ "Kurumsal"/"Garaj" in Turkish) as visible
+  text, via ARB keys `toneCorporate`/`toneStreet`, because a real word
+  sitting in an otherwise fully-Turkish menu reads as a bug (this is exactly
+  how it was caught — a screenshot of the Turkish UI). Confirmed with Farzad
+  before diverging from the older icon-toggle's documented intent.
+
+If you're auditing for hard-coded English strings again, don't assume every
+instance of a tone label is covered by the tone_toggle.dart exemption —
+check whether the specific widget actually renders text or just an icon.
+
 **Adding a new language:**
 1. Create `frontend/lib/l10n/app_<code>.arb` with all keys from `app_en.arb`.
 2. Add `Locale('<code>')` to `supportedLocales` in `frontend/lib/app.dart`.

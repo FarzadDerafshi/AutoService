@@ -244,6 +244,36 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get language;
 
+  /// No description provided for @voiceToneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get voiceToneLabel;
+
+  /// No description provided for @toneCorporate.
+  ///
+  /// In en, this message translates to:
+  /// **'Corporate'**
+  String get toneCorporate;
+
+  /// No description provided for @toneStreet.
+  ///
+  /// In en, this message translates to:
+  /// **'Garage'**
+  String get toneStreet;
+
+  /// No description provided for @globalSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search plate, name, phone, order #'**
+  String get globalSearchHint;
+
+  /// No description provided for @selectItemToViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item to view its details'**
+  String get selectItemToViewDetails;
+
   /// No description provided for @edit.
   ///
   /// In en, this message translates to:
