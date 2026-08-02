@@ -5,6 +5,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.9.3] — 2026-08-02  *(Login Logo Size + Home-Screen Icon Investigation)*
+
+### Changed
+- **Login screen logo enlarged** — doubled from `height: 96` to `height: 192`
+  per request, no layout overflow at the existing `maxWidth: 400` form
+  constraint.
+  _File: `frontend/lib/features/auth/presentation/login_screen.dart`_
+
+### Investigated — no code change needed
+- **iPhone "Add to Home Screen" showed the default Flutter logo instead of
+  the GarajOS icon** (reported via a screenshot of the iOS share-sheet).
+  Verified server-side and found everything already correct: `index.html`'s
+  `apple-touch-icon` link tags point at `icons/Icon-maskable-192.png` /
+  `-512.png`, both files are the branded mascot artwork (not Flutter
+  defaults), and `curl` against the live container confirms it serves those
+  exact bytes with no long-lived cache headers that could explain a stale
+  serve. This is a known iOS Safari quirk, not a build defect: Safari caches
+  home-screen icons per-URL independently of normal HTTP caching, so a
+  device that visited this LAN URL before the branded icons were added
+  (pre-v0.7.0) can keep showing its own stale icon indefinitely regardless
+  of what the server now sends. See DECISIONS.md for the fix on the device
+  side.
+
+---
+
 ## [0.9.2] — 2026-08-02  *(Remaining Hard-Coded English UI Strings)*
 
 ### Fixed

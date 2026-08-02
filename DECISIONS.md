@@ -294,6 +294,23 @@ The Flutter web build must be rebuilt (`flutter build web --release`) and the
 nginx container restarted (`docker restart repairshop_web`) for PWA changes to
 take effect.
 
+**Gotcha — iOS "Add to Home Screen" can show a stale icon even when the
+server is correct (hit in practice, v0.9.3):** Safari caches the home-screen
+icon per-URL independently of normal HTTP caching (no amount of correct
+`Cache-Control`/ETag headers on the server side prevents this). If an iPhone
+visited this app's LAN URL before the branded `apple-touch-icon` files
+existed (pre-v0.7.0, when the icons were still Flutter's default), it can
+keep showing that old icon on every subsequent "Add to Home Screen" forever,
+even after the server starts serving the right file. Before assuming a
+report like this is a build/deploy bug, verify server-side first:
+```bash
+curl -s http://localhost:8080/ | grep apple-touch-icon   # confirm the tags
+curl -sI http://localhost:8080/icons/Icon-maskable-192.png  # confirm 200 + no long max-age
+```
+If those check out, the fix is on the device: iOS Settings → Safari →
+Advanced → Website Data → find the host/IP → Delete, then reload the page
+fresh before retrying "Add to Home Screen".
+
 ### Brand icon/logo (v0.7.0 — real logo, replaces the v0.6.0 placeholder)
 
 `assets/branding/logo-master.png` is the source of truth for the app icon —
