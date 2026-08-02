@@ -5,6 +5,39 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.9.1] — 2026-08-02  *(Brand Rename to GarajOS + Turkish Lira Currency)*
+
+### Fixed
+- **App still read "AutoService" everywhere despite the GarajOS rebrand**
+  The visual redesign (v0.7.0–v0.9.0) never touched the actual brand string.
+  `appTitle` (shown on the login screen and the app-shell header via
+  `AppLocalizations`), the browser tab `<title>`, PWA manifest name/short_name,
+  and social-share meta tags (`apple-mobile-web-app-title`, `og:title`,
+  `twitter:title`) all still said "AutoService" / "AutoServis". Fixed by
+  changing the `appTitle` key in both `app_en.arb` and `app_tr.arb` to
+  "GarajOS" and regenerating via `flutter gen-l10n` (never hand-edit
+  `lib/generated/` — see i18n gotcha in DECISIONS.md), plus updating the
+  `MaterialApp.router` `title:` and the web-shell HTML/manifest directly.
+  The internal `AutoServiceApp` Dart class name (`app.dart`, `main.dart`) was
+  left as-is — it's not user-visible UI.
+  _Files: `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/generated/app_localizations*.dart`, `frontend/lib/app.dart`,
+  `frontend/web/index.html`, `frontend/web/manifest.json`_
+
+- **Financial figures were formatted in USD (`$`) instead of Turkish Lira**
+  `formatCurrency()`, the single formatting helper used by every screen that
+  displays money (work order line items, totals, catalog prices, reports),
+  hard-coded `NumberFormat.currency(symbol: '\$', decimalDigits: 2)`. Since
+  the app's localization is Turkish-only for currency (no multi-currency
+  support), fixed at the source by switching to
+  `NumberFormat.currency(locale: 'tr_TR', symbol: '₺', decimalDigits: 2)`,
+  which also switches grouping/decimal separators to Turkish convention
+  (`₺1.234,50` instead of `$1,234.50`). No other file hard-codes a `$`
+  symbol — confirmed by grepping the whole `frontend/lib` tree.
+  _File: `frontend/lib/core/utils/currency_formatter.dart`_
+
+---
+
 ## [0.9.0] — 2026-08-01  *(Corporate/Garage Voice Toggle + Full Gamification Localization)*
 
 ### Added

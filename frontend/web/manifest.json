@@ -1,6 +1,6 @@
 {
-    "name": "AutoService",
-    "short_name": "AutoService",
+    "name": "GarajOS",
+    "short_name": "GarajOS",
     "description": "Auto repair shop management system",
     "start_url": ".",
     "display": "standalone",

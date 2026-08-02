@@ -9,7 +9,7 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
-  String get appTitle => 'AutoServis';
+  String get appTitle => 'GarajOS';
 
   @override
   String get email => 'E-posta';

@@ -121,7 +121,7 @@ class AutoServiceApp extends ConsumerWidget {
         tone == AppTone.corporate ? Locale(baseLocale.languageCode, 'CP') : baseLocale;
 
     return MaterialApp.router(
-      title: 'AutoService',
+      title: 'GarajOS',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
