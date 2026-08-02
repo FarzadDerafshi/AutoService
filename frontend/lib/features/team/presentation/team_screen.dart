@@ -58,11 +58,25 @@ class TeamScreen extends ConsumerWidget {
               child: AsyncValueWidget<List<Invite>>(
                 value: invitesAsync,
                 onRetry: () => ref.invalidate(teamInvitesProvider),
-                data: (invites) => Column(
-                  children: [
-                    for (final invite in invites) _InviteTile(invite: invite),
-                  ],
-                ),
+                // This section is specifically "pending" — an invite that's
+                // been used/revoked/expired isn't actionable anymore and
+                // just clutters a list titled "Pending Invites" with
+                // entries that contradict the heading (caught by Farzad:
+                // used invites were showing here as if still outstanding).
+                data: (invites) {
+                  final pending = invites.where((i) => i.isPending).toList();
+                  if (pending.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(l.noPendingInvites, style: Theme.of(context).textTheme.bodyMedium),
+                    );
+                  }
+                  return Column(
+                    children: [
+                      for (final invite in pending) _InviteTile(invite: invite),
+                    ],
+                  );
+                },
               ),
             ),
           ],

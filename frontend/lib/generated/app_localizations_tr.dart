@@ -550,6 +550,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pendingInvites => 'Bekleyen Davetler';
 
   @override
+  String get noPendingInvites => 'Bekleyen davet yok';
+
+  @override
   String get inviteStatusPending => 'Bekliyor';
 
   @override

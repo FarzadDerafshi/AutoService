@@ -178,6 +178,7 @@
   "shareViaWhatsApp": "WhatsApp ile paylaş",
   "whatsAppInviteMessage": "{shop} işletmesine GarajOS üzerinden katıl: {link}",
   "pendingInvites": "Bekleyen Davetler",
+  "noPendingInvites": "Bekleyen davet yok",
   "inviteStatusPending": "Bekliyor",
   "inviteStatusUsed": "Kullanıldı",
   "inviteStatusRevoked": "İptal edildi",

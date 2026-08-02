@@ -1084,6 +1084,12 @@ abstract class AppLocalizations {
   /// **'Pending Invites'**
   String get pendingInvites;
 
+  /// No description provided for @noPendingInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending invites'**
+  String get noPendingInvites;
+
   /// No description provided for @inviteStatusPending.
   ///
   /// In en, this message translates to:

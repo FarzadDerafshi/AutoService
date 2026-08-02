@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.11.1] — 2026-08-02  *(Fix — "Pending Invites" Showed Already-Used Invites)*
+
+### Fixed
+- **The Team screen's "Pending Invites" section listed invites that had
+  already been accepted**, showing as "Technician — Used" under a heading
+  that says "Pending." Farzad caught this immediately after inviting Araz
+  — two entries showed up there, both actually already used (Araz's real
+  invite, plus a leftover from an earlier verification pass). Checked the
+  backend data first to rule out an actual invite/user bug: both invites'
+  `used_at`/`used_by` were correct — Araz's account really was created via
+  his invite. The bug was purely in the frontend: `GET /api/v1/invites`
+  intentionally returns every invite regardless of status (so a future
+  history view could use it), but `team_screen.dart` rendered that
+  unfiltered list directly under the "Pending Invites" heading instead of
+  filtering to `invite.isPending` first. Now filters to pending-only, with
+  a "No pending invites" empty state.
+  _Files: `frontend/lib/features/team/presentation/team_screen.dart`,
+  `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`_
+
+---
+
 ## [0.11.0] — 2026-08-02  *(Team Invites — WhatsApp Link, Self-Registration, Deactivate/Delete)*
 
 ### Added

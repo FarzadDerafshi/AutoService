@@ -241,6 +241,7 @@
     "placeholders": { "shop": { "type": "String" }, "link": { "type": "String" } }
   },
   "pendingInvites": "Pending Invites",
+  "noPendingInvites": "No pending invites",
   "inviteStatusPending": "Pending",
   "inviteStatusUsed": "Used",
   "inviteStatusRevoked": "Revoked",

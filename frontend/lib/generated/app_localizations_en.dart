@@ -549,6 +549,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingInvites => 'Pending Invites';
 
   @override
+  String get noPendingInvites => 'No pending invites';
+
+  @override
   String get inviteStatusPending => 'Pending';
 
   @override
