@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: repairshop_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-repairshop_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?error - set DB_PASSWORD in .env}
+      POSTGRES_DB: ${DB_NAME:-repairshop}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"   # loopback only, never expose further
+    networks:
+      - repairshop_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-repairshop_admin} -d ${DB_NAME:-repairshop}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: repairshop_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${DB_USER:-repairshop_admin}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-repairshop}
+      JWT_SECRET: ${JWT_SECRET:?error - set JWT_SECRET in .env}
+      JWT_EXPIRES_IN: "8h"
+      CORS_ORIGIN: ${CORS_ORIGIN:?error - set CORS_ORIGIN in .env}
+    # No "ports:" key at all — dev publishes 3000 to the host for local
+    # curl/debugging; in prod nothing outside the Docker network should
+    # reach the API directly. Only nginx (the `web` service) talks to it,
+    # via the internal `repairshop_net` network at http://api:3000.
+    networks:
+      - repairshop_net
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: garajos-web:prod
+    container_name: repairshop_web
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:8083:80"   # loopback only — reachable by the Cloudflare
+                               # Tunnel process on this same machine, not by
+                               # other devices on the LAN
+    networks:
+      - repairshop_net
+
+networks:
+  repairshop_net:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
