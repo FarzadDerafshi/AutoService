@@ -5,6 +5,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.13.1] — 2026-08-03  *(Production Deployment Confirmed Live — Guide Corrections from Real Server Run)*
+
+### Fixed
+- **Deployment guide corrected against an actual server run.** The
+  Docker-based frontend build (`frontend/Dockerfile`, v0.13.0) was
+  confirmed working — all three containers built and started successfully
+  on the target Windows home server with no Flutter installed on it. Two
+  parts of the original guide draft didn't hold up and were corrected:
+  the `docker run --rm node:20-alpine node -e "..."` one-liner suggested
+  for generating `JWT_SECRET`/`DB_PASSWORD` errored on this server
+  (likely a Docker Hub pull/network restriction) — replaced with a
+  PowerShell-native `RNGCryptoServiceProvider` command that needs nothing
+  beyond PowerShell itself; and the assumed project root
+  (`D:\apps\garajos`) didn't match the actual path used
+  (`D:\apps\GarajOS\garajos`) — every path reference in the guide was
+  corrected. Also added tested `winget install --id Git.Git` (Git wasn't
+  preinstalled) and a working native-Flutter-install PowerShell script,
+  kept as an optional fallback path.
+  See `DECISIONS.md`'s "Production deployment" section for the full
+  writeup. No application code changed — this is a documentation-only
+  correction to the external deployment guide (and this repo's
+  `DECISIONS.md`), based on real-world deployment feedback.
+  _Files: `DECISIONS.md`,
+  `C:\Users\Farzad\Desktop\logs\garajos-production-deployment-guide.md`
+  (outside repo)_
+
+---
+
 ## [0.13.0] — 2026-08-03  *(Production Deployment — Dockerized Frontend Build + Prod Compose Stack)*
 
 ### Added

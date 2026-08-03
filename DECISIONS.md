@@ -767,14 +767,43 @@ Prod differs from dev in three deliberate ways:
   (`./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro`), which also
   means nginx config changes don't require rebuilding the frontend image.
 
+**Confirmed by an actual deployment run (2026-08-03):** `docker compose -f
+docker-compose.prod.yml up -d --build` built all three containers
+successfully on the target home server with no Flutter installed on it —
+validating the `frontend/Dockerfile` approach above as the real, working
+path, not just a theory.
+
+Two things from the original guide draft didn't hold up in practice and
+were corrected:
+- **`docker run --rm node:20-alpine node -e "..."` (suggested for
+  generating `JWT_SECRET`/`DB_PASSWORD`) errored out on this server** —
+  likely a Docker Hub pull/network restriction, not investigated further.
+  Replaced with a PowerShell-native one-liner
+  (`[System.Security.Cryptography.RNGCryptoServiceProvider]` →
+  `[Convert]::ToBase64String`), which needs nothing beyond PowerShell
+  itself. `DB_PASSWORD` ended up hand-picked rather than generated, which
+  is fine and arguably simpler — just keep it alphanumeric-only per the
+  `#`-in-URL gotcha above.
+- **Git and Flutter were not preinstalled on the server.** Git: `winget
+  install --id Git.Git -e --source winget` worked. Flutter: not required
+  for the Docker-build path, but a native-install PowerShell script (fixed
+  version download URL, unzip to `D:\Flutter`, add to machine `PATH`) was
+  tested and works, kept in the guide as an optional fallback/
+  troubleshooting path (Option B) in case the Docker build ever struggles
+  on lower-powered hardware.
+
+The actual project root ended up at `D:\apps\GarajOS\garajos` (an extra
+`GarajOS` level above the cloned repo folder), not the flat `D:\apps\garajos`
+an earlier draft assumed — every path in the guide was corrected to match.
+
 Full step-by-step deployment guide (server prerequisites, secret
-generation via `docker run node:20-alpine` rather than assuming Node.js is
-on the prod host, pointing the existing Cloudflare Tunnel's ingress rule
-at `127.0.0.1:8083`, backup/restore commands, troubleshooting) lives
-outside this repo at
+generation, pointing the existing Cloudflare Tunnel's ingress rule at
+`127.0.0.1:8083`, backup/restore commands, troubleshooting) lives outside
+this repo at
 `C:\Users\Farzad\Desktop\logs\garajos-production-deployment-guide.md` —
 not checked in since it contains a specific deployment topology, not
-general project documentation.
+general project documentation. As of 2026-08-03 it reflects the
+corrections above and matches a real, working deployment.
 
 ---
 
