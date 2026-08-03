@@ -5,6 +5,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.13.0] — 2026-08-03  *(Production Deployment — Dockerized Frontend Build + Prod Compose Stack)*
+
+### Added
+- **`frontend/Dockerfile`** — new two-stage build (`ghcr.io/cirruslabs/flutter:stable`
+  → `nginx:1.27-alpine` runtime), mirroring the pattern `backend/Dockerfile`
+  already used. Lets the `web` service build the Flutter web app entirely
+  inside Docker, so a production host never needs the Flutter SDK
+  installed locally.
+- **`docker-compose.prod.yml`** — a self-contained production stack for
+  the home-server + Cloudflare Tunnel deployment (`www.garajos.com.tr`),
+  distinct from the dev `docker-compose.yml`:
+  - `api` publishes no port to the host at all (dev publishes
+    `0.0.0.0:3000`) — only reachable from `web` over the internal
+    `repairshop_net` Docker network.
+  - `web` binds to `127.0.0.1:8083` (loopback only), not `0.0.0.0:8080` —
+    reachable by the Cloudflare Tunnel process on the same host, not by
+    any other device on the LAN.
+  - `web` builds from `frontend/Dockerfile` instead of relying on a
+    pre-built `frontend/build/web/` bind mount.
+
+  See `DECISIONS.md`'s "Production deployment" section for why this is a
+  standalone file rather than a merge-overlay on `docker-compose.yml`, and
+  a Dockerfile gotcha (`nginx.conf` can't be `COPY`'d from outside the
+  build context, so it's still supplied via bind mount). Full step-by-step
+  server setup guide lives outside this repo at
+  `Desktop\logs\garajos-production-deployment-guide.md`.
+  _Files: `frontend/Dockerfile`, `docker-compose.prod.yml`, `DECISIONS.md`_
+
+---
+
 ## [0.12.0] — 2026-08-02  *(Redesigned Work-Order PDF + Fix — Turkish Characters Garbled in Print)*
 
 ### Added

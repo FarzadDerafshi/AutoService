@@ -729,6 +729,53 @@ docker compose down -v   # removes containers AND the pgdata volume
 docker compose up -d --build postgres api
 ```
 
+### Production deployment (`docker-compose.prod.yml`, v0.13.0)
+
+Production (a Windows home server behind an existing Cloudflare Tunnel,
+domain `www.garajos.com.tr`) uses a **separate, fully self-contained**
+`docker-compose.prod.yml` rather than a merge-overlay on top of
+`docker-compose.yml`. An overlay was tried first, using Compose's
+`!reset`/`!override` YAML merge tags to drop the `api` service's `ports:`
+key and swap `web`'s bind-mounted build output for an image build — but
+list-merge behavior across Compose versions (whether `ports`/`volumes` are
+replaced vs. concatenated by an override file, and which Compose version
+actually supports `!reset`) was uncertain enough to be a real footgun in a
+guide meant to be followed by hand. A standalone file with zero merge
+semantics is more verbose but unambiguous on any Compose version.
+
+Prod differs from dev in three deliberate ways:
+- **`api` publishes no host port at all** (dev publishes `0.0.0.0:3000`).
+  Only `web`'s nginx reaches it, over the internal `repairshop_net`
+  network at `http://api:3000` — nothing outside Docker needs to hit the
+  API directly in prod.
+- **`web` binds to `127.0.0.1:8083`**, not `0.0.0.0:8080`. Loopback-only:
+  reachable by the Cloudflare Tunnel process running on that same host,
+  unreachable from any other device on the home LAN. Port `8083` (not
+  `8080`) was a deliberate choice to avoid any confusion with the dev
+  box's LAN port — they're different machines, but keeping the numbers
+  distinct avoids muscle-memory mistakes when working across both.
+- **`web` builds from a new `frontend/Dockerfile`** (two-stage:
+  `ghcr.io/cirruslabs/flutter:stable` → `nginx:1.27-alpine` runtime,
+  mirroring the pattern `backend/Dockerfile` already used) instead of
+  requiring a manually-run `flutter build web --release` on the host.
+  The production host has no Flutter SDK installed. **Gotcha:** the
+  Dockerfile does *not* `COPY` `nginx.conf` into the image — Docker's
+  `COPY` can only read files inside its own build context (`./frontend`),
+  and `nginx.conf` lives in the repo's `nginx/` directory, outside that
+  context. `nginx.conf` is instead supplied at container-start via the
+  same bind mount dev already uses
+  (`./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro`), which also
+  means nginx config changes don't require rebuilding the frontend image.
+
+Full step-by-step deployment guide (server prerequisites, secret
+generation via `docker run node:20-alpine` rather than assuming Node.js is
+on the prod host, pointing the existing Cloudflare Tunnel's ingress rule
+at `127.0.0.1:8083`, backup/restore commands, troubleshooting) lives
+outside this repo at
+`C:\Users\Farzad\Desktop\logs\garajos-production-deployment-guide.md` —
+not checked in since it contains a specific deployment topology, not
+general project documentation.
+
 ---
 
 ## Known Limitations / Future Work
@@ -737,7 +784,7 @@ docker compose up -d --build postgres api
 |---|---|---|
 | RLS not enforced | Table-owner DB role bypasses RLS; app-level `shop_id` filtering (added in v0.5.0) is the only real tenant isolation right now | `FORCE ROW LEVEL SECURITY` + non-owner app role, plus rework `register`/`login` (see Database section above) |
 | Catalog item ownership on work orders | `work_order_items.catalog_item_id` isn't verified to belong to the caller's shop when a work order is created | Add the same ownership check used for `clientId`/`vehicleId` in `createWorkOrder` |
-| HTTPS | App runs over plain HTTP; Web Crypto unavailable on LAN | Add TLS (self-signed cert or Let's Encrypt via Caddy/Traefik) |
+| HTTPS | Dev/LAN still runs over plain HTTP; Web Crypto unavailable on LAN | Resolved for production as of v0.13.0 — TLS terminates at Cloudflare's edge in front of the home-server deployment. Dev/LAN access is unaffected and stays plain HTTP. |
 | Token storage (web) | `localStorage` is readable by JS (XSS risk) | Acceptable for internal LAN; switch to `flutter_secure_storage` when HTTPS is available |
 | Work-order numbering | Global sequence, not per-shop | Add `shop_counters` table with advisory lock |
 | Role-based UI | Schema supports owner/manager/technician but UI doesn't restrict by role | Add `canManage` guards to edit/delete actions |
