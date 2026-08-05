@@ -24,6 +24,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Password is required';
 
   @override
+  String get invalidEmailOrPassword => 'Invalid email or password';
+
+  @override
   String get logIn => 'Punch In';
 
   @override
@@ -265,6 +268,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newWorkOrder => 'Wrench a New Job';
+
+  @override
+  String editWorkOrderTitle(int no) {
+    return 'Edit Order #$no';
+  }
+
+  @override
+  String get client => 'Client';
+
+  @override
+  String get vehicle => 'Vehicle';
+
+  @override
+  String get selectAClient => 'Select a client';
+
+  @override
+  String get selectAVehicle => 'Select a vehicle';
+
+  @override
+  String get selectClientAndVehicle => 'Select a client and vehicle';
+
+  @override
+  String get addAtLeastOneLineItem => 'Add at least one line item';
+
+  @override
+  String failedToLoadVehicles(Object error) {
+    return 'Whoops, dropped the vehicle list in the oil pan: $error';
+  }
+
+  @override
+  String get mileageAtServiceLabel => 'Mileage at service (km)';
+
+  @override
+  String get fromCatalog => 'From catalog';
+
+  @override
+  String get customLineItem => 'Custom';
+
+  @override
+  String get descriptionLabel => 'Description';
+
+  @override
+  String get qtyLabel => 'Qty';
+
+  @override
+  String get priceLabel => 'Price';
+
+  @override
+  String get taxRateLabel => 'Tax rate (%)';
+
+  @override
+  String get taxLabel => 'Tax';
 
   @override
   String get noWorkOrders => 'No work orders';

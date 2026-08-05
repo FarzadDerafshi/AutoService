@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'core/config/feature_flags.dart';
 import 'core/locale/locale_provider.dart';
 import 'core/locale/tone_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -45,6 +46,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // signed in as someone else) needs to reach it too, since accepting it
       // deliberately switches the session to the new account.
       if (loc.startsWith('/join/')) return null;
+
+      // Self-registration is temporarily disabled (public usability test) —
+      // block direct navigation to /register even with the link hidden,
+      // same as a logged-out visitor being bounced away from any other route.
+      if (loc == '/register' && !kRegistrationOpen) return '/login';
 
       final authState = ref.read(authControllerProvider);
       final goingToAuth = loc == '/login' || loc == '/register';

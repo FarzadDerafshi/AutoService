@@ -38,7 +38,7 @@ class _CatalogItemFormSheetState extends State<_CatalogItemFormSheet> {
     _type = e?.type ?? 'service';
     _name = TextEditingController(text: e?.name ?? '');
     _sku = TextEditingController(text: e?.sku ?? '');
-    _unit = TextEditingController(text: e?.unit ?? 'unit');
+    _unit = TextEditingController(text: e?.unit ?? '');
     _price = TextEditingController(text: e?.defaultUnitPrice.toString() ?? '0');
   }
 

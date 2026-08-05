@@ -130,6 +130,12 @@ abstract class AppLocalizations {
   /// **'Password is required'**
   String get passwordRequired;
 
+  /// No description provided for @invalidEmailOrPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password'**
+  String get invalidEmailOrPassword;
+
   /// No description provided for @logIn.
   ///
   /// In en, this message translates to:
@@ -579,6 +585,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wrench a New Job'**
   String get newWorkOrder;
+
+  /// No description provided for @editWorkOrderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Order #{no}'**
+  String editWorkOrderTitle(int no);
+
+  /// No description provided for @client.
+  ///
+  /// In en, this message translates to:
+  /// **'Client'**
+  String get client;
+
+  /// No description provided for @vehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get vehicle;
+
+  /// No description provided for @selectAClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a client'**
+  String get selectAClient;
+
+  /// No description provided for @selectAVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a vehicle'**
+  String get selectAVehicle;
+
+  /// No description provided for @selectClientAndVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a client and vehicle'**
+  String get selectClientAndVehicle;
+
+  /// No description provided for @addAtLeastOneLineItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one line item'**
+  String get addAtLeastOneLineItem;
+
+  /// No description provided for @failedToLoadVehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'Whoops, dropped the vehicle list in the oil pan: {error}'**
+  String failedToLoadVehicles(Object error);
+
+  /// No description provided for @mileageAtServiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mileage at service (km)'**
+  String get mileageAtServiceLabel;
+
+  /// No description provided for @fromCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'From catalog'**
+  String get fromCatalog;
+
+  /// No description provided for @customLineItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get customLineItem;
+
+  /// No description provided for @descriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get descriptionLabel;
+
+  /// No description provided for @qtyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get qtyLabel;
+
+  /// No description provided for @priceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get priceLabel;
+
+  /// No description provided for @taxRateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax rate (%)'**
+  String get taxRateLabel;
+
+  /// No description provided for @taxLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get taxLabel;
 
   /// No description provided for @noWorkOrders.
   ///

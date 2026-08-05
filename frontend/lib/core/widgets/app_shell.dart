@@ -37,8 +37,8 @@ class AppShell extends ConsumerWidget {
 
     final destinations = [
       (path: '/work-orders', icon: Icons.receipt_long, label: l.workOrders),
-      (path: '/clients', icon: Icons.people, label: l.clients),
       (path: '/vehicles', icon: Icons.directions_car, label: l.vehicles),
+      (path: '/clients', icon: Icons.people, label: l.clients),
       (path: '/catalog', icon: Icons.build, label: l.catalog),
       (path: '/reports', icon: Icons.bar_chart, label: l.reports),
     ];
@@ -99,31 +99,33 @@ class AppShell extends ConsumerWidget {
                   Text(l.team),
                 ]),
               ),
-            const PopupMenuDivider(),
-            PopupMenuItem(
-              enabled: false,
-              child: Text(l.language, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            PopupMenuItem(
-              value: 'lang_en',
-              child: Row(children: [
-                const Text('🇬🇧  English'),
-                if (currentLocale.languageCode == 'en') ...[
-                  const Spacer(),
-                  const Icon(Icons.check, size: 16),
-                ],
-              ]),
-            ),
-            PopupMenuItem(
-              value: 'lang_tr',
-              child: Row(children: [
-                const Text('🇹🇷  Türkçe'),
-                if (currentLocale.languageCode == 'tr') ...[
-                  const Spacer(),
-                  const Icon(Icons.check, size: 16),
-                ],
-              ]),
-            ),
+            if (kLanguageToggleVisible) ...[
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                enabled: false,
+                child: Text(l.language, style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              PopupMenuItem(
+                value: 'lang_en',
+                child: Row(children: [
+                  const Text('🇬🇧  English'),
+                  if (currentLocale.languageCode == 'en') ...[
+                    const Spacer(),
+                    const Icon(Icons.check, size: 16),
+                  ],
+                ]),
+              ),
+              PopupMenuItem(
+                value: 'lang_tr',
+                child: Row(children: [
+                  const Text('🇹🇷  Türkçe'),
+                  if (currentLocale.languageCode == 'tr') ...[
+                    const Spacer(),
+                    const Icon(Icons.check, size: 16),
+                  ],
+                ]),
+              ),
+            ],
             const PopupMenuDivider(),
             PopupMenuItem(
               enabled: false,

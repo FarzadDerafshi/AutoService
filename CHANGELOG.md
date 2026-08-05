@@ -5,6 +5,183 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.14.4] — 2026-08-05  *(Nav Order — Vehicles Moved Before Clients)*
+
+### Changed
+- **Main navigation order changed** from Servis Kaydı / Müşteriler / Araçlar
+  / Katalog / Raporlar to Servis Kaydı / Araçlar / Müşteriler / Katalog /
+  Raporlar, per Farzad's request. One shared `destinations` list in
+  `app_shell.dart` drives both the wide-screen `NavigationRail` and the
+  narrow/mobile `NavigationBar`, so reordering it covers web and mobile in
+  one change.
+  _File: `frontend/lib/core/widgets/app_shell.dart`_
+
+---
+
+## [0.14.3] — 2026-08-05  *(Localization Fixes from First-Round Screenshots — New Work Order, Payment Method, Save Button, Login Error)*
+
+### Fixed
+- **`work_order_form_screen.dart` (the "New/Edit Work Order" form) had *zero*
+  `AppLocalizations` wiring** — every label, button, and validator message
+  was a raw English string literal, so the single most-used form in the app
+  rendered entirely in English regardless of locale. Caught from Farzad's
+  screenshot during the usability test. Wired the whole screen up: reused
+  existing keys where one already fit (`lineItems`, `discount`, `notes`,
+  `subtotal`, `grandTotal`, `save`, `required`, `newWorkOrder`,
+  `failedToLoadClients`, `clientLabel`/`vehicleLabel`) and added the ones
+  that didn't exist yet — `client`, `vehicle`, `selectAClient`,
+  `selectAVehicle`, `selectClientAndVehicle`, `addAtLeastOneLineItem`,
+  `failedToLoadVehicles`, `mileageAtServiceLabel`, `fromCatalog`,
+  `customLineItem`, `descriptionLabel`, `qtyLabel`, `priceLabel`,
+  `taxRateLabel`, `taxLabel`, `editWorkOrderTitle` — to both `app_en.arb`
+  and `app_tr.arb`.
+- **The "Mark as X" button on the work-order detail screen showed the raw
+  English status enum** (screenshot: "paid İşaretle", half-Turkish
+  half-English) — `markAs(next)` was called with the unlocalized `next`
+  status string (`'draft'`/`'completed'`/`'paid'`) directly, bypassing the
+  `l.draft`/`l.completed`/`l.paid` getters `PitStopStepper` itself already
+  uses correctly for the *current* status. Added a `_statusLabel()` helper
+  in `work_order_detail_panel.dart` (same pattern
+  `vehicle_history_screen.dart` already uses) and now call
+  `l.markAs(_statusLabel(l, next))`.
+- **The payment-method picker dialog and the paid-order chip both showed
+  raw backend enum values** (`cash`/`card`/`bank_transfer`/`other`,
+  screenshot) instead of the already-existing `l.cash`/`l.card`/
+  `l.bankTransfer`/`l.other` keys — `_paymentMethods.map((m) => ... Text(m))`
+  rendered the raw string directly. Added a `_paymentMethodLabel()` helper
+  and used it in both places.
+- **New catalog item form's "Unit" field started pre-filled with the raw
+  English word "unit"** (screenshot: "Birim" label, "unit" value) —
+  `catalog_item_form_sheet.dart` defaulted a *new* item's controller to the
+  literal string `'unit'`. Changed to an empty default (no field should be
+  presumptuously pre-filled with one specific unit word — "adet"/"saat"/
+  "litre" are all equally likely per item). The same English fallback
+  existed one layer deeper too: `catalog.service.ts`'s `createCatalogItem`
+  substitutes `input.unit || "unit"` when the field is left blank, so even
+  with the frontend fix, a blank submission would have silently stored the
+  English word server-side. Changed the backend fallback to `"adet"`
+  (Turkish for "piece/each", the most generic default) to match.
+- **The catalog/client/vehicle "Save" button's Turkish garage-voice
+  translation read as confusing/wrong** (screenshot: "Sıkıştır (Kaydet)" —
+  "Sıkıştır" alone means "compress/tighten," not "save," and doesn't parse
+  as a save action to a Turkish reader even with "(Kaydet)" appended).
+  Simplified `app_tr.arb`'s `save` key to plain "Kaydet" — this button is
+  hit constantly during onboarding/testing, so clarity wins over the pun
+  here; matches what the Corporate-tone override already used
+  (`app_tr_CP.arb`'s `save` was already "Kaydet"). Affects every form that
+  reuses this one shared key (catalog, client, vehicle, and now work order).
+- **Login failure showed the raw backend string "Invalid email or
+  password"** in English, unconditionally — the backend has no notion of
+  the caller's locale, so every error message it returns is English by
+  construction (see DECISIONS.md's new note on this). Added
+  `invalidEmailOrPassword` to both ARBs and a targeted client-side mapping
+  in `login_screen.dart`: the one specific, known, extremely common string
+  is now translated; any other backend message still falls back to the raw
+  English text rather than showing nothing. **Not a general fix** — every
+  other screen that surfaces `toApiException(e).message` directly
+  (register, join, work orders, profile, team, ...) still shows raw
+  backend English on less-common error paths. Flagged as follow-up work if
+  it comes up again; a real fix needs backend error codes the frontend can
+  map, not per-string client-side matching.
+  _Files: `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_detail_panel.dart`,
+  `frontend/lib/features/catalog/presentation/catalog_item_form_sheet.dart`,
+  `frontend/lib/features/auth/presentation/login_screen.dart`,
+  `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/generated/app_localizations*.dart`,
+  `backend/src/modules/catalog/catalog.service.ts`_
+
+---
+
+## [0.14.2] — 2026-08-05  *(Fix — Turkish Default Didn't Apply If a Browser Already Had "en" Saved)*
+
+### Fixed
+- **v0.14.0's new Turkish default silently didn't apply for Farzad's own
+  test browser** — after logging in, the app still showed English with no
+  way to switch (toggle hidden by v0.14.0). Root cause: `LocaleNotifier`'s
+  `_load()` always reads a saved `locale_code` from `localStorage` and
+  overrides the constructor's default state if one exists — that's correct
+  behavior for a normal returning user, but his browser already had
+  `locale_code: 'en'` saved from before this change (or from earlier
+  toggle testing), so the stored value won out over the new `Locale('tr')`
+  default every time, on every reload, with no UI path left to fix it
+  since the toggle is hidden. The bug wasn't in the default itself — it
+  only affected browsers that already had a saved preference from before
+  v0.14.0; a genuinely fresh browser with no `locale_code` key would have
+  seen Turkish correctly.
+
+  Fix: `_load()` now returns immediately without touching storage at all
+  when `kLanguageToggleVisible` is `false` — every user gets Turkish,
+  unconditionally, regardless of what (if anything) is already saved.
+  Re-enabling the toggle later restores normal respect-the-saved-value
+  behavior automatically, no extra change needed.
+  _File: `frontend/lib/core/locale/locale_provider.dart`_
+
+---
+
+## [0.14.1] — 2026-08-05  *(Self-Registration Temporarily Disabled for Public Usability Test)*
+
+### Changed
+- **New shops can no longer self-register**, front-end only, per Farzad's
+  request while a public usability test is running on the live site — he
+  doesn't want anyone creating a real shop account mid-test. New
+  `kRegistrationOpen` constant (currently `false`,
+  `frontend/lib/core/config/feature_flags.dart`) gates two things: the
+  "Create account" link on the login screen (now hidden, same
+  `if (kFlag) ...` pattern the v0.14.0 language toggle uses), and the
+  `goRouterProvider` `redirect` guard in `app.dart`, which now bounces any
+  direct navigation to `/register` back to `/login` regardless of auth
+  state — closing the gap a hidden link alone would leave (someone typing
+  the URL directly).
+
+  **Not changed:** the backend `POST /api/v1/auth/register` endpoint itself
+  still accepts requests — this pass only closes the two UI paths a normal
+  visitor would use. Someone deliberately calling the API directly (e.g.
+  via curl/Postman) could still register. Flagged to Farzad as a
+  follow-up; not blocked automatically since disabling a public API route
+  is a backend/prod change with its own deploy step, out of scope for a
+  "hide it in the UI" request.
+  _Files: `frontend/lib/core/config/feature_flags.dart` (new),
+  `frontend/lib/features/auth/presentation/login_screen.dart`,
+  `frontend/lib/app.dart`_
+
+---
+
+## [0.14.0] — 2026-08-05  *(Turkish-Only for Now — Language Toggle Hidden, Default Locale Switched)*
+
+### Changed
+- **The app now defaults to Turkish and hides the EN/TR language switcher
+  everywhere**, per Farzad's request after first real user testing — every
+  current user works in Turkish, so the toggle was just surface area for
+  confusion. `LocaleNotifier`'s initial state changed from `Locale('en')` to
+  `Locale('tr')` (`core/locale/locale_provider.dart`), and a new
+  `kLanguageToggleVisible` constant (currently `false`) in the same file
+  gates every place the switcher rendered: the login screen's segmented
+  button, the register screen's AppBar action, the public join screen's
+  AppBar action, and the "Language" section (header + English/Türkçe rows)
+  in the authenticated app-shell's account menu. A user with no
+  `locale_code` already in browser storage now lands in Turkish
+  immediately; anyone who'd previously switched to English keeps seeing
+  English until they clear storage, since the stored preference still
+  takes precedence over the new default — the toggle to change it back is
+  just not visible right now.
+
+  **Deliberately not removed:** the underlying `LocaleNotifier`/
+  `localeProvider` machinery, both ARB files, and all four toggle widgets
+  are untouched — only wrapped in `if (kLanguageToggleVisible)`. Farzad was
+  explicit this is temporary ("for the time being, until stated
+  otherwise") and that both `app_en.arb`/`app_tr.arb` must keep being
+  updated for every future feature/fix regardless. Flipping the constant
+  back to `true` (and reverting the default-locale line, if desired) is a
+  two-line change whenever he says so — no re-implementation needed.
+  _Files: `frontend/lib/core/locale/locale_provider.dart`,
+  `frontend/lib/features/auth/presentation/login_screen.dart`,
+  `frontend/lib/features/auth/presentation/register_screen.dart`,
+  `frontend/lib/features/team/presentation/join_screen.dart`,
+  `frontend/lib/core/widgets/app_shell.dart`_
+
+---
+
 ## [0.13.1] — 2026-08-03  *(Production Deployment Confirmed Live — Guide Corrections from Real Server Run)*
 
 ### Fixed

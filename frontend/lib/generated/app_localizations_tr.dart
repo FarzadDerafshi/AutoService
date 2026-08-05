@@ -24,6 +24,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get passwordRequired => 'Şifre gereklidir';
 
   @override
+  String get invalidEmailOrPassword => 'E-posta veya şifre hatalı';
+
+  @override
   String get logIn => 'Mesaiye Başla';
 
   @override
@@ -262,10 +265,62 @@ class AppLocalizationsTr extends AppLocalizations {
       'Somunla ödeme almıyorsak geçerli bir rakam girelim.';
 
   @override
-  String get save => 'Sıkıştır (Kaydet)';
+  String get save => 'Kaydet';
 
   @override
   String get newWorkOrder => 'Yeni İş Emri Patlat';
+
+  @override
+  String editWorkOrderTitle(int no) {
+    return '#$no Nolu Kaydı Düzenle';
+  }
+
+  @override
+  String get client => 'Müşteri';
+
+  @override
+  String get vehicle => 'Araç';
+
+  @override
+  String get selectAClient => 'Bir müşteri seçin';
+
+  @override
+  String get selectAVehicle => 'Bir araç seçin';
+
+  @override
+  String get selectClientAndVehicle => 'Bir müşteri ve araç seçin';
+
+  @override
+  String get addAtLeastOneLineItem => 'En az bir kalem ekleyin';
+
+  @override
+  String failedToLoadVehicles(Object error) {
+    return 'Araç listesi yağ karterine düştü galiba: $error';
+  }
+
+  @override
+  String get mileageAtServiceLabel => 'Servis kilometresi (km)';
+
+  @override
+  String get fromCatalog => 'Katalogdan seç';
+
+  @override
+  String get customLineItem => 'Özel';
+
+  @override
+  String get descriptionLabel => 'Açıklama';
+
+  @override
+  String get qtyLabel => 'Adet';
+
+  @override
+  String get priceLabel => 'Fiyat';
+
+  @override
+  String get taxRateLabel => 'Vergi oranı (%)';
+
+  @override
+  String get taxLabel => 'Vergi';
 
   @override
   String get noWorkOrders => 'Servis kaydı yok';

@@ -15,6 +15,21 @@ import '../data/work_order_model.dart';
 const _nextStatus = {'draft': 'completed', 'completed': 'paid', 'paid': null};
 const _paymentMethods = ['cash', 'card', 'bank_transfer', 'other'];
 
+String _statusLabel(AppLocalizations l, String status) => switch (status) {
+      'draft' => l.draft,
+      'completed' => l.completed,
+      'paid' => l.paid,
+      _ => status,
+    };
+
+String _paymentMethodLabel(AppLocalizations l, String method) => switch (method) {
+      'cash' => l.cash,
+      'card' => l.card,
+      'bank_transfer' => l.bankTransfer,
+      'other' => l.other,
+      _ => method,
+    };
+
 class WorkOrderDetailPanel extends ConsumerWidget {
   const WorkOrderDetailPanel({required this.workOrderId, this.onClose, super.key});
   final String workOrderId;
@@ -45,12 +60,13 @@ class _DetailContent extends ConsumerWidget {
 
     String? paymentMethod;
     if (next == 'paid') {
+      final l = AppLocalizations.of(context)!;
       paymentMethod = await showDialog<String>(
         context: context,
         builder: (context) => SimpleDialog(
-          title: Text(AppLocalizations.of(context)!.paymentMethodTitle),
+          title: Text(l.paymentMethodTitle),
           children: _paymentMethods
-              .map((m) => SimpleDialogOption(onPressed: () => Navigator.pop(context, m), child: Text(m)))
+              .map((m) => SimpleDialogOption(onPressed: () => Navigator.pop(context, m), child: Text(_paymentMethodLabel(l, m))))
               .toList(),
         ),
       );
@@ -133,11 +149,11 @@ class _DetailContent extends ConsumerWidget {
           if (order.paymentMethod != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Chip(label: Text(order.paymentMethod!.toUpperCase())),
+              child: Chip(label: Text(_paymentMethodLabel(l, order.paymentMethod!))),
             ),
           PitStopStepper(
             status: order.status,
-            nextLabel: next == null ? null : l.markAs(next),
+            nextLabel: next == null ? null : l.markAs(_statusLabel(l, next)),
             onAdvance: () => _advanceStatus(context, ref),
           ),
           const SizedBox(height: 16),

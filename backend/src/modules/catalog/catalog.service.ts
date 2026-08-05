@@ -37,7 +37,7 @@ export async function createCatalogItem(db: PoolClient, input: CreateCatalogItem
     `INSERT INTO catalog_items (shop_id, type, sku, name, unit, default_unit_price)
      VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5)
      RETURNING *`,
-    [input.type, input.sku || null, input.name, input.unit || "unit", input.defaultUnitPrice]
+    [input.type, input.sku || null, input.name, input.unit || "adet", input.defaultUnitPrice]
   );
   return toCamel(rows[0]);
 }

@@ -117,6 +117,33 @@ for any direct API client (e.g. Postman, mobile apps hitting the API directly).
 Tokens are signed with HS256 and expire in 8 hours (`JWT_EXPIRES_IN`).
 Logout is best-effort (stateless JWT — no server-side token revocation).
 
+### Backend error messages are always English (known gap, v0.14.3)
+Every `AppError` subclass (`UnauthorizedError`, `ValidationError`,
+`ConflictError`, ...) is thrown with a hardcoded English `message`, and
+`errorHandler.ts` returns that string verbatim as `{ error: message }` —
+there's no error-code field, and the backend has no notion of the
+caller's locale (`tenantScope` sets `app.current_shop_id`, not a language).
+The frontend then displays that raw string directly via
+`toApiException(e).message` in most catch blocks across the app (login,
+register, join, work orders, profile, team, ...).
+
+**Partial fix applied (login only):** `login_screen.dart` now checks the
+raw message against the one specific, known, extremely-common string
+("Invalid email or password") and swaps in `l.invalidEmailOrPassword` if
+it matches, falling back to the raw English text otherwise. This is a
+narrow patch for the single most-hit error path, not a systemic fix —
+every other screen still shows raw backend English on its less-common
+error paths (duplicate email on register, FK-conflict on delete, etc.).
+
+**Real fix, not done yet:** give `AppError` subclasses a stable `code`
+field (e.g. `"invalid_credentials"`, `"validation_failed"`) alongside the
+existing English `message` (kept for logs/API consumers that want it), and
+have the frontend maintain a `code → l10n key` lookup instead of matching
+on the literal English sentence — string-matching is fragile (any future
+wording change to the backend message silently un-translates the frontend
+mapping with no compile error). Worth doing if more error-message reports
+come in from testing rather than patching each raw string individually.
+
 ### PDF text and Turkish characters (v0.12.0)
 PDFKit's built-in `"Helvetica"`/`"Helvetica-Bold"` (and the other standard-14
 fonts) are encoded as WinAnsi, which does **not** include the Turkish
@@ -358,6 +385,37 @@ purpose:
 If you're auditing for hard-coded English strings again, don't assume every
 instance of a tone label is covered by the tone_toggle.dart exemption —
 check whether the specific widget actually renders text or just an icon.
+
+**Language switcher hidden, Turkish is the default (v0.14.0, temporary):**
+`core/locale/locale_provider.dart` exports `kLanguageToggleVisible = false`,
+which every EN/TR toggle widget in the app (login, register, join,
+app-shell account menu) is wrapped in. `LocaleNotifier`'s initial state was
+also changed from `Locale('en')` to `Locale('tr')`. Farzad requested this
+after first real user testing — every current user is Turkish, and the
+toggle was just surface area for confusion — but was explicit it's
+temporary ("for the time being, until stated otherwise"), not a decision to
+drop English support. Both ARB files (`app_en.arb`/`app_tr.arb`) must keep
+being updated for every future feature/fix regardless of this flag —
+English just isn't reachable from the UI right now. A user who already had
+`locale_code: 'en'` in browser storage from before this change keeps
+seeing English (the stored value still wins over the new default); only
+the *toggle to change it* is hidden. Re-enabling is a one-line flip of the
+constant back to `true` (the default-locale line can be left as-is or
+reverted, independently).
+
+**Gotcha (hit in practice, v0.14.2): a saved `locale_code` from before this
+change silently wins over the new default.** `LocaleNotifier._load()`
+unconditionally reads `localStorage`'s `locale_code` and overrides the
+constructor default if a value is present — correct for a returning user
+under normal operation, but it means anyone whose browser already had
+`locale_code: 'en'` saved (from before v0.14.0, or from earlier toggle
+testing) kept seeing English after the default changed to Turkish, with no
+way back since the toggle itself is hidden. `_load()` now short-circuits
+and returns immediately, without touching storage, whenever
+`kLanguageToggleVisible` is `false` — so the flag doesn't just change the
+*default*, it makes Turkish the *only* outcome while it's off, regardless
+of anything already saved. This self-corrects the moment the toggle is
+re-enabled (`_load()` goes back to reading storage normally).
 
 **Adding a new language:**
 1. Create `frontend/lib/l10n/app_<code>.arb` with all keys from `app_en.arb`.
@@ -628,6 +686,19 @@ entry. **Any new "jump to a work order from elsewhere" entry point must use
 the direct path route `/work-orders/:id` (→ `WorkOrderDetailScreen`)**, not
 the `?id=` query-param form — this is what `global_search_bar.dart` and
 `work_orders_master_list.dart`'s own mobile branch already do correctly.
+
+**Self-registration temporarily disabled (v0.14.1):** `/register` is
+blocked in the `redirect` guard whenever `kRegistrationOpen` (new file,
+`core/config/feature_flags.dart`) is `false` — checked *before* the
+existing logged-in/logged-out logic, same position as the `/join/:id`
+bypass just above it, so it applies unconditionally regardless of auth
+state. Added alongside hiding the login screen's "Create account" link
+(same flag) so a visitor can't reach the register form either way during
+Farzad's public usability test. Only the frontend paths are closed — the
+backend `POST /api/v1/auth/register` route is untouched and still accepts
+direct API calls; see CHANGELOG v0.14.1 for why that wasn't included in
+this pass. Re-enabling later is the same one-constant flip as
+`kLanguageToggleVisible` above.
 
 **Team-invite links bypass the auth redirect entirely (v0.11.0):** the
 `redirect` callback checks `loc.startsWith('/join/')` *before* any of the

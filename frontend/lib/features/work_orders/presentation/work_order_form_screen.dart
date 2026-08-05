@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../generated/app_localizations.dart';
 import '../../catalog/application/catalog_provider.dart';
 import '../../catalog/data/catalog_item_model.dart';
 import '../../clients/application/clients_provider.dart';
@@ -123,13 +124,14 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (!_isEdit && (_clientId == null || _vehicleId == null)) {
-      setState(() => _errorMessage = 'Select a client and vehicle');
+      setState(() => _errorMessage = l10n.selectClientAndVehicle);
       return;
     }
     if (_items.isEmpty) {
-      setState(() => _errorMessage = 'Add at least one line item');
+      setState(() => _errorMessage = l10n.addAtLeastOneLineItem);
       return;
     }
 
@@ -180,33 +182,36 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final clientsAsync = ref.watch(allClientsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Edit Work Order #${widget.existing!.orderNo}' : 'New Work Order')),
+      appBar: AppBar(
+        title: Text(_isEdit ? l10n.editWorkOrderTitle(widget.existing!.orderNo) : l10n.newWorkOrder),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             if (_isEdit) ...[
-              Text('Client: ${widget.existing!.clientName ?? widget.existing!.clientId}'),
-              Text('Vehicle: ${widget.existing!.vehiclePlate ?? widget.existing!.vehicleId}'),
+              Text(l10n.clientLabel(widget.existing!.clientName ?? widget.existing!.clientId)),
+              Text(l10n.vehicleLabel(widget.existing!.vehiclePlate ?? widget.existing!.vehicleId)),
               const SizedBox(height: 12),
             ] else ...[
               clientsAsync.when(
                 data: (clients) => DropdownButtonFormField<String>(
                   initialValue: _clientId,
-                  decoration: const InputDecoration(labelText: 'Client'),
+                  decoration: InputDecoration(labelText: l10n.client),
                   items: clients.map((c) => DropdownMenuItem(value: c.id, child: Text(c.fullName))).toList(),
                   onChanged: (value) => setState(() {
                     _clientId = value;
                     _vehicleId = null;
                   }),
-                  validator: (v) => v == null ? 'Select a client' : null,
+                  validator: (v) => v == null ? l10n.selectAClient : null,
                 ),
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Failed to load clients: $e'),
+                error: (e, _) => Text(l10n.failedToLoadClients(e)),
               ),
               const SizedBox(height: 12),
               if (_clientId != null)
@@ -216,15 +221,15 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                     return vehiclesAsync.when(
                       data: (vehicles) => DropdownButtonFormField<String>(
                         initialValue: _vehicleId,
-                        decoration: const InputDecoration(labelText: 'Vehicle'),
+                        decoration: InputDecoration(labelText: l10n.vehicle),
                         items: vehicles
                             .map((v) => DropdownMenuItem(value: v.id, child: Text('${v.licensePlate} — ${v.displayName}')))
                             .toList(),
                         onChanged: (value) => setState(() => _vehicleId = value),
-                        validator: (v) => v == null ? 'Select a vehicle' : null,
+                        validator: (v) => v == null ? l10n.selectAVehicle : null,
                       ),
                       loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => Text('Failed to load vehicles: $e'),
+                      error: (e, _) => Text(l10n.failedToLoadVehicles(e)),
                     );
                   },
                 ),
@@ -232,40 +237,40 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
             ],
             TextFormField(
               controller: _mileage,
-              decoration: const InputDecoration(labelText: 'Mileage at service (km)'),
+              decoration: InputDecoration(labelText: l10n.mileageAtServiceLabel),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Line Items', style: Theme.of(context).textTheme.titleMedium),
+                Text(l10n.lineItems, style: Theme.of(context).textTheme.titleMedium),
                 Wrap(
                   spacing: 8,
                   children: [
                     OutlinedButton.icon(
                       onPressed: _pickFromCatalog,
                       icon: const Icon(Icons.list),
-                      label: const Text('From catalog'),
+                      label: Text(l10n.fromCatalog),
                     ),
                     OutlinedButton.icon(
                       onPressed: () => setState(() => _items.add(_ItemRow())),
                       icon: const Icon(Icons.add),
-                      label: const Text('Custom'),
+                      label: Text(l10n.customLineItem),
                     ),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            for (int i = 0; i < _items.length; i++) _buildItemRow(i),
+            for (int i = 0; i < _items.length; i++) _buildItemRow(l10n, i),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: _discount,
-                    decoration: const InputDecoration(labelText: 'Discount'),
+                    decoration: InputDecoration(labelText: l10n.discount),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -274,7 +279,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _taxRate,
-                    decoration: const InputDecoration(labelText: 'Tax rate (%)'),
+                    decoration: InputDecoration(labelText: l10n.taxRateLabel),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -282,7 +287,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes'), maxLines: 2),
+            TextFormField(controller: _notes, decoration: InputDecoration(labelText: l10n.notes), maxLines: 2),
             const SizedBox(height: 16),
             Card(
               child: Padding(
@@ -290,9 +295,9 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('Subtotal: ${formatCurrency(_subtotal)}'),
-                    Text('Tax: ${formatCurrency(_taxAmount)}'),
-                    Text('Grand Total: ${formatCurrency(_grandTotal)}',
+                    Text('${l10n.subtotal}: ${formatCurrency(_subtotal)}'),
+                    Text('${l10n.taxLabel}: ${formatCurrency(_taxAmount)}'),
+                    Text('${l10n.grandTotal}: ${formatCurrency(_grandTotal)}',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -307,7 +312,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               onPressed: _saving ? null : _submit,
               child: _saving
                   ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Save'),
+                  : Text(l10n.save),
             ),
           ],
         ),
@@ -315,7 +320,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
     );
   }
 
-  Widget _buildItemRow(int index) {
+  Widget _buildItemRow(AppLocalizations l10n, int index) {
     final row = _items[index];
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -326,15 +331,15 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
             flex: 3,
             child: TextFormField(
               controller: row.description,
-              decoration: const InputDecoration(labelText: 'Description'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              decoration: InputDecoration(labelText: l10n.descriptionLabel),
+              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: TextFormField(
               controller: row.quantity,
-              decoration: const InputDecoration(labelText: 'Qty'),
+              decoration: InputDecoration(labelText: l10n.qtyLabel),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) => setState(() {}),
             ),
@@ -343,7 +348,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
           Expanded(
             child: TextFormField(
               controller: row.unitPrice,
-              decoration: const InputDecoration(labelText: 'Price'),
+              decoration: InputDecoration(labelText: l10n.priceLabel),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) => setState(() {}),
             ),

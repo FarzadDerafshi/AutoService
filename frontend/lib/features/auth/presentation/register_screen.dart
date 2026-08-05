@@ -59,18 +59,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       appBar: AppBar(
         title: Text(l.createYourShop),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'en', label: Text('EN')),
-                ButtonSegment(value: 'tr', label: Text('TR')),
-              ],
-              selected: {currentLocale.languageCode},
-              onSelectionChanged: (s) =>
-                  ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
+          if (kLanguageToggleVisible)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'en', label: Text('EN')),
+                  ButtonSegment(value: 'tr', label: Text('TR')),
+                ],
+                selected: {currentLocale.languageCode},
+                onSelectionChanged: (s) =>
+                    ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
+              ),
             ),
-          ),
           const Padding(
             padding: EdgeInsets.only(right: 12),
             child: ToneToggle(),

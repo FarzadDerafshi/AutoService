@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/locale/locale_provider.dart';
 import '../../../core/widgets/tone_toggle.dart';
 import '../../../generated/app_localizations.dart';
@@ -38,7 +39,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final state = ref.read(authControllerProvider);
     if (state.hasError && mounted) {
-      setState(() => _errorMessage = toApiException(state.error!).message);
+      final rawMessage = toApiException(state.error!).message;
+      // The backend always replies in English (it has no notion of the
+      // caller's locale). This is the one login-failure message every user
+      // hits, so translate that specific known string; anything else still
+      // falls back to the raw backend text rather than showing nothing.
+      final l = AppLocalizations.of(context)!;
+      setState(() => _errorMessage = rawMessage == 'Invalid email or password'
+          ? l.invalidEmailOrPassword
+          : rawMessage);
     }
   }
 
@@ -94,25 +103,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
                             : Text(l.logIn),
                       ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: isLoading ? null : () => context.push('/register'),
-                        child: Text(l.newShopCreateAccount),
-                      ),
-                      const SizedBox(height: 16),
-                      // Language selector
-                      Center(
-                        child: SegmentedButton<String>(
-                          segments: const [
-                            ButtonSegment(value: 'en', label: Text('EN')),
-                            ButtonSegment(value: 'tr', label: Text('TR')),
-                          ],
-                          selected: {currentLocale.languageCode},
-                          onSelectionChanged: (s) =>
-                              ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
+                      if (kRegistrationOpen) ...[
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: isLoading ? null : () => context.push('/register'),
+                          child: Text(l.newShopCreateAccount),
                         ),
-                      ),
-                      const SizedBox(height: 8),
+                      ],
+                      const SizedBox(height: 16),
+                      if (kLanguageToggleVisible) ...[
+                        // Language selector
+                        Center(
+                          child: SegmentedButton<String>(
+                            segments: const [
+                              ButtonSegment(value: 'en', label: Text('EN')),
+                              ButtonSegment(value: 'tr', label: Text('TR')),
+                            ],
+                            selected: {currentLocale.languageCode},
+                            onSelectionChanged: (s) =>
+                                ref.read(localeProvider.notifier).setLocale(Locale(s.first)),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       // Voice/tone selector — corporate vs. playful "garage" copy
                       const Center(child: ToneToggle()),
                     ],
