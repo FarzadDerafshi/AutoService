@@ -14,7 +14,8 @@ running the project locally in VS Code.
 
 ```
 AutoService/
-├── docker-compose.yml     # postgres + api + (optional) nginx web
+├── docker-compose.dev.yml  # postgres + api + (optional) nginx web — local dev
+├── docker-compose.prod.yml # self-contained production stack (see DECISIONS.md)
 ├── .env.example            # copy to .env and fill in secrets
 ├── db/init/                 # SQL schema, run automatically on first Postgres boot
 ├── backend/                 # Node.js + Express + TypeScript REST API
@@ -24,9 +25,16 @@ AutoService/
 
 ## Quick start
 
+> There is no default `docker-compose.yml` — always pass `-f
+> docker-compose.dev.yml` (local dev) or `-f docker-compose.prod.yml`
+> (production) explicitly. This is deliberate: an earlier incident showed
+> that a bare `docker compose up --build` run against a production checkout
+> silently ran the dev stack's config (wrong ports, exposed API) instead of
+> failing loudly. See DECISIONS.md's DevOps section.
+
 ```bash
 cp .env.example .env        # edit — use alphanumeric DB_PASSWORD (no # @ / ?)
-docker compose up -d --build postgres api
+docker compose -f docker-compose.dev.yml up -d --build postgres api
 ```
 
 Build and serve the Flutter web frontend:
@@ -36,7 +44,7 @@ cd frontend
 flutter pub get
 flutter gen-l10n          # regenerate localisation files if ARBs changed
 flutter build web --release
-docker compose up -d web
+docker compose -f docker-compose.dev.yml up -d web
 ```
 
 | URL | Purpose |
@@ -80,17 +88,17 @@ language choice, so any language + voice combination is possible.
 
 ```bash
 # Backend code change
-docker compose up -d --build api
+docker compose -f docker-compose.dev.yml up -d --build api
 
 # Frontend code change
 cd frontend && flutter build web --release
 docker restart repairshop_web
 
 # .env change (restart alone does NOT re-read .env)
-docker compose up -d --force-recreate <service>
+docker compose -f docker-compose.dev.yml up -d --force-recreate <service>
 
 # Full reset (wipes database volume)
-docker compose down -v && docker compose up -d --build
+docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up -d --build
 ```
 
 Frontend (dev hot-reload, outside Docker):

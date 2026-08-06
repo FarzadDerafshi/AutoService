@@ -836,8 +836,26 @@ tones — see the i18n section above.
 
 ## DevOps
 
-### Docker Compose services
-| Service | Image | Port |
+### Docker Compose services — two fully separate compose files, no default (v0.15.1)
+There is **no `docker-compose.yml`** in this repo — only `docker-compose.dev.yml`
+and `docker-compose.prod.yml`, both requiring an explicit `-f`. This was a
+deliberate rename (from a plain `docker-compose.yml` that used to serve as
+the dev config and the implicit default). **Why:** on 2026-08-06 Farzad's
+manual-deploy batch script ran a bare `docker compose up -d --build` on the
+production server — with no default file, Compose fell back to whatever
+`docker-compose.yml` happened to resolve to, which was the *dev* config
+(both files share the same `container_name`s). That would have replaced
+the live prod containers with dev-networked ones: `web` moving off
+`127.0.0.1:8083` (what the Cloudflare Tunnel targets — site goes down) and
+`api` moving from unpublished to `0.0.0.0:3000` (exposed outside Docker).
+Caught in review before it was actually run. Removing the implicit default
+entirely means the same mistake now fails loudly (`no configuration file
+provided`) instead of silently doing the dangerous thing — every command
+in this repo's docs and scripts uses an explicit `-f docker-compose.dev.yml`
+or `-f docker-compose.prod.yml` from here on; never re-add a bare
+`docker-compose.yml`.
+
+| Service (`docker-compose.dev.yml`) | Image | Port |
 |---|---|---|
 | `postgres` | `postgres:16-alpine` | `127.0.0.1:5432` (localhost only) |
 | `api` | `autoservice-api` (built from `backend/`) | `0.0.0.0:3000` |
@@ -848,9 +866,9 @@ The `web` service is optional and requires a prior `flutter build web` in
 into nginx.
 
 ### Rebuilding after code changes
-- **Backend change:** `docker compose up -d --build api`
+- **Backend change:** `docker compose -f docker-compose.dev.yml up -d --build api`
 - **Frontend change:** `flutter build web --release` → `docker restart repairshop_web`
-- **`.env` change:** `docker compose up -d --force-recreate <service>` (a
+- **`.env` change:** `docker compose -f docker-compose.dev.yml up -d --force-recreate <service>` (a
   simple `restart` does **not** re-read `.env` values baked into the container
   at creation time)
 
@@ -858,8 +876,8 @@ into nginx.
 PostgreSQL data lives in the `pgdata` named Docker volume. To fully reset the
 database (e.g. after a password change):
 ```bash
-docker compose down -v   # removes containers AND the pgdata volume
-docker compose up -d --build postgres api
+docker compose -f docker-compose.dev.yml down -v   # removes containers AND the pgdata volume
+docker compose -f docker-compose.dev.yml up -d --build postgres api
 ```
 
 ### Production deployment (`docker-compose.prod.yml`, v0.13.0)
@@ -867,7 +885,7 @@ docker compose up -d --build postgres api
 Production (a Windows home server behind an existing Cloudflare Tunnel,
 domain `www.garajos.com.tr`) uses a **separate, fully self-contained**
 `docker-compose.prod.yml` rather than a merge-overlay on top of
-`docker-compose.yml`. An overlay was tried first, using Compose's
+`docker-compose.dev.yml`. An overlay was tried first, using Compose's
 `!reset`/`!override` YAML merge tags to drop the `api` service's `ports:`
 key and swap `web`'s bind-mounted build output for an image build — but
 list-merge behavior across Compose versions (whether `ports`/`volumes` are

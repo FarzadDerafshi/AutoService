@@ -80,7 +80,7 @@ Open `.env` and replace the placeholder values:
 From the project root:
 
 ```powershell
-docker compose up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 First run will take a minute or two (downloading the `postgres:16-alpine` and `node:20-alpine` images, then building the API image). You should see:
@@ -105,13 +105,13 @@ docker exec -it repairshop_db psql -U repairshop_admin -d repairshop -c "\dt"
 ```
 (Use whatever `DB_USER`/`DB_NAME` you set in `.env` if you changed the defaults.)
 
-To stop everything: `Ctrl+C` in that terminal, then `docker compose down` (add `-v` only if you also want to wipe the database volume and start fresh).
+To stop everything: `Ctrl+C` in that terminal, then `docker compose -f docker-compose.dev.yml down` (add `-v` only if you also want to wipe the database volume and start fresh).
 
 ---
 
 ## 5. Run the Flutter app
 
-Docker Compose can also serve a compiled Flutter Web build via the `web` container (see `docker-compose.yml`), but for day-to-day development it's much faster to run Flutter directly with hot reload, pointed at the API container from step 4.
+Docker Compose can also serve a compiled Flutter Web build via the `web` container (see `docker-compose.dev.yml`), but for day-to-day development it's much faster to run Flutter directly with hot reload, pointed at the API container from step 4.
 
 ```powershell
 cd frontend
@@ -143,13 +143,13 @@ You don't have to rebuild the Docker API image on every backend code change. Two
 
 **A. Full stack in Docker (closest to production)**
 ```powershell
-docker compose up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 Rebuilds the API image each time — good for a final check before committing, or the Phase-4.4-style full walkthrough (register → client → vehicle → work order → paid → report), but slower per iteration.
 
 **B. Postgres in Docker, API running natively with hot reload (faster iteration)**
 ```powershell
-docker compose up postgres    # just the database, in one terminal
+docker compose -f docker-compose.dev.yml up postgres    # just the database, in one terminal
 ```
 ```powershell
 cd backend
@@ -186,12 +186,13 @@ If every step above works, the full stack (Postgres → Express API → Flutter 
 | Symptom | Likely cause / fix |
 |---|---|
 | `docker` not recognized | Docker Desktop not running, or terminal opened before install finished — restart terminal/VS Code |
-| `docker compose up` fails with "DB_PASSWORD... error" | `.env` wasn't created/filled in (step 3) |
-| API container keeps restarting | Check logs: `docker compose logs api` — usually a missing/invalid env var |
+| `docker compose ... up` errors with "no configuration file provided" | You forgot `-f docker-compose.dev.yml` — there is no default `docker-compose.yml` on purpose, see DECISIONS.md's DevOps section |
+| `docker compose ... up` fails with "DB_PASSWORD... error" | `.env` wasn't created/filled in (step 3) |
+| API container keeps restarting | Check logs: `docker compose -f docker-compose.dev.yml logs api` — usually a missing/invalid env var |
 | Flutter app shows a network error on login | Backend isn't running, or `API_BASE_URL` doesn't match where it's listening |
 | `flutter run -d chrome` can't find Chrome | Make sure Chrome is installed; otherwise use `-d edge` or `-d windows` |
-| Port 3000 or 5432 already in use | Something else on the machine is using it — stop that process, or change the host-side port in `docker-compose.yml` (the part before the `:`) |
-| Want a clean slate | `docker compose down -v` — **this deletes all data** in the Postgres volume, use only for local testing resets |
+| Port 3000 or 5432 already in use | Something else on the machine is using it — stop that process, or change the host-side port in `docker-compose.dev.yml` (the part before the `:`) |
+| Want a clean slate | `docker compose -f docker-compose.dev.yml down -v` — **this deletes all data** in the Postgres volume, use only for local testing resets |
 
 ---
 

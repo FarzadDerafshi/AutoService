@@ -5,6 +5,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.15.1] — 2026-08-06  *(Rename docker-compose.yml → docker-compose.dev.yml — Remove the Implicit Default)*
+
+### Changed
+#### DevOps
+- **`docker-compose.yml` renamed to `docker-compose.dev.yml`.** There is now
+  no default compose file at all — every command requires an explicit `-f
+  docker-compose.dev.yml` or `-f docker-compose.prod.yml`. Prompted by a
+  near-miss found while reviewing Farzad's manual production deploy script:
+  a bare `docker compose up -d --build` (no `-f`) resolves to whichever
+  file is named `docker-compose.yml`, and since dev and prod share the
+  same `container_name`s, running that against a production checkout would
+  have silently replaced the live prod containers with dev-networked ones
+  (`web` off `127.0.0.1:8083` — breaking the Cloudflare Tunnel — `api`
+  exposed on `0.0.0.0:3000` instead of unpublished). Removing the implicit
+  default turns that mistake into a loud, immediate
+  `no configuration file provided` error instead of a silent wrong-config
+  deploy. `README.md`, `SETUP.md`, and `DECISIONS.md` updated to use the
+  explicit `-f` flag throughout; verified `docker compose -f
+  docker-compose.dev.yml ps`/`up -d` against the already-running dev stack
+  picks up the existing containers cleanly with no unwanted recreation.
+  _Files: `docker-compose.dev.yml` (renamed from `docker-compose.yml`),
+  `README.md`, `SETUP.md`, `DECISIONS.md`_
+
+---
+
 ## [0.15.0] — 2026-08-06  *(Vehicle Chassis No. / Engine No. / Color Fields)*
 
 ### Added
