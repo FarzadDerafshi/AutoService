@@ -90,6 +90,26 @@ their work orders exist would be silently discarding who did the work).
 per shop) was deferred; it would require a `shop_counters` table and an
 advisory lock or `FOR UPDATE` to avoid race conditions at scale.
 
+### Schema changes on a live dev database — apply the new `db/init` file directly, don't reset the volume (v0.15.0)
+`db/init/*.sql` files only run automatically on a brand-new `pgdata` volume
+(Postgres's own init-script behavior) — they do **not** re-run against an
+already-provisioned container. Prior column additions (e.g.
+`009_shop_profile.sql`, `010_shop_invites.sql`) used a plain
+`ALTER TABLE ... ADD COLUMN`, which makes the same file usable two ways:
+Postgres runs it automatically for a fresh install, and it can also be
+piped directly into the running dev container to update it in place:
+```bash
+docker exec -i repairshop_db psql -U repairshop_admin -d repairshop < db/init/0NN_new_thing.sql
+```
+This preserves whatever's already in the dev database — real test data
+Farzad has built up (clients, vehicles, work orders, the two standing
+WV Ferry test accounts, see the v0.10–v0.12 feature-additions history) —
+instead of `docker compose down -v` wiping it. Reach for the full
+volume-reset path (`### Persistent data` under DevOps) only when actually
+starting over, not as a routine way to pick up new columns. The same new
+file also becomes the source of truth for the next fresh install/prod
+deployment, so nothing needs to be written twice.
+
 ---
 
 ## Backend
@@ -422,6 +442,48 @@ re-enabled (`_load()` goes back to reading storage normally).
 2. Add `Locale('<code>')` to `supportedLocales` in `frontend/lib/app.dart`.
 3. Add `'<code>'` to `LocaleNotifier._supported` in `locale_provider.dart`.
 4. Run `flutter gen-l10n` and commit the generated file.
+
+**Every ARB key must exist in all four catalogues — `app_en.arb`,
+`app_tr.arb`, `app_en_CP.arb`, `app_tr_CP.arb` (v0.14.5):** the app ships
+four locale variants, not two — English/Turkish crossed with
+Garage/Corporate tone (the `_CP` files are the Corporate tone; see the
+"Corporate/Garage tone labels" note above). `_CP` files subclass the base
+language class in generated code
+(`AppLocalizationsEnCp extends AppLocalizationsEn`, same for `Tr`), so a key
+missing from a `_CP` file doesn't crash or render blank — it silently falls
+back to the Garage-tone wording for that key. That fallback is exactly how
+this drifted out of sync: `app_en_CP.arb`/`app_tr_CP.arb` were kept current
+through v0.9.x (26–27 keys, matching the string count at the time) but never
+touched again as v0.10.0–v0.14.4 added ~165 more keys (profile, team
+invites, redesigned work-order form, nav), so every one of those newer
+screens quietened back to Garage wording under Corporate tone — not a build
+break, but real functionality (the CP toggle) silently going stale.
+`flutter build web --release`'s "N untranslated message(s)" warning for
+`en_CP`/`tr_CP` is the signal to watch — it should read **0** at all times;
+a nonzero count means new keys shipped without their Corporate counterpart.
+
+Fixed in v0.14.5 by backfilling both `_CP` files to full 191/191 key parity:
+for keys where the Garage-tone wording is already plain/professional (the
+large majority — most form labels, nav items, admin/team/profile copy never
+had any slang to begin with), the Corporate entry is a verbatim copy of the
+Garage one. Only genuinely flavored strings (garage slang, exclamation
+marks, metaphors — e.g. `failedToLoadVehicles`'s "dropped the vehicle list
+in the oil pan") get a distinct, plainly-worded Corporate rewrite, following
+the pattern already established by the ~26 pre-existing `_CP` entries (e.g.
+`logIn`: "Punch In" → "Log in").
+
+**Standing rule going forward: every ARB edit touches all four files in the
+same change**, not just `app_en.arb`/`app_tr.arb`. When adding or rewording
+a key:
+- Plain/neutral copy (labels, field names, admin/system messages) → the
+  same string goes into both `_CP` files verbatim; no separate "Corporate"
+  wording needed, there's nothing to detone.
+- Flavored copy (garage slang, exclamation marks, playful metaphors) → write
+  a distinct, neutral Corporate equivalent for both `_CP` files, matching
+  the register of existing `_CP` entries.
+This keeps `flutter build web --release`'s untranslated-message count at 0
+on every commit, so re-enabling English (see the language-switcher note
+above) or the Corporate tone never surfaces a backlog of stale strings.
 
 **`intl` version pin:** `flutter_localizations` from the SDK pins `intl` to a
 specific version. Always check the pin when upgrading Flutter:

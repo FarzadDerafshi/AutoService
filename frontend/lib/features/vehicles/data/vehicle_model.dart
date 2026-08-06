@@ -7,6 +7,9 @@ class Vehicle {
   final String? engineType;
   final int? year;
   final int currentMileageKm;
+  final String? chassisNo;
+  final String? engineNo;
+  final String? color;
 
   const Vehicle({
     required this.id,
@@ -17,6 +20,9 @@ class Vehicle {
     this.model,
     this.engineType,
     this.year,
+    this.chassisNo,
+    this.engineNo,
+    this.color,
   });
 
   String get displayName => [make, model].where((s) => s != null && s.isNotEmpty).join(' ');
@@ -30,5 +36,8 @@ class Vehicle {
         engineType: json['engineType'] as String?,
         year: json['year'] as int?,
         currentMileageKm: json['currentMileageKm'] as int? ?? 0,
+        chassisNo: json['chassisNo'] as String?,
+        engineNo: json['engineNo'] as String?,
+        color: json['color'] as String?,
       );
 }

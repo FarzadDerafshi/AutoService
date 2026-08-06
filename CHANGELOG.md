@@ -5,6 +5,86 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.15.0] — 2026-08-06  *(Vehicle Chassis No. / Engine No. / Color Fields)*
+
+### Added
+#### Backend
+- **`vehicles` table gained three optional columns:** `chassis_no VARCHAR(50)`
+  (Şasi No.), `engine_no VARCHAR(50)` (Motor No.), `color VARCHAR(30)`
+  (Renk), per Farzad's request. New migration file
+  `db/init/011_vehicle_identifiers.sql`, applied directly to the running
+  dev container via `docker exec -i repairshop_db psql ... < 011_*.sql`
+  rather than a volume reset, so existing dev data (clients, work orders,
+  the two standing WV Ferry test accounts) was preserved. `createVehicle`/
+  `updateVehicle` in `vehicles.service.ts` and `createVehicleSchema`/
+  `updateVehicleSchema` in `vehicles.schema.ts` extended to accept
+  `chassisNo`/`engineNo`/`color`, following the existing optional-field
+  pattern (`engineType`, `make`, `model`).
+  _Files: `db/init/011_vehicle_identifiers.sql`,
+  `backend/src/modules/vehicles/vehicles.schema.ts`,
+  `backend/src/modules/vehicles/vehicles.service.ts`_
+
+#### Frontend
+- **New/Edit Vehicle form** gained three fields — Şasi No., Motor No., Renk
+  — placed after the existing mileage field, wired into the same
+  `ProfileCompletenessBar` tracker as the rest of the vehicle profile
+  fields. Vehicle History screen's detail card now also shows all three
+  when present. ARB keys `chassisNoLabel`/`engineNoLabel`/`colorLabel`
+  added to all four locale files (`app_en.arb`, `app_tr.arb`,
+  `app_en_CP.arb`, `app_tr_CP.arb`) in the same change, per the standing
+  convention from v0.14.5 — plain field labels, so Corporate tone is a
+  verbatim copy of Garage tone for all three.
+  _Files: `frontend/lib/features/vehicles/data/vehicle_model.dart`,
+  `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+  `frontend/lib/features/vehicles/presentation/vehicle_history_screen.dart`,
+  `frontend/lib/l10n/app_en.arb`, `frontend/lib/l10n/app_tr.arb`,
+  `frontend/lib/l10n/app_en_CP.arb`, `frontend/lib/l10n/app_tr_CP.arb`_
+
+**Verified end-to-end:** backend tested via direct API calls (create,
+update, get, history — all four round-trip the new fields) against a
+throwaway shop, cleaned up afterward; frontend tested by logging into a
+second throwaway shop in the running dev app and creating a real vehicle
+through the actual New Vehicle form UI, confirming all three fields save
+and display correctly on the Vehicle History screen. Both throwaway shops
+deleted after verification — no leftover test data beyond the two
+intentional WV Ferry accounts.
+
+---
+
+## [0.14.5] — 2026-08-06  *(Backfill Corporate-Tone Translations — Close the en_CP/tr_CP Gap)*
+
+### Fixed
+#### Frontend
+- **`flutter build web --release` was reporting 165 (`en_CP`) and 164
+  (`tr_CP`) untranslated messages.** The Corporate-tone locale files
+  (`app_en_CP.arb`/`app_tr_CP.arb`) had only been kept current through
+  v0.9.x (26–27 keys); v0.10.0–v0.14.4 added ~165 new keys (profile, team
+  invites, redesigned work-order form, nav) without their Corporate
+  counterparts. Not a crash or blank text — missing `_CP` keys silently
+  fall back to Garage-tone wording (`AppLocalizationsEnCp extends
+  AppLocalizationsEn`) — but meant switching to Corporate voice showed a
+  growing mix of Garage slang on every screen shipped since v0.10.0.
+  Backfilled both files to full 191/191 parity: plain/neutral keys (the
+  large majority) copied verbatim from the Garage-tone file since there was
+  no slang to remove; the one genuinely flavored missing key
+  (`failedToLoadVehicles`, "dropped the vehicle list in the oil pan") got a
+  proper neutral Corporate rewrite ("Failed to load vehicles: {error}" /
+  "Araçlar yüklenemedi: {error}"), matching the pattern of the pre-existing
+  `_CP` entries. `flutter build web --release` now reports 0 untranslated
+  messages for both locales.
+  _Files: `frontend/lib/l10n/app_en_CP.arb`,
+  `frontend/lib/l10n/app_tr_CP.arb`,
+  `frontend/lib/generated/app_localizations_en.dart`,
+  `frontend/lib/generated/app_localizations_tr.dart`_
+
+### Added
+- **New standing convention: every ARB key change touches all four locale
+  files** (`app_en.arb`, `app_tr.arb`, `app_en_CP.arb`, `app_tr_CP.arb`) in
+  the same commit, so this gap can't silently reopen. See DECISIONS.md's
+  Internationalisation section for the full rule.
+
+---
+
 ## [0.14.4] — 2026-08-05  *(Nav Order — Vehicles Moved Before Clients)*
 
 ### Changed

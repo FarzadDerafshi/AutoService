@@ -424,6 +424,24 @@ abstract class AppLocalizations {
   /// **'Current mileage (km)'**
   String get currentMileageKmLabel;
 
+  /// No description provided for @chassisNoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Chassis No.'**
+  String get chassisNoLabel;
+
+  /// No description provided for @engineNoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine No.'**
+  String get engineNoLabel;
+
+  /// No description provided for @colorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get colorLabel;
+
   /// No description provided for @vehicleHistory.
   ///
   /// In en, this message translates to:

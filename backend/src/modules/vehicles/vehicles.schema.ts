@@ -8,6 +8,9 @@ export const createVehicleSchema = z.object({
   engineType: z.string().trim().max(50).optional(),
   year: z.coerce.number().int().min(1900).max(2100).optional(),
   currentMileageKm: z.coerce.number().int().min(0).optional(),
+  chassisNo: z.string().trim().max(50).optional(),
+  engineNo: z.string().trim().max(50).optional(),
+  color: z.string().trim().max(30).optional(),
 });
 
 export const updateVehicleSchema = createVehicleSchema.partial();

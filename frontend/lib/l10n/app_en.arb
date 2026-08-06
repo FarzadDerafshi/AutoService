@@ -64,6 +64,9 @@
   "engineLabel": "Engine",
   "yearFieldLabel": "Year",
   "currentMileageKmLabel": "Current mileage (km)",
+  "chassisNoLabel": "Chassis No.",
+  "engineNoLabel": "Engine No.",
+  "colorLabel": "Color",
 
   "vehicleHistory": "Vehicle History",
   "engine": "Engine: {value}",

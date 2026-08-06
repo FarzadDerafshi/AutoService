@@ -60,8 +60,8 @@ export async function getVehicleHistory(db: PoolClient, id: string) {
 
 export async function createVehicle(db: PoolClient, input: CreateVehicleInput) {
   const { rows } = await db.query(
-    `INSERT INTO vehicles (shop_id, client_id, license_plate, make, model, engine_type, year, current_mileage_km)
-     VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO vehicles (shop_id, client_id, license_plate, make, model, engine_type, year, current_mileage_km, chassis_no, engine_no, color)
+     VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING *`,
     [
       input.clientId,
@@ -71,6 +71,9 @@ export async function createVehicle(db: PoolClient, input: CreateVehicleInput) {
       input.engineType || null,
       input.year ?? null,
       input.currentMileageKm ?? 0,
+      input.chassisNo || null,
+      input.engineNo || null,
+      input.color || null,
     ]
   );
   return toCamel(rows[0]);
@@ -94,6 +97,9 @@ export async function updateVehicle(db: PoolClient, id: string, input: UpdateVeh
   if (input.engineType !== undefined) push("engine_type", input.engineType || null);
   if (input.year !== undefined) push("year", input.year);
   if (input.currentMileageKm !== undefined) push("current_mileage_km", input.currentMileageKm);
+  if (input.chassisNo !== undefined) push("chassis_no", input.chassisNo || null);
+  if (input.engineNo !== undefined) push("engine_no", input.engineNo || null);
+  if (input.color !== undefined) push("color", input.color || null);
 
   if (fields.length === 0) {
     return getVehicleById(db, id);

@@ -37,6 +37,12 @@ class VehicleHistoryScreen extends ConsumerWidget {
                       if (vehicle.engineType != null) Text(l.engine(vehicle.engineType!)),
                       if (vehicle.year != null) Text(l.yearLabel(vehicle.year.toString())),
                       Text(l.currentMileage(vehicle.currentMileageKm.toString())),
+                      if (vehicle.chassisNo != null && vehicle.chassisNo!.isNotEmpty)
+                        Text('${l.chassisNoLabel}: ${vehicle.chassisNo}'),
+                      if (vehicle.engineNo != null && vehicle.engineNo!.isNotEmpty)
+                        Text('${l.engineNoLabel}: ${vehicle.engineNo}'),
+                      if (vehicle.color != null && vehicle.color!.isNotEmpty)
+                        Text('${l.colorLabel}: ${vehicle.color}'),
                     ],
                   ),
                 ),

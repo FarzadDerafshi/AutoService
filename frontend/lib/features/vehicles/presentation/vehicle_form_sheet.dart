@@ -36,6 +36,9 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   late final TextEditingController _engineType;
   late final TextEditingController _year;
   late final TextEditingController _mileage;
+  late final TextEditingController _chassisNo;
+  late final TextEditingController _engineNo;
+  late final TextEditingController _color;
   String? _clientId;
 
   @override
@@ -49,7 +52,10 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     _engineType = TextEditingController(text: e?.engineType ?? '');
     _year = TextEditingController(text: e?.year?.toString() ?? '');
     _mileage = TextEditingController(text: e?.currentMileageKm.toString() ?? '');
-    for (final c in [_plate, _make, _model, _engineType, _year, _mileage]) {
+    _chassisNo = TextEditingController(text: e?.chassisNo ?? '');
+    _engineNo = TextEditingController(text: e?.engineNo ?? '');
+    _color = TextEditingController(text: e?.color ?? '');
+    for (final c in [_plate, _make, _model, _engineType, _year, _mileage, _chassisNo, _engineNo, _color]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -62,6 +68,9 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     _engineType.dispose();
     _year.dispose();
     _mileage.dispose();
+    _chassisNo.dispose();
+    _engineNo.dispose();
+    _color.dispose();
     super.dispose();
   }
 
@@ -73,6 +82,9 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
         (l.engineLabel, _engineType.text.trim().isNotEmpty),
         (l.yearFieldLabel, _year.text.trim().isNotEmpty),
         (l.currentMileageKmLabel, _mileage.text.trim().isNotEmpty),
+        (l.chassisNoLabel, _chassisNo.text.trim().isNotEmpty),
+        (l.engineNoLabel, _engineNo.text.trim().isNotEmpty),
+        (l.colorLabel, _color.text.trim().isNotEmpty),
       ];
 
   void _submit() {
@@ -86,6 +98,9 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
         'engineType': _engineType.text.trim(),
         if (_year.text.trim().isNotEmpty) 'year': int.tryParse(_year.text.trim()),
         if (_mileage.text.trim().isNotEmpty) 'currentMileageKm': int.tryParse(_mileage.text.trim()),
+        'chassisNo': _chassisNo.text.trim(),
+        'engineNo': _engineNo.text.trim(),
+        'color': _color.text.trim(),
       }),
     );
   }
@@ -163,6 +178,31 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
               controller: _mileage,
               decoration: InputDecoration(labelText: l10n.currentMileageKmLabel),
               keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _chassisNo,
+                    decoration: InputDecoration(labelText: l10n.chassisNoLabel),
+                    textCapitalization: TextCapitalization.characters,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _engineNo,
+                    decoration: InputDecoration(labelText: l10n.engineNoLabel),
+                    textCapitalization: TextCapitalization.characters,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _color,
+              decoration: InputDecoration(labelText: l10n.colorLabel),
             ),
             const SizedBox(height: 20),
             FilledButton(onPressed: _submit, child: Text(l10n.save)),
