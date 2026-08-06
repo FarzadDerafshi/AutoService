@@ -7,17 +7,22 @@ class CatalogItemFormResult {
   const CatalogItemFormResult(this.data);
 }
 
-Future<CatalogItemFormResult?> showCatalogItemFormSheet(BuildContext context, {CatalogItem? existing}) {
+Future<CatalogItemFormResult?> showCatalogItemFormSheet(
+  BuildContext context, {
+  CatalogItem? existing,
+  String? initialName,
+}) {
   return showModalBottomSheet<CatalogItemFormResult>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => _CatalogItemFormSheet(existing: existing),
+    builder: (context) => _CatalogItemFormSheet(existing: existing, initialName: initialName),
   );
 }
 
 class _CatalogItemFormSheet extends StatefulWidget {
-  const _CatalogItemFormSheet({this.existing});
+  const _CatalogItemFormSheet({this.existing, this.initialName});
   final CatalogItem? existing;
+  final String? initialName;
 
   @override
   State<_CatalogItemFormSheet> createState() => _CatalogItemFormSheetState();
@@ -36,7 +41,7 @@ class _CatalogItemFormSheetState extends State<_CatalogItemFormSheet> {
     super.initState();
     final e = widget.existing;
     _type = e?.type ?? 'service';
-    _name = TextEditingController(text: e?.name ?? '');
+    _name = TextEditingController(text: e?.name ?? widget.initialName ?? '');
     _sku = TextEditingController(text: e?.sku ?? '');
     _unit = TextEditingController(text: e?.unit ?? '');
     _price = TextEditingController(text: e?.defaultUnitPrice.toString() ?? '0');

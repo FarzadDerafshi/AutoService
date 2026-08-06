@@ -10,6 +10,39 @@ import { CreateVehicleInput, UpdateVehicleInput } from "./vehicles.schema";
 // by default, so every query here must explicitly scope by shop_id itself.
 const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
 
+// Master-data Autocomplete pattern (DECISIONS.md) — small, uncounted result
+// set for search-as-you-type. Prioritizes exact/prefix plate matches above
+// fuzzy make/model matches, mirroring the global search bar's ordering
+// (search.service.ts's searchAll). Joins the owner's name so the vehicle
+// field can display/auto-fill the client without a second round-trip.
+const SEARCH_LIMIT = 10;
+
+export async function searchVehicles(db: PoolClient, q: string, clientId?: string) {
+  const normalizedPlate = normalizePlate(q);
+  const conditions = [
+    `v.shop_id = current_setting('app.current_shop_id')::uuid`,
+    `(v.license_plate ILIKE $1 OR v.make ILIKE $2 OR v.model ILIKE $2)`,
+  ];
+  const params: unknown[] = [`%${normalizedPlate}%`, `%${q}%`];
+  if (clientId) {
+    params.push(clientId);
+    conditions.push(`v.client_id = $${params.length}`);
+  }
+  params.push(normalizedPlate, `${normalizedPlate}%`, SEARCH_LIMIT);
+  const { rows } = await db.query(
+    `SELECT v.*, c.full_name AS client_name
+     FROM vehicles v
+     JOIN clients c ON c.id = v.client_id
+     WHERE ${conditions.join(" AND ")}
+     ORDER BY (v.license_plate = $${params.length - 2}) DESC,
+              (v.license_plate ILIKE $${params.length - 1}) DESC,
+              v.license_plate ASC
+     LIMIT $${params.length}`,
+    params
+  );
+  return toCamelList(rows);
+}
+
 export async function listVehicles(
   db: PoolClient,
   filters: { plate?: string; clientId?: string },

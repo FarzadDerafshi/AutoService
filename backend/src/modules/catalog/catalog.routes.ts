@@ -9,6 +9,7 @@ export const catalogRoutes = Router();
 catalogRoutes.use(authenticate, tenantScope);
 
 catalogRoutes.get("/", catalogController.list);
+catalogRoutes.get("/search", catalogController.search);
 catalogRoutes.post("/", authorize("owner", "manager"), catalogController.create);
 catalogRoutes.patch("/:id", authorize("owner", "manager"), catalogController.update);
 catalogRoutes.delete("/:id", authorize("owner", "manager"), catalogController.remove);

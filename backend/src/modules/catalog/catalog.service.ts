@@ -8,6 +8,27 @@ import { CreateCatalogItemInput, UpdateCatalogItemInput } from "./catalog.schema
 // by default, so every query here must explicitly scope by shop_id itself.
 const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
 
+// Master-data Autocomplete pattern (DECISIONS.md) — small, active-only result
+// set for search-as-you-type (excludes deactivated items — see
+// deleteCatalogItem below — since those shouldn't be pickable into new work
+// orders), unlike listCatalogItems' unbounded, all-items query below.
+const SEARCH_LIMIT = 15;
+
+export async function searchCatalogItems(db: PoolClient, q: string, type?: string) {
+  const conditions = [SHOP_SCOPE, "is_active = true", "(name ILIKE $1 OR sku ILIKE $1)"];
+  const params: unknown[] = [`%${q}%`];
+  if (type) {
+    params.push(type);
+    conditions.push(`type = $${params.length}`);
+  }
+  params.push(SEARCH_LIMIT);
+  const { rows } = await db.query(
+    `SELECT * FROM catalog_items WHERE ${conditions.join(" AND ")} ORDER BY name ASC LIMIT $${params.length}`,
+    params
+  );
+  return toCamelList(rows);
+}
+
 export async function listCatalogItems(db: PoolClient, filters: { type?: string; search?: string }) {
   const conditions: string[] = [SHOP_SCOPE];
   const params: unknown[] = [];

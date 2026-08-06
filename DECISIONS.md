@@ -832,6 +832,115 @@ add a real endpoint instead of widening the client-side window indefinitely.
 now fully wired to `AppLocalizations`, in both languages and both voice
 tones — see the i18n section above.
 
+### Master-data search-autocomplete pattern (v0.16.0)
+
+Farzad set a standing architectural/UI-UX standard for every master-data
+field (client, vehicle, catalog item, and any future one like this) in a
+transaction form: a debounced search-as-you-type `Autocomplete`, cross-field
+auto-fill on selection, and an inline quick-create fallback — not a static
+dropdown fed by a fully-loaded list. First applied to the Work Order form's
+header (client + vehicle) and line items (catalog picker); apply the same
+pattern by default to any new or refactored master-data field, without
+being re-asked.
+
+**The reusable widget** (`core/widgets/search_autocomplete_field.dart`)
+wraps Flutter's `Autocomplete<T>`, which supports an async
+`FutureOr<Iterable<T>> Function(TextEditingValue)` options builder but has
+**no built-in debouncing** — every keystroke calls it immediately. The
+widget adds its own `Timer`-based debounce (300ms default) inside that
+builder: cancel any pending timer, start a new one, and return a
+`Completer`'s future that only resolves once the timer actually fires.
+`Autocomplete`'s own internal "is this still the current query" guard
+(matching against `RawAutocomplete`'s current text) handles discarding
+stale in-flight results if a newer keystroke supersedes an older one —
+the widget doesn't need to re-implement that race protection itself.
+
+**Quick-create is modeled as a sentinel option, not a separate UI element.**
+Internally the widget's options list is `_Option<T>` (either a real result
+or an `isCreateNew` marker), not `T` directly — `Autocomplete<_Option<T>>`
+is what's actually instantiated. This lets the "+ Add new..." row live
+inside the same dropdown, selected through the same `onSelected` codepath
+as a real result, rather than a second onTap handler bolted on
+separately. **Deliberate choice: the create-new row is always appended
+once the minimum character count is reached, even when real matches
+exist** — not only on zero results. Reasoning: a shop may have two clients
+with similar names, and hiding the "add new" affordance whenever *any*
+match exists would force a workaround (clearing the field, retyping something
+slightly different) just to reach a legitimately new record. This mirrors
+Notion/Linear-style "Create new..." rows, not a traditional empty-state-only
+pattern — worth knowing before "simplifying" it to only show on zero
+matches.
+
+**Cross-field auto-fill needs the *other* field's live `TextEditingController`,
+which `Autocomplete` doesn't expose by default.** The widget's
+`fieldViewBuilder` callback receives that controller on every build; the
+widget captures it into an instance field (`_fieldController`) and exposes
+`setText`/`clear` methods, reachable from a parent via
+`GlobalKey<SearchAutocompleteFieldState<T>>`. This is how the work-order
+form's vehicle field can push a value into the client field's box (and vice
+versa for clearing) without either widget knowing about the other directly.
+
+**Vehicle selection is authoritative over client selection, not the other
+way round.** A license plate uniquely determines its owner, so picking a
+vehicle always overwrites whichever client is currently shown (fetching the
+full `Client` via `GET /clients/:id` only if it isn't already the one
+selected, to avoid an extra round-trip on the common case). Picking a
+*client* only clears an already-selected vehicle if it belongs to someone
+else — it doesn't try to guess a replacement. `createWorkOrder` also now
+verifies server-side that the submitted vehicle actually belongs to the
+submitted client (previously only checked each independently belonged to
+the shop) — a backstop for this auto-sync, not a fix for an observed bug.
+
+**Backend: dedicated `/search` endpoints, not the existing paginated `list`
+endpoints with a small `pageSize`.** `listClients`/`listVehicles` both run
+an extra `COUNT(*)` query for pagination that a debounced, throwaway-per-
+keystroke search doesn't need — `searchClients`/`searchVehicles`/
+`searchCatalogItems` (in each module's `.service.ts`) are separate,
+smaller queries: capped (10–15 rows), no count, ILIKE across the relevant
+columns, `q.length >= 2` enforced via Zod too (defense-in-depth, in case
+something calls the endpoint directly rather than through the debounced
+widget). Routes: `GET /search` **must be registered before `GET /:id`** in
+each `*.routes.ts` — Express would otherwise match `/search` as an `:id`
+value. `searchVehicles` joins `clients` for `client_name` so the frontend
+can show/auto-fill the owner without a second request; `searchCatalogItems`
+filters `is_active = true` since deactivated items (soft-deleted because
+they're referenced by an existing work order — see `deleteCatalogItem`)
+shouldn't be pickable into a *new* one.
+
+**Fully rolled out as of v0.16.1**: every master-data picker in the app now
+uses this pattern — `vehicle_form_sheet.dart`'s "owner" field was the last
+static dropdown, converted alongside the Work Order form. It has two
+callers with different starting knowledge, handled via two paths:
+- **Already have the `Client` object** (the work-order form's vehicle
+  quick-create, which already holds `_selectedClient`) — pass it as the new
+  `presetClient: Client?` parameter on `showVehicleFormSheet`; the sheet
+  uses it directly as `initialText`, no fetch needed.
+- **Only have an id** (editing an existing vehicle — only `clientId` is on
+  the `Vehicle` model; or the Vehicles screen's `presetClientId: String?`
+  route param) — the sheet fetches the name itself via one `GET
+  /clients/:id` in `initState` (`Future.microtask`, not blocking first
+  frame) and pushes it in via `setText()` once resolved, same imperative
+  mechanism as the cross-field auto-fill above. A failed fetch leaves the
+  field blank but keeps `_clientId` set, so submitting with the unchanged
+  owner still works — it doesn't block the form on a transient network
+  error.
+
+This is also why `allClientsProvider` (previously used to feed both this
+dropdown and the work-order form's old client dropdown) and the
+`failedToLoadClients`/`failedToLoadVehicles` ARB keys (used by their
+`.when(error: ...)` branches) were removed in v0.16.1 — check before
+resurrecting either as a "quick fix" for some other screen; the search
+endpoint is the intended replacement now.
+
+**Trigram indexes added for substring search** (`db/init/012_search_indexes.sql`):
+`vehicles.license_plate` and `catalog_items.name`/`sku` had no `pg_trgm`
+GIN index before this (only `clients.full_name` did, from
+`002_clients.sql`), so `ILIKE '%term%'` on those columns was a sequential
+scan. `pg_trgm` was already enabled (`000_extensions.sql`). Like every
+`db/init/*.sql` file, this only runs automatically on a brand-new Postgres
+volume — apply it by hand against an already-provisioned database (dev or
+prod) per the pattern in the DevOps section below.
+
 ---
 
 ## DevOps

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { parsePagination } from "../../utils/pagination";
-import { createVehicleSchema, updateVehicleSchema, listVehiclesQuerySchema } from "./vehicles.schema";
+import { createVehicleSchema, updateVehicleSchema, listVehiclesQuerySchema, searchVehiclesQuerySchema } from "./vehicles.schema";
 import * as vehiclesService from "./vehicles.service";
 
 export const list = asyncHandler(async (req: Request, res: Response) => {
@@ -12,6 +12,12 @@ export const list = asyncHandler(async (req: Request, res: Response) => {
     parsePagination(req)
   );
   res.status(200).json(result);
+});
+
+export const search = asyncHandler(async (req: Request, res: Response) => {
+  const { q, clientId } = searchVehiclesQuerySchema.parse(req.query);
+  const vehicles = await vehiclesService.searchVehicles(req.db!, q, clientId);
+  res.status(200).json(vehicles);
 });
 
 export const getById = asyncHandler(async (req: Request, res: Response) => {

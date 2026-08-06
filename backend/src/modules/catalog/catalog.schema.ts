@@ -19,5 +19,13 @@ export const listCatalogQuerySchema = z.object({
   search: z.string().trim().max(150).optional(),
 });
 
+// Master-data Autocomplete pattern (DECISIONS.md) — capped, active-items-only
+// result set for search-as-you-type, unlike listCatalogItems' unbounded
+// (no LIMIT) query above.
+export const searchCatalogQuerySchema = z.object({
+  q: z.string().trim().min(2).max(150),
+  type: catalogItemTypeSchema.optional(),
+});
+
 export type CreateCatalogItemInput = z.infer<typeof createCatalogItemSchema>;
 export type UpdateCatalogItemInput = z.infer<typeof updateCatalogItemSchema>;

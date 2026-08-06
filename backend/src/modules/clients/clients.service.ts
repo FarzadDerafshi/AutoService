@@ -9,6 +9,22 @@ import { CreateClientInput, UpdateClientInput } from "./clients.schema";
 // by default, so every query here must explicitly scope by shop_id itself.
 const SHOP_SCOPE = "shop_id = current_setting('app.current_shop_id')::uuid";
 
+// Master-data Autocomplete pattern (DECISIONS.md) — small, uncounted result
+// set for search-as-you-type, unlike listClients' paginated (COUNT(*)-backed)
+// query below.
+const SEARCH_LIMIT = 10;
+
+export async function searchClients(db: PoolClient, q: string) {
+  const { rows } = await db.query(
+    `SELECT * FROM clients
+     WHERE (full_name ILIKE $1 OR phone ILIKE $1 OR email ILIKE $1) AND ${SHOP_SCOPE}
+     ORDER BY full_name ASC
+     LIMIT $2`,
+    [`%${q}%`, SEARCH_LIMIT]
+  );
+  return toCamelList(rows);
+}
+
 export async function listClients(db: PoolClient, search: string | undefined, pagination: Pagination) {
   const conditions: string[] = [SHOP_SCOPE];
   const params: unknown[] = [];

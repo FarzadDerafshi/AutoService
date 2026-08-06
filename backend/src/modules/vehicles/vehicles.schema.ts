@@ -22,5 +22,13 @@ export const listVehiclesQuerySchema = z.object({
   pageSize: z.coerce.number().int().positive().max(100).optional(),
 });
 
+// Master-data Autocomplete pattern (DECISIONS.md) — searches plate/make/model
+// shop-wide (or narrowed to one owner via clientId), unlike listVehicles'
+// plate-only, paginated filter above.
+export const searchVehiclesQuerySchema = z.object({
+  q: z.string().trim().min(2).max(30),
+  clientId: z.string().uuid().optional(),
+});
+
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
 export type UpdateVehicleInput = z.infer<typeof updateVehicleSchema>;

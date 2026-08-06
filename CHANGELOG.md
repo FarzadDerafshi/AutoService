@@ -5,6 +5,102 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.1] — 2026-08-06  *(Vehicle Form's Owner Field: Same Autocomplete Pattern)*
+
+### Added
+- **`vehicle_form_sheet.dart`'s "owner" field** — the last remaining
+  static-dropdown master-data picker (used both standalone on the Vehicles
+  screen and as this pattern's own vehicle quick-create sheet) — converted
+  to `SearchAutocompleteField<Client>`, same as the Work Order form's
+  client/vehicle fields in v0.16.0. Editing an existing vehicle now fetches
+  the owner's name asynchronously after the sheet opens (`GET
+  /clients/:id`, once) rather than depending on a fully-loaded client list;
+  a new optional `presetClient: Client?` parameter on `showVehicleFormSheet`
+  lets a caller that already has the `Client` object (the work-order form's
+  vehicle quick-create) skip that fetch entirely.
+- **Cleanup**: `allClientsProvider` (now unused anywhere) removed from
+  `clients_provider.dart`; the `failedToLoadClients`/`failedToLoadVehicles`
+  ARB keys (unused since this and the v0.16.0 dropdown removals) removed
+  from all four locale files.
+  _Files: `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/features/clients/application/clients_provider.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+---
+
+## [0.16.0] — 2026-08-06  *(Work Order Form: Search-As-You-Type Autocomplete + Quick-Create)*
+
+### Added
+Established the standard pattern for every master-data field (client,
+vehicle, catalog item, ...) across transaction forms: a debounced (300ms,
+≥2 chars) search-as-you-type `Autocomplete`, cross-field auto-fill on
+selection, and an inline "+ Add new..." quick-create fallback that opens
+the existing entity form sheet, saves, and auto-selects the result without
+losing other form state. Applied it to the Work Order form's header
+(client + vehicle) and line items (catalog picker), replacing static
+dropdowns / a full-list bottom sheet. See DECISIONS.md's "Master-data
+search-autocomplete pattern" section for the full rationale and how to
+wire a new field.
+
+#### Frontend
+- **New reusable `SearchAutocompleteField<T>` widget**
+  (`core/widgets/search_autocomplete_field.dart`) — wraps `Autocomplete<T>`
+  with its own debounce Timer (the widget itself has no built-in
+  debouncing), an always-present trailing "+ Add new..." option once the
+  minimum character count is reached, and imperative `setText`/`clear`
+  methods (via a `GlobalKey`) for cross-field auto-fill and post-add
+  resets.
+- **Work order header** — `client`/`vehicle` `DropdownButtonFormField`s
+  (fed by a fully-loaded list, cascaded client → vehicle) replaced with two
+  `SearchAutocompleteField`s. Selecting a client shows a contact-info line
+  (phone/email); selecting a vehicle auto-fills/overrides the owner field
+  (a plate uniquely determines its owner, so vehicle selection is
+  authoritative) via a single extra `GET /clients/:id` only when the
+  owner isn't already the one shown.
+  `vehiclesByClientProvider` (now unused anywhere) was removed.
+- **Work order line items** — the "From catalog" button + unfiltered
+  `showModalBottomSheet` picker replaced with a `SearchAutocompleteField`
+  that appends a line item and clears itself on selection, so it's ready
+  for the next item immediately (fixes a side issue too: the old picker
+  didn't filter out deactivated catalog items).
+- Quick-create wiring: `showClientFormSheet`, `showVehicleFormSheet`, and
+  `showCatalogItemFormSheet` each gained an optional prefill parameter
+  (`initialFullName`/`initialPlate`/`initialName`) so the typed search text
+  carries into the sheet instead of the user retyping it.
+  _Files: `frontend/lib/core/widgets/search_autocomplete_field.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/features/{clients,vehicles,catalog}/presentation/*_form_sheet.dart`,
+  `frontend/lib/features/{clients,vehicles,catalog}/data/*_repository.dart`,
+  `frontend/lib/features/vehicles/data/vehicle_model.dart`,
+  `frontend/lib/features/vehicles/application/vehicles_provider.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+#### Backend
+- **New capped, uncounted `/search` endpoints** — `GET /clients/search?q=`,
+  `GET /vehicles/search?q=&clientId=`, `GET /catalog/search?q=&type=` —
+  purpose-built for search-as-you-type (skip the `list` endpoints'
+  `COUNT(*)` query, which autocomplete doesn't need). Vehicle search joins
+  the owner's name so the frontend can display/auto-fill it without a
+  second round-trip; catalog search excludes deactivated items. All three
+  enforce `q.length >= 2` server-side too, as defense-in-depth against the
+  frontend debounce being bypassed.
+- **New trigram indexes** (`db/init/012_search_indexes.sql`) — `pg_trgm`
+  GIN indexes on `vehicles.license_plate` and `catalog_items.name`/`sku`,
+  which previously had none (unlike `clients.full_name`), so `ILIKE
+  '%term%'` on those columns was a sequential scan.
+- **`createWorkOrder` now verifies the vehicle actually belongs to the
+  submitted client**, not just that each individually belongs to the
+  shop — closes a gap where a mismatched pair could previously be
+  submitted (e.g. a direct API call, or any future edit flow that only
+  changes one of the two). Added as a backstop for the new UI's
+  client↔vehicle auto-sync, not because a bug was observed in practice.
+  _Files: `backend/src/modules/{clients,vehicles,catalog}/*.{schema,service,controller,routes}.ts`,
+  `backend/src/modules/workOrders/workOrders.service.ts`,
+  `db/init/012_search_indexes.sql`_
+
+---
+
 ## [0.15.2] — 2026-08-06  *(First Real Production Rollout of v0.14.0–v0.15.1 — Deployment Script Fix)*
 
 ### Fixed

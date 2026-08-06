@@ -151,11 +151,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAnOwner => 'Select an owner';
 
   @override
-  String failedToLoadClients(Object error) {
-    return 'Whoops, dropped the client list in the oil pan: $error';
-  }
-
-  @override
   String get licensePlate => 'License plate';
 
   @override
@@ -302,11 +297,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addAtLeastOneLineItem => 'Add at least one line item';
 
   @override
-  String failedToLoadVehicles(Object error) {
-    return 'Whoops, dropped the vehicle list in the oil pan: $error';
-  }
-
-  @override
   String get mileageAtServiceLabel => 'Mileage at service (km)';
 
   @override
@@ -314,6 +304,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customLineItem => 'Custom';
+
+  @override
+  String addNewClientOption(String name) {
+    return '+ Add new client \"$name\"';
+  }
+
+  @override
+  String addNewVehicleOption(String name) {
+    return '+ Add new vehicle \"$name\"';
+  }
+
+  @override
+  String addNewCatalogItemOption(String name) {
+    return '+ Add new item \"$name\"';
+  }
 
   @override
   String get descriptionLabel => 'Description';
@@ -792,11 +797,6 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String get selectAnOwner => 'Select an owner';
 
   @override
-  String failedToLoadClients(Object error) {
-    return 'Failed to load clients: $error';
-  }
-
-  @override
   String get licensePlate => 'License plate';
 
   @override
@@ -940,11 +940,6 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String get addAtLeastOneLineItem => 'Add at least one line item';
 
   @override
-  String failedToLoadVehicles(Object error) {
-    return 'Failed to load vehicles: $error';
-  }
-
-  @override
   String get mileageAtServiceLabel => 'Mileage at service (km)';
 
   @override
@@ -952,6 +947,21 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
 
   @override
   String get customLineItem => 'Custom';
+
+  @override
+  String addNewClientOption(String name) {
+    return '+ Add new client \"$name\"';
+  }
+
+  @override
+  String addNewVehicleOption(String name) {
+    return '+ Add new vehicle \"$name\"';
+  }
+
+  @override
+  String addNewCatalogItemOption(String name) {
+    return '+ Add new item \"$name\"';
+  }
 
   @override
   String get descriptionLabel => 'Description';

@@ -8,17 +8,18 @@ class ClientFormResult {
   const ClientFormResult(this.data);
 }
 
-Future<ClientFormResult?> showClientFormSheet(BuildContext context, {Client? existing}) {
+Future<ClientFormResult?> showClientFormSheet(BuildContext context, {Client? existing, String? initialFullName}) {
   return showModalBottomSheet<ClientFormResult>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => _ClientFormSheet(existing: existing),
+    builder: (context) => _ClientFormSheet(existing: existing, initialFullName: initialFullName),
   );
 }
 
 class _ClientFormSheet extends StatefulWidget {
-  const _ClientFormSheet({this.existing});
+  const _ClientFormSheet({this.existing, this.initialFullName});
   final Client? existing;
+  final String? initialFullName;
 
   @override
   State<_ClientFormSheet> createState() => _ClientFormSheetState();
@@ -36,7 +37,7 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _fullName = TextEditingController(text: e?.fullName ?? '');
+    _fullName = TextEditingController(text: e?.fullName ?? widget.initialFullName ?? '');
     _phone = TextEditingController(text: e?.phone ?? '');
     _email = TextEditingController(text: e?.email ?? '');
     _address = TextEditingController(text: e?.address ?? '');

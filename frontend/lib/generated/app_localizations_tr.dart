@@ -152,11 +152,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get selectAnOwner => 'Bir sahip seçin';
 
   @override
-  String failedToLoadClients(Object error) {
-    return 'Müşteri defteri yağ karterine düştü galiba: $error';
-  }
-
-  @override
   String get licensePlate => 'Plaka';
 
   @override
@@ -303,11 +298,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addAtLeastOneLineItem => 'En az bir kalem ekleyin';
 
   @override
-  String failedToLoadVehicles(Object error) {
-    return 'Araç listesi yağ karterine düştü galiba: $error';
-  }
-
-  @override
   String get mileageAtServiceLabel => 'Servis kilometresi (km)';
 
   @override
@@ -315,6 +305,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get customLineItem => 'Özel';
+
+  @override
+  String addNewClientOption(String name) {
+    return '+ Yeni müşteri ekle: \"$name\"';
+  }
+
+  @override
+  String addNewVehicleOption(String name) {
+    return '+ Yeni araç ekle: \"$name\"';
+  }
+
+  @override
+  String addNewCatalogItemOption(String name) {
+    return '+ Yeni ürün ekle: \"$name\"';
+  }
 
   @override
   String get descriptionLabel => 'Açıklama';
@@ -793,11 +798,6 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String get selectAnOwner => 'Bir sahip seçin';
 
   @override
-  String failedToLoadClients(Object error) {
-    return 'Müşteriler yüklenemedi: $error';
-  }
-
-  @override
   String get licensePlate => 'Plaka';
 
   @override
@@ -941,11 +941,6 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String get addAtLeastOneLineItem => 'En az bir kalem ekleyin';
 
   @override
-  String failedToLoadVehicles(Object error) {
-    return 'Araçlar yüklenemedi: $error';
-  }
-
-  @override
   String get mileageAtServiceLabel => 'Servis kilometresi (km)';
 
   @override
@@ -953,6 +948,21 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
 
   @override
   String get customLineItem => 'Özel';
+
+  @override
+  String addNewClientOption(String name) {
+    return '+ Yeni müşteri ekle: \"$name\"';
+  }
+
+  @override
+  String addNewVehicleOption(String name) {
+    return '+ Yeni araç ekle: \"$name\"';
+  }
+
+  @override
+  String addNewCatalogItemOption(String name) {
+    return '+ Yeni ürün ekle: \"$name\"';
+  }
 
   @override
   String get descriptionLabel => 'Açıklama';

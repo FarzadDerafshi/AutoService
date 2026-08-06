@@ -15,6 +15,13 @@ class ClientsRepository {
     return PaginatedResponse.fromJson(response.data as Map<String, dynamic>, Client.fromJson);
   }
 
+  /// Lightweight, debounce-friendly search for the master-data Autocomplete
+  /// pattern (see DECISIONS.md) — capped and unpaginated, unlike [list].
+  Future<List<Client>> search(String q) async {
+    final response = await _client.dio.get('/clients/search', queryParameters: {'q': q});
+    return (response.data as List).map((e) => Client.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
   Future<Client> getById(String id) async {
     final response = await _client.dio.get('/clients/$id');
     return Client.fromJson(response.data as Map<String, dynamic>);

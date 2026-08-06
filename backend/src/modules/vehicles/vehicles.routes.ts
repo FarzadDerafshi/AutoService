@@ -9,6 +9,8 @@ export const vehiclesRoutes = Router();
 vehiclesRoutes.use(authenticate, tenantScope);
 
 vehiclesRoutes.get("/", vehiclesController.list);
+// Must precede "/:id" — otherwise Express would match "search" as an :id param.
+vehiclesRoutes.get("/search", vehiclesController.search);
 vehiclesRoutes.get("/:id", vehiclesController.getById);
 vehiclesRoutes.get("/:id/history", vehiclesController.history);
 vehiclesRoutes.post("/", vehiclesController.create);

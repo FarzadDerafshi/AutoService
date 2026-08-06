@@ -14,6 +14,16 @@ class CatalogRepository {
     return (body['data'] as List).map((e) => CatalogItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  /// Lightweight, debounce-friendly search for the master-data Autocomplete
+  /// pattern (see DECISIONS.md) — capped, active items only, unlike [list].
+  Future<List<CatalogItem>> search(String q, {String? type}) async {
+    final response = await _client.dio.get('/catalog/search', queryParameters: {
+      'q': q,
+      'type': ?type,
+    });
+    return (response.data as List).map((e) => CatalogItem.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
   Future<CatalogItem> create(Map<String, dynamic> input) async {
     final response = await _client.dio.post('/catalog', data: input);
     return CatalogItem.fromJson(response.data as Map<String, dynamic>);

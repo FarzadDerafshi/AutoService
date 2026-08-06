@@ -1,13 +1,19 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { parsePagination } from "../../utils/pagination";
-import { createClientSchema, updateClientSchema, listClientsQuerySchema } from "./clients.schema";
+import { createClientSchema, updateClientSchema, listClientsQuerySchema, searchClientsQuerySchema } from "./clients.schema";
 import * as clientsService from "./clients.service";
 
 export const list = asyncHandler(async (req: Request, res: Response) => {
   const query = listClientsQuerySchema.parse(req.query);
   const result = await clientsService.listClients(req.db!, query.search, parsePagination(req));
   res.status(200).json(result);
+});
+
+export const search = asyncHandler(async (req: Request, res: Response) => {
+  const { q } = searchClientsQuerySchema.parse(req.query);
+  const clients = await clientsService.searchClients(req.db!, q);
+  res.status(200).json(clients);
 });
 
 export const getById = asyncHandler(async (req: Request, res: Response) => {

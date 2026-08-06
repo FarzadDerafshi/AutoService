@@ -3,11 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/search_autocomplete_field.dart';
 import '../../../generated/app_localizations.dart';
 import '../../catalog/application/catalog_provider.dart';
 import '../../catalog/data/catalog_item_model.dart';
+import '../../catalog/presentation/catalog_item_form_sheet.dart';
 import '../../clients/application/clients_provider.dart';
+import '../../clients/data/client_model.dart';
+import '../../clients/presentation/client_form_sheet.dart';
 import '../../vehicles/application/vehicles_provider.dart';
+import '../../vehicles/data/vehicle_model.dart';
+import '../../vehicles/presentation/vehicle_form_sheet.dart';
 import '../application/work_orders_provider.dart';
 import '../data/work_order_item_model.dart';
 import '../data/work_order_model.dart';
@@ -42,8 +48,11 @@ class WorkOrderFormScreen extends ConsumerStatefulWidget {
 
 class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  String? _clientId;
-  String? _vehicleId;
+  final _clientFieldKey = GlobalKey<SearchAutocompleteFieldState<Client>>();
+  final _vehicleFieldKey = GlobalKey<SearchAutocompleteFieldState<Vehicle>>();
+  final _catalogFieldKey = GlobalKey<SearchAutocompleteFieldState<CatalogItem>>();
+  Client? _selectedClient;
+  Vehicle? _selectedVehicle;
   late final TextEditingController _mileage;
   late final TextEditingController _discount;
   late final TextEditingController _taxRate;
@@ -58,8 +67,6 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _clientId = e?.clientId;
-    _vehicleId = e?.vehicleId;
     _mileage = TextEditingController(text: e?.mileageAtService?.toString() ?? '');
     _discount = TextEditingController(text: e?.discountAmount.toString() ?? '0');
     _taxRate = TextEditingController(text: e?.taxRate.toString() ?? '0');
@@ -97,36 +104,10 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   double get _taxAmount => _taxable * (_taxRateValue / 100);
   double get _grandTotal => _taxable + _taxAmount;
 
-  Future<void> _pickFromCatalog() async {
-    final items = await ref.read(catalogListProvider.future);
-    if (!mounted) return;
-    final selected = await showModalBottomSheet<CatalogItem>(
-      context: context,
-      builder: (context) => ListView(
-        children: items
-            .map((item) => ListTile(
-                  title: Text(item.name),
-                  subtitle: Text(formatCurrency(item.defaultUnitPrice)),
-                  onTap: () => Navigator.pop(context, item),
-                ))
-            .toList(),
-      ),
-    );
-    if (selected == null) return;
-    setState(() {
-      _items.add(_ItemRow(
-        catalogItemId: selected.id,
-        description: selected.name,
-        quantity: '1',
-        unitPrice: selected.defaultUnitPrice.toString(),
-      ));
-    });
-  }
-
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
-    if (!_isEdit && (_clientId == null || _vehicleId == null)) {
+    if (!_isEdit && (_selectedClient == null || _selectedVehicle == null)) {
       setState(() => _errorMessage = l10n.selectClientAndVehicle);
       return;
     }
@@ -162,8 +143,8 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
         ref.invalidate(workOrderDetailProvider(widget.existing!.id));
       } else {
         await repo.create({
-          'clientId': _clientId,
-          'vehicleId': _vehicleId,
+          'clientId': _selectedClient!.id,
+          'vehicleId': _selectedVehicle!.id,
           if (_mileage.text.trim().isNotEmpty) 'mileageAtService': int.tryParse(_mileage.text.trim()),
           'items': items,
           'discountAmount': _discountValue,
@@ -183,7 +164,6 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final clientsAsync = ref.watch(allClientsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -199,40 +179,73 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               Text(l10n.vehicleLabel(widget.existing!.vehiclePlate ?? widget.existing!.vehicleId)),
               const SizedBox(height: 12),
             ] else ...[
-              clientsAsync.when(
-                data: (clients) => DropdownButtonFormField<String>(
-                  initialValue: _clientId,
-                  decoration: InputDecoration(labelText: l10n.client),
-                  items: clients.map((c) => DropdownMenuItem(value: c.id, child: Text(c.fullName))).toList(),
-                  onChanged: (value) => setState(() {
-                    _clientId = value;
-                    _vehicleId = null;
-                  }),
-                  validator: (v) => v == null ? l10n.selectAClient : null,
-                ),
-                loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text(l10n.failedToLoadClients(e)),
+              SearchAutocompleteField<Client>(
+                key: _clientFieldKey,
+                labelText: l10n.client,
+                search: (q) => ref.read(clientsRepositoryProvider).search(q),
+                displayStringForOption: (c) => c.fullName,
+                subtitleForOption: (c) =>
+                    [c.phone, c.email].where((s) => s != null && s.isNotEmpty).join(' · '),
+                createOptionLabel: l10n.addNewClientOption,
+                onCreateNew: (typedText) async {
+                  final result = await showClientFormSheet(context, initialFullName: typedText);
+                  if (result == null) return null;
+                  final created = await ref.read(clientsRepositoryProvider).create(result.data);
+                  ref.invalidate(clientsListProvider);
+                  return created;
+                },
+                onSelected: (client) => setState(() {
+                  _selectedClient = client;
+                  if (_selectedVehicle != null && _selectedVehicle!.clientId != client.id) {
+                    _selectedVehicle = null;
+                    _vehicleFieldKey.currentState?.clear();
+                  }
+                }),
+                validator: (_) => _selectedClient == null ? l10n.selectAClient : null,
               ),
-              const SizedBox(height: 12),
-              if (_clientId != null)
-                Consumer(
-                  builder: (context, ref, _) {
-                    final vehiclesAsync = ref.watch(vehiclesByClientProvider(_clientId!));
-                    return vehiclesAsync.when(
-                      data: (vehicles) => DropdownButtonFormField<String>(
-                        initialValue: _vehicleId,
-                        decoration: InputDecoration(labelText: l10n.vehicle),
-                        items: vehicles
-                            .map((v) => DropdownMenuItem(value: v.id, child: Text('${v.licensePlate} — ${v.displayName}')))
-                            .toList(),
-                        onChanged: (value) => setState(() => _vehicleId = value),
-                        validator: (v) => v == null ? l10n.selectAVehicle : null,
-                      ),
-                      loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => Text(l10n.failedToLoadVehicles(e)),
-                    );
-                  },
+              if (_selectedClient != null &&
+                  ((_selectedClient!.phone?.isNotEmpty ?? false) || (_selectedClient!.email?.isNotEmpty ?? false)))
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 4),
+                  child: Text(
+                    [
+                      if (_selectedClient!.phone?.isNotEmpty ?? false) '${l10n.phoneLabel}: ${_selectedClient!.phone}',
+                      if (_selectedClient!.email?.isNotEmpty ?? false) '${l10n.email}: ${_selectedClient!.email}',
+                    ].join('   '),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ),
+              const SizedBox(height: 12),
+              SearchAutocompleteField<Vehicle>(
+                key: _vehicleFieldKey,
+                labelText: l10n.vehicle,
+                search: (q) => ref.read(vehiclesRepositoryProvider).search(q, clientId: _selectedClient?.id),
+                displayStringForOption: (v) => '${v.licensePlate} — ${v.displayName}',
+                subtitleForOption: (v) =>
+                    (v.clientName == null || v.clientName == _selectedClient?.fullName) ? null : '${l10n.owner}: ${v.clientName}',
+                createOptionLabel: l10n.addNewVehicleOption,
+                onCreateNew: (typedText) async {
+                  final result = await showVehicleFormSheet(
+                    context,
+                    presetClient: _selectedClient,
+                    initialPlate: typedText,
+                  );
+                  if (result == null) return null;
+                  final created = await ref.read(vehiclesRepositoryProvider).create(result.data);
+                  ref.invalidate(vehiclesListProvider);
+                  return created;
+                },
+                onSelected: (vehicle) async {
+                  setState(() => _selectedVehicle = vehicle);
+                  if (_selectedClient == null || _selectedClient!.id != vehicle.clientId) {
+                    final client = await ref.read(clientsRepositoryProvider).getById(vehicle.clientId);
+                    if (!mounted) return;
+                    setState(() => _selectedClient = client);
+                    _clientFieldKey.currentState?.setText(client.fullName);
+                  }
+                },
+                validator: (_) => _selectedVehicle == null ? l10n.selectAVehicle : null,
+              ),
               const SizedBox(height: 12),
             ],
             TextFormField(
@@ -245,24 +258,41 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(l10n.lineItems, style: Theme.of(context).textTheme.titleMedium),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: _pickFromCatalog,
-                      icon: const Icon(Icons.list),
-                      label: Text(l10n.fromCatalog),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () => setState(() => _items.add(_ItemRow())),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.customLineItem),
-                    ),
-                  ],
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _items.add(_ItemRow())),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.customLineItem),
                 ),
               ],
             ),
             const SizedBox(height: 8),
+            SearchAutocompleteField<CatalogItem>(
+              key: _catalogFieldKey,
+              labelText: l10n.fromCatalog,
+              search: (q) => ref.read(catalogRepositoryProvider).search(q),
+              displayStringForOption: (c) => c.name,
+              subtitleForOption: (c) => '${c.type == 'service' ? l10n.service : l10n.part} · ${formatCurrency(c.defaultUnitPrice)}',
+              createOptionLabel: l10n.addNewCatalogItemOption,
+              onCreateNew: (typedText) async {
+                final result = await showCatalogItemFormSheet(context, initialName: typedText);
+                if (result == null) return null;
+                final created = await ref.read(catalogRepositoryProvider).create(result.data);
+                ref.invalidate(catalogListProvider);
+                return created;
+              },
+              onSelected: (item) {
+                setState(() {
+                  _items.add(_ItemRow(
+                    catalogItemId: item.id,
+                    description: item.name,
+                    quantity: '1',
+                    unitPrice: item.defaultUnitPrice.toString(),
+                  ));
+                });
+                _catalogFieldKey.currentState?.clear();
+              },
+            ),
+            const SizedBox(height: 12),
             for (int i = 0; i < _items.length; i++) _buildItemRow(l10n, i),
             const SizedBox(height: 16),
             Row(

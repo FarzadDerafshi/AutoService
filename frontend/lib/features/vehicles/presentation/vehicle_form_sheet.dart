@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/profile_completeness_bar.dart';
+import '../../../core/widgets/search_autocomplete_field.dart';
 import '../../../generated/app_localizations.dart';
 import '../../clients/application/clients_provider.dart';
+import '../../clients/data/client_model.dart';
+import '../../clients/presentation/client_form_sheet.dart';
 import '../data/vehicle_model.dart';
 
 class VehicleFormResult {
@@ -11,18 +14,31 @@ class VehicleFormResult {
   const VehicleFormResult(this.data);
 }
 
-Future<VehicleFormResult?> showVehicleFormSheet(BuildContext context, {Vehicle? existing, String? presetClientId}) {
+Future<VehicleFormResult?> showVehicleFormSheet(
+  BuildContext context, {
+  Vehicle? existing,
+  String? presetClientId,
+  Client? presetClient,
+  String? initialPlate,
+}) {
   return showModalBottomSheet<VehicleFormResult>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => _VehicleFormSheet(existing: existing, presetClientId: presetClientId),
+    builder: (context) => _VehicleFormSheet(
+      existing: existing,
+      presetClientId: presetClientId,
+      presetClient: presetClient,
+      initialPlate: initialPlate,
+    ),
   );
 }
 
 class _VehicleFormSheet extends ConsumerStatefulWidget {
-  const _VehicleFormSheet({this.existing, this.presetClientId});
+  const _VehicleFormSheet({this.existing, this.presetClientId, this.presetClient, this.initialPlate});
   final Vehicle? existing;
   final String? presetClientId;
+  final Client? presetClient;
+  final String? initialPlate;
 
   @override
   ConsumerState<_VehicleFormSheet> createState() => _VehicleFormSheetState();
@@ -39,14 +55,24 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   late final TextEditingController _chassisNo;
   late final TextEditingController _engineNo;
   late final TextEditingController _color;
+  final _ownerFieldKey = GlobalKey<SearchAutocompleteFieldState<Client>>();
   String? _clientId;
+  Client? _selectedClient;
 
   @override
   void initState() {
     super.initState();
     final e = widget.existing;
-    _clientId = e?.clientId ?? widget.presetClientId;
-    _plate = TextEditingController(text: e?.licensePlate ?? '');
+    _clientId = e?.clientId ?? widget.presetClient?.id ?? widget.presetClientId;
+    if (widget.presetClient != null) {
+      _selectedClient = widget.presetClient;
+    } else if (_clientId != null) {
+      // Only the id is known (editing an existing vehicle, or a bare
+      // presetClientId string) — fetch the name for display once the sheet
+      // is up rather than blocking the first frame on it.
+      Future.microtask(_loadOwnerName);
+    }
+    _plate = TextEditingController(text: e?.licensePlate ?? widget.initialPlate ?? '');
     _make = TextEditingController(text: e?.make ?? '');
     _model = TextEditingController(text: e?.model ?? '');
     _engineType = TextEditingController(text: e?.engineType ?? '');
@@ -72,6 +98,19 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     _engineNo.dispose();
     _color.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadOwnerName() async {
+    try {
+      final client = await ref.read(clientsRepositoryProvider).getById(_clientId!);
+      if (!mounted) return;
+      setState(() => _selectedClient = client);
+      _ownerFieldKey.currentState?.setText(client.fullName);
+    } catch (_) {
+      // Leave the field blank — _clientId is still set, so submitting with
+      // the unchanged owner still works; the user can re-search to fix the
+      // display if they notice.
+    }
   }
 
   List<(String, bool)> _completenessFields(AppLocalizations l) => [
@@ -108,7 +147,6 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final clientsAsync = ref.watch(allClientsProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -127,16 +165,27 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
             const SizedBox(height: 14),
             ProfileCompletenessBar(fields: _completenessFields(l10n), title: l10n.garageCompleteness),
             const SizedBox(height: 16),
-            clientsAsync.when(
-              data: (clients) => DropdownButtonFormField<String>(
-                initialValue: clients.any((c) => c.id == _clientId) ? _clientId : null,
-                decoration: InputDecoration(labelText: l10n.owner),
-                items: clients.map((c) => DropdownMenuItem(value: c.id, child: Text(c.fullName))).toList(),
-                onChanged: (value) => setState(() => _clientId = value),
-                validator: (v) => v == null ? l10n.selectAnOwner : null,
-              ),
-              loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text(l10n.failedToLoadClients(e)),
+            SearchAutocompleteField<Client>(
+              key: _ownerFieldKey,
+              labelText: l10n.owner,
+              initialText: _selectedClient?.fullName ?? '',
+              search: (q) => ref.read(clientsRepositoryProvider).search(q),
+              displayStringForOption: (c) => c.fullName,
+              subtitleForOption: (c) =>
+                  [c.phone, c.email].where((s) => s != null && s.isNotEmpty).join(' · '),
+              createOptionLabel: l10n.addNewClientOption,
+              onCreateNew: (typedText) async {
+                final result = await showClientFormSheet(context, initialFullName: typedText);
+                if (result == null) return null;
+                final created = await ref.read(clientsRepositoryProvider).create(result.data);
+                ref.invalidate(clientsListProvider);
+                return created;
+              },
+              onSelected: (client) => setState(() {
+                _selectedClient = client;
+                _clientId = client.id;
+              }),
+              validator: (_) => _clientId == null ? l10n.selectAnOwner : null,
             ),
             const SizedBox(height: 12),
             TextFormField(

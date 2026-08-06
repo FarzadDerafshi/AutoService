@@ -147,6 +147,18 @@ export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInpu
   if (!ownedRows[0].client_owned) throw new NotFoundError("Client not found");
   if (!ownedRows[0].vehicle_owned) throw new NotFoundError("Vehicle not found");
 
+  // The two ownership checks above don't verify the pair belongs together —
+  // a vehicle owned by a *different* client in the same shop would otherwise
+  // slip through. This matters more now that the frontend's vehicle-search
+  // Autocomplete can auto-fill the owner (see DECISIONS.md's master-data
+  // search-autocomplete pattern): if that client/vehicle sync ever drifts
+  // (stale state, a future client-only edit flow, a direct API call), this
+  // is the backstop that keeps a work order's client and vehicle consistent.
+  const { rows: pairRows } = await db.query(`SELECT client_id FROM vehicles WHERE id = $1`, [input.vehicleId]);
+  if (pairRows[0].client_id !== input.clientId) {
+    throw new ValidationError("Selected vehicle does not belong to the selected client");
+  }
+
   const { subtotal, taxAmount, grandTotal } = computeTotals(input.items, input.discountAmount, input.taxRate);
 
   const {

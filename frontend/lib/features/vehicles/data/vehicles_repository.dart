@@ -22,6 +22,17 @@ class VehiclesRepository {
     return PaginatedResponse.fromJson(response.data as Map<String, dynamic>, Vehicle.fromJson);
   }
 
+  /// Lightweight, debounce-friendly search for the master-data Autocomplete
+  /// pattern (see DECISIONS.md) — shop-wide by plate/make/model, optionally
+  /// narrowed to one owner, and joins the owner's name for display.
+  Future<List<Vehicle>> search(String q, {String? clientId}) async {
+    final response = await _client.dio.get('/vehicles/search', queryParameters: {
+      'q': q,
+      'clientId': ?clientId,
+    });
+    return (response.data as List).map((e) => Vehicle.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
   Future<Vehicle> getById(String id) async {
     final response = await _client.dio.get('/vehicles/$id');
     return Vehicle.fromJson(response.data as Map<String, dynamic>);

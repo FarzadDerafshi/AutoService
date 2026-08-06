@@ -10,6 +10,7 @@ class Vehicle {
   final String? chassisNo;
   final String? engineNo;
   final String? color;
+  final String? clientName; // only populated by VehiclesRepository.search's owner join
 
   const Vehicle({
     required this.id,
@@ -23,6 +24,7 @@ class Vehicle {
     this.chassisNo,
     this.engineNo,
     this.color,
+    this.clientName,
   });
 
   String get displayName => [make, model].where((s) => s != null && s.isNotEmpty).join(' ');
@@ -39,5 +41,6 @@ class Vehicle {
         chassisNo: json['chassisNo'] as String?,
         engineNo: json['engineNo'] as String?,
         color: json['color'] as String?,
+        clientName: json['clientName'] as String?,
       );
 }

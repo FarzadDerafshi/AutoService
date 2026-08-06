@@ -17,5 +17,13 @@ export const listClientsQuerySchema = z.object({
   pageSize: z.coerce.number().int().positive().max(100).optional(),
 });
 
+// Separate from listClientsQuerySchema's optional `search` — the master-data
+// Autocomplete pattern (DECISIONS.md) requires at least 2 characters before
+// firing a query, enforced here too as defense-in-depth against the frontend
+// debounce being bypassed (e.g. a direct API call).
+export const searchClientsQuerySchema = z.object({
+  q: z.string().trim().min(2).max(150),
+});
+
 export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;

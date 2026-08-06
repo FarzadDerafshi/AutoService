@@ -382,12 +382,6 @@ abstract class AppLocalizations {
   /// **'Select an owner'**
   String get selectAnOwner;
 
-  /// No description provided for @failedToLoadClients.
-  ///
-  /// In en, this message translates to:
-  /// **'Whoops, dropped the client list in the oil pan: {error}'**
-  String failedToLoadClients(Object error);
-
   /// No description provided for @licensePlate.
   ///
   /// In en, this message translates to:
@@ -646,12 +640,6 @@ abstract class AppLocalizations {
   /// **'Add at least one line item'**
   String get addAtLeastOneLineItem;
 
-  /// No description provided for @failedToLoadVehicles.
-  ///
-  /// In en, this message translates to:
-  /// **'Whoops, dropped the vehicle list in the oil pan: {error}'**
-  String failedToLoadVehicles(Object error);
-
   /// No description provided for @mileageAtServiceLabel.
   ///
   /// In en, this message translates to:
@@ -669,6 +657,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom'**
   String get customLineItem;
+
+  /// No description provided for @addNewClientOption.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add new client \"{name}\"'**
+  String addNewClientOption(String name);
+
+  /// No description provided for @addNewVehicleOption.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add new vehicle \"{name}\"'**
+  String addNewVehicleOption(String name);
+
+  /// No description provided for @addNewCatalogItemOption.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add new item \"{name}\"'**
+  String addNewCatalogItemOption(String name);
 
   /// No description provided for @descriptionLabel.
   ///

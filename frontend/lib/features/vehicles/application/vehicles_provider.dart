@@ -28,10 +28,3 @@ final vehiclesListProvider = FutureProvider.autoDispose<List<Vehicle>>((ref) asy
 final vehicleHistoryProvider = FutureProvider.autoDispose.family((ref, String vehicleId) async {
   return ref.watch(vehiclesRepositoryProvider).history(vehicleId);
 });
-
-/// Vehicles owned by a specific client — used by the work-order form's
-/// vehicle picker once a client has been selected.
-final vehiclesByClientProvider = FutureProvider.autoDispose.family<List<Vehicle>, String>((ref, clientId) async {
-  final result = await ref.watch(vehiclesRepositoryProvider).list(clientId: clientId, pageSize: 100);
-  return result.data;
-});

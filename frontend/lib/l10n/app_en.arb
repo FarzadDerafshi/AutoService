@@ -54,10 +54,6 @@
   "editVehicle": "Edit Vehicle",
   "owner": "Owner",
   "selectAnOwner": "Select an owner",
-  "failedToLoadClients": "Whoops, dropped the client list in the oil pan: {error}",
-  "@failedToLoadClients": {
-    "placeholders": { "error": { "type": "Object" } }
-  },
   "licensePlate": "License plate",
   "make": "Make",
   "model": "Model",
@@ -126,13 +122,21 @@
   "selectAVehicle": "Select a vehicle",
   "selectClientAndVehicle": "Select a client and vehicle",
   "addAtLeastOneLineItem": "Add at least one line item",
-  "failedToLoadVehicles": "Whoops, dropped the vehicle list in the oil pan: {error}",
-  "@failedToLoadVehicles": {
-    "placeholders": { "error": { "type": "Object" } }
-  },
   "mileageAtServiceLabel": "Mileage at service (km)",
   "fromCatalog": "From catalog",
   "customLineItem": "Custom",
+  "addNewClientOption": "+ Add new client \"{name}\"",
+  "@addNewClientOption": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "addNewVehicleOption": "+ Add new vehicle \"{name}\"",
+  "@addNewVehicleOption": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "addNewCatalogItemOption": "+ Add new item \"{name}\"",
+  "@addNewCatalogItemOption": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "descriptionLabel": "Description",
   "qtyLabel": "Qty",
   "priceLabel": "Price",
