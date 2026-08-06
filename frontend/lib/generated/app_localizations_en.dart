@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get email => 'Email';
 
   @override
+  String get emailHint => 'mail@example.com';
+
+  @override
   String get password => 'Password';
 
   @override
@@ -127,6 +130,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneLabel => 'Phone';
 
   @override
+  String get phoneHint => '530 XXX XXXX';
+
+  @override
   String get addressLabel => 'Address';
 
   @override
@@ -152,6 +158,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licensePlate => 'License plate';
+
+  @override
+  String get licensePlateHint => '34 AAA 5678';
 
   @override
   String get make => 'Make';
@@ -666,6 +675,9 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String get email => 'Email';
 
   @override
+  String get emailHint => 'mail@example.com';
+
+  @override
   String get password => 'Password';
 
   @override
@@ -778,6 +790,9 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String get phoneLabel => 'Phone';
 
   @override
+  String get phoneHint => '530 XXX XXXX';
+
+  @override
   String get addressLabel => 'Address';
 
   @override
@@ -803,6 +818,9 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
 
   @override
   String get licensePlate => 'License plate';
+
+  @override
+  String get licensePlateHint => '34 AAA 5678';
 
   @override
   String get make => 'Make';

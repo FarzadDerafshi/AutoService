@@ -5,6 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.5] — 2026-08-06  *(Guided Data Entry: Example Hints for Plate/Phone/Email)*
+
+### Added
+- **License plate, phone, and email fields now show a format example as
+  hint text** (Flutter's `hintText`, revealed once the field's label
+  floats on focus — an empty, unfocused field only shows the label, per
+  standard Material behavior) — guides correct formatting without
+  forcing it via an input mask, which would risk rejecting valid
+  variations (Turkish plates alone have several valid letter/digit
+  patterns). Added to: vehicle form's plate field; client form's phone +
+  email fields; shop profile's contact phone + email fields. Login/
+  register/join screens' email fields were deliberately left alone —
+  those are "type your own known email," not a format someone needs
+  taught. Phone/email fields also gained `keyboardType:
+  TextInputType.phone`/`.emailAddress` for a better mobile keyboard while
+  at it.
+  _Files: `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+  `frontend/lib/features/clients/presentation/client_form_sheet.dart`,
+  `frontend/lib/features/shop/presentation/profile_screen.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+---
+
 ## [0.16.4] — 2026-08-06  *(Fix: Leftover Blank Line Item on New Work Orders)*
 
 ### Fixed

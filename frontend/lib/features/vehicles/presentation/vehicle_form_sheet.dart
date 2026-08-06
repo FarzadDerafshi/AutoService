@@ -191,7 +191,7 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _plate,
-              decoration: InputDecoration(labelText: l10n.licensePlate),
+              decoration: InputDecoration(labelText: l10n.licensePlate, hintText: l10n.licensePlateHint),
               textCapitalization: TextCapitalization.characters,
               style: AppFonts.mono(const TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.6)),
               validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,

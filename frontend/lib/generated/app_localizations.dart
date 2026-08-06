@@ -112,6 +112,12 @@ abstract class AppLocalizations {
   /// **'Email'**
   String get email;
 
+  /// No description provided for @emailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'mail@example.com'**
+  String get emailHint;
+
   /// No description provided for @password.
   ///
   /// In en, this message translates to:
@@ -334,6 +340,12 @@ abstract class AppLocalizations {
   /// **'Phone'**
   String get phoneLabel;
 
+  /// No description provided for @phoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'530 XXX XXXX'**
+  String get phoneHint;
+
   /// No description provided for @addressLabel.
   ///
   /// In en, this message translates to:
@@ -387,6 +399,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'License plate'**
   String get licensePlate;
+
+  /// No description provided for @licensePlateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'34 AAA 5678'**
+  String get licensePlateHint;
 
   /// No description provided for @make.
   ///

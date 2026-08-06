@@ -4,6 +4,7 @@
   "appTitle": "GarajOS",
 
   "email": "Email",
+  "emailHint": "mail@example.com",
   "password": "Password",
   "emailRequired": "Email is required",
   "passwordRequired": "Password is required",
@@ -45,6 +46,7 @@
   "editClient": "Edit Client",
   "fullNameLabel": "Full name",
   "phoneLabel": "Phone",
+  "phoneHint": "530 XXX XXXX",
   "addressLabel": "Address",
 
   "clientsVehicles": "Client's Vehicles",
@@ -55,6 +57,7 @@
   "owner": "Owner",
   "selectAnOwner": "Select an owner",
   "licensePlate": "License plate",
+  "licensePlateHint": "34 AAA 5678",
   "make": "Make",
   "model": "Model",
   "engineLabel": "Engine",

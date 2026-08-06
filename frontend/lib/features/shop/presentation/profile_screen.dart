@@ -398,7 +398,8 @@ class _ShopDetailsFormState extends ConsumerState<_ShopDetailsForm> {
                   child: TextFormField(
                     controller: _phone,
                     enabled: canManage,
-                    decoration: InputDecoration(labelText: l.phoneLabel),
+                    decoration: InputDecoration(labelText: l.phoneLabel, hintText: l.phoneHint),
+                    keyboardType: TextInputType.phone,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -406,7 +407,8 @@ class _ShopDetailsFormState extends ConsumerState<_ShopDetailsForm> {
                   child: TextFormField(
                     controller: _email,
                     enabled: canManage,
-                    decoration: InputDecoration(labelText: l.email),
+                    decoration: InputDecoration(labelText: l.email, hintText: l.emailHint),
+                    keyboardType: TextInputType.emailAddress,
                   ),
                 ),
               ],

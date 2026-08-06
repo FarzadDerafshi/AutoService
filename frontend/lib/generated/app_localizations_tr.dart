@@ -15,6 +15,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get email => 'E-posta';
 
   @override
+  String get emailHint => 'mail@adres.com';
+
+  @override
   String get password => 'Şifre';
 
   @override
@@ -128,6 +131,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get phoneLabel => 'Telefon';
 
   @override
+  String get phoneHint => '530 XXX XXXX';
+
+  @override
   String get addressLabel => 'Adres';
 
   @override
@@ -153,6 +159,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get licensePlate => 'Plaka';
+
+  @override
+  String get licensePlateHint => '34 AAA 5678';
 
   @override
   String get make => 'Marka';
@@ -667,6 +676,9 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String get email => 'E-posta';
 
   @override
+  String get emailHint => 'mail@adres.com';
+
+  @override
   String get password => 'Şifre';
 
   @override
@@ -779,6 +791,9 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String get phoneLabel => 'Telefon';
 
   @override
+  String get phoneHint => '530 XXX XXXX';
+
+  @override
   String get addressLabel => 'Adres';
 
   @override
@@ -804,6 +819,9 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
 
   @override
   String get licensePlate => 'Plaka';
+
+  @override
+  String get licensePlateHint => '34 AAA 5678';
 
   @override
   String get make => 'Marka';
