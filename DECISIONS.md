@@ -1198,6 +1198,20 @@ fully restored the original content. Check with `git status`/`git diff
 docker-compose.prod.yml` on the server; if modified, `git checkout --
 docker-compose.prod.yml` and redeploy.
 
+**Second production deploy, v0.16.0–v0.16.5, confirmed working (2026-08-06):**
+Farzad deployed the master-data search-autocomplete rollout (client/vehicle/
+catalog/make/model Autocomplete + quick-create), the temporary VAT/discount
+hide, the blank-line-item fix, and the guided-data-entry hints — reported
+back "it is perfect." Both new migrations since the first deploy,
+`012_search_indexes.sql` and `013_vehicle_make_model_indexes.sql` (`pg_trgm`
+indexes only, no data changes), were applied by hand per the pattern above.
+**The "add new" button consistency fix (v0.16.6, commit `778e1ac`) landed
+*after* this deploy and is not yet live** — still just on `main`/dev as of
+this writing; don't assume it's in prod until the next deploy confirms it.
+The `repairshop_web` port-binding open item from the first deploy (see
+above) was not investigated or mentioned again this round — still an open
+question, not confirmed resolved either way.
+
 **Earlier the same day, a near-miss was caught before it ran:**
 `ProdRelease.bat` originally ran a bare `docker compose up -d --build`
 (no `-f` flag). Since dev and prod compose files shared identical
