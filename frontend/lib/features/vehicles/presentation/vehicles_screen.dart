@@ -30,6 +30,23 @@ class VehiclesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(clientId != null ? l.clientsVehicles : l.vehicles),
+        actions: [
+          IconButton.filled(
+            tooltip: l.newVehicle,
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              final result = await showVehicleFormSheet(context, presetClientId: clientId);
+              if (result == null) return;
+              try {
+                await ref.read(vehiclesRepositoryProvider).create(result.data);
+                ref.invalidate(vehiclesListProvider);
+              } catch (e) {
+                if (context.mounted) _showError(context, e);
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
@@ -46,19 +63,6 @@ class VehiclesScreen extends ConsumerWidget {
             ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await showVehicleFormSheet(context, presetClientId: clientId);
-          if (result == null) return;
-          try {
-            await ref.read(vehiclesRepositoryProvider).create(result.data);
-            ref.invalidate(vehiclesListProvider);
-          } catch (e) {
-            if (context.mounted) _showError(context, e);
-          }
-        },
-        child: const Icon(Icons.add),
       ),
       body: AsyncValueWidget(
         value: vehiclesAsync,

@@ -20,6 +20,23 @@ class ClientsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.clients),
+        actions: [
+          IconButton.filled(
+            tooltip: l.newClient,
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              final result = await showClientFormSheet(context);
+              if (result == null) return;
+              try {
+                await ref.read(clientsRepositoryProvider).create(result.data);
+                ref.invalidate(clientsListProvider);
+              } catch (e) {
+                if (context.mounted) _showError(context, e);
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
@@ -34,19 +51,6 @@ class ClientsScreen extends ConsumerWidget {
             ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await showClientFormSheet(context);
-          if (result == null) return;
-          try {
-            await ref.read(clientsRepositoryProvider).create(result.data);
-            ref.invalidate(clientsListProvider);
-          } catch (e) {
-            if (context.mounted) _showError(context, e);
-          }
-        },
-        child: const Icon(Icons.add),
       ),
       body: AsyncValueWidget(
         value: clientsAsync,

@@ -23,7 +23,10 @@ class WorkOrdersMasterList extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.workOrders),
-        actions: [IconButton(onPressed: onCreate, icon: const Icon(Icons.add))],
+        actions: [
+          IconButton.filled(tooltip: l.newWorkOrder, onPressed: onCreate, icon: const Icon(Icons.add)),
+          const SizedBox(width: 8),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Padding(

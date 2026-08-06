@@ -21,6 +21,24 @@ class CatalogScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.serviceAndPartsCatalog),
+        actions: [
+          if (canManage)
+            IconButton.filled(
+              tooltip: l.newCatalogItem,
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final result = await showCatalogItemFormSheet(context);
+                if (result == null) return;
+                try {
+                  await ref.read(catalogRepositoryProvider).create(result.data);
+                  ref.invalidate(catalogListProvider);
+                } catch (e) {
+                  if (context.mounted) _showError(context, e);
+                }
+              },
+            ),
+          const SizedBox(width: 8),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Padding(
@@ -40,21 +58,6 @@ class CatalogScreen extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: canManage
-          ? FloatingActionButton(
-              onPressed: () async {
-                final result = await showCatalogItemFormSheet(context);
-                if (result == null) return;
-                try {
-                  await ref.read(catalogRepositoryProvider).create(result.data);
-                  ref.invalidate(catalogListProvider);
-                } catch (e) {
-                  if (context.mounted) _showError(context, e);
-                }
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
       body: AsyncValueWidget(
         value: itemsAsync,
         onRetry: () => ref.invalidate(catalogListProvider),

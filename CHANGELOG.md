@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.6] — 2026-08-06  *("New" Button Consistency: AppBar, Not FAB)*
+
+### Changed
+- **The "add new" button on Servis Kaydı, Araçlar, Müşteriler, and Katalog
+  is now a filled green `IconButton` in the AppBar, next to the title** —
+  replacing two inconsistent patterns: Servis Kaydı's plain (unfilled, easy
+  to miss) `IconButton`, and the other three screens' bottom-right
+  `FloatingActionButton`. Farzad's desktop-UI feedback: the plain icon
+  button on Servis Kaydı didn't stand out, and the FAB on the other three
+  sat in the bottom-right corner, away from where attention naturally
+  lands when a screen first loads — a mobile-first Material pattern that
+  reads as out-of-the-way on a PC-sized viewport. One consistent,
+  immediately-visible entry point across all four now, with a tooltip
+  (e.g. "Yeni Araç") for hover clarity. Catalog's button keeps its
+  existing `canManage`-only guard.
+  _Files: `frontend/lib/features/work_orders/presentation/work_orders_master_list.dart`,
+  `frontend/lib/features/vehicles/presentation/vehicles_screen.dart`,
+  `frontend/lib/features/clients/presentation/clients_screen.dart`,
+  `frontend/lib/features/catalog/presentation/catalog_screen.dart`_
+
+---
+
 ## [0.16.5] — 2026-08-06  *(Guided Data Entry: Example Hints for Plate/Phone/Email)*
 
 ### Added
