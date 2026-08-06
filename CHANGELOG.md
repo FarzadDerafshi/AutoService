@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.4] — 2026-08-06  *(Fix: Leftover Blank Line Item on New Work Orders)*
+
+### Fixed
+- **New work order form always starts with one blank line item row, and
+  picking from catalog (or clicking "Custom") added a *second* row instead
+  of using it** — the blank first row's required Description then failed
+  validation on save, forcing the user to notice and manually delete it
+  every time before they could submit. `_addItem()` now checks whether the
+  only row present is still that untouched blank default (empty
+  description, no catalog link) and replaces it in place instead of
+  appending; once any row has real content, further additions append
+  normally. Applies to both the catalog-search field and the "Custom"
+  button, since both hit the same helper.
+  _File: `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`_
+
+---
+
 ## [0.16.3] — 2026-08-06  *(Hide VAT/Tax and Discount, Temporarily)*
 
 ### Changed

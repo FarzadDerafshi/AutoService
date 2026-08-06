@@ -98,6 +98,24 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
     super.dispose();
   }
 
+  /// Adds [row] as a new line item — except when the only row present is
+  /// still the untouched blank one a fresh work order always starts with,
+  /// in which case [row] replaces it instead of stacking a second
+  /// (required-but-empty) row the user would otherwise have to delete
+  /// before saving.
+  void _addItem(_ItemRow row) {
+    final onlyBlankRow =
+        _items.length == 1 && _items[0].catalogItemId == null && _items[0].description.text.trim().isEmpty;
+    setState(() {
+      if (onlyBlankRow) {
+        _items[0].dispose();
+        _items[0] = row;
+      } else {
+        _items.add(row);
+      }
+    });
+  }
+
   double get _subtotal => _items.fold(0, (sum, i) => sum + i.lineTotal);
   double get _discountValue => double.tryParse(_discount.text) ?? 0;
   double get _taxRateValue => double.tryParse(_taxRate.text) ?? 0;
@@ -260,7 +278,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               children: [
                 Text(l10n.lineItems, style: Theme.of(context).textTheme.titleMedium),
                 OutlinedButton.icon(
-                  onPressed: () => setState(() => _items.add(_ItemRow())),
+                  onPressed: () => _addItem(_ItemRow()),
                   icon: const Icon(Icons.add),
                   label: Text(l10n.customLineItem),
                 ),
@@ -282,14 +300,12 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                 return created;
               },
               onSelected: (item) {
-                setState(() {
-                  _items.add(_ItemRow(
-                    catalogItemId: item.id,
-                    description: item.name,
-                    quantity: '1',
-                    unitPrice: item.defaultUnitPrice.toString(),
-                  ));
-                });
+                _addItem(_ItemRow(
+                  catalogItemId: item.id,
+                  description: item.name,
+                  quantity: '1',
+                  unitPrice: item.defaultUnitPrice.toString(),
+                ));
                 _catalogFieldKey.currentState?.clear();
               },
             ),
