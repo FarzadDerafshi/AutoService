@@ -956,6 +956,84 @@ not checked in since it contains a specific deployment topology, not
 general project documentation. As of 2026-08-03 it reflects the
 corrections above and matches a real, working deployment.
 
+### Applying a new `db/init/*.sql` migration to prod
+`db/init/*.sql` files only run automatically the *first* time Postgres
+creates its data directory on a brand-new, empty volume — restarting or
+rebuilding containers on an already-provisioned database (prod's, always)
+does **not** re-run them. Any new migration (e.g. `011_vehicle_
+identifiers.sql`, adding `chassis_no`/`engine_no`/`color` to `vehicles`)
+must be applied by hand, once, against the prod container:
+```bat
+docker exec -i repairshop_db psql -U repairshop_admin -d repairshop < db\init\0NN_new_thing.sql
+```
+(swap `repairshop_admin`/`repairshop` if prod's `.env` overrides those).
+Re-running an already-applied `ADD COLUMN` migration will error — it's not
+idempotent, so this is a one-time step per migration, not something to
+fold into the routine deploy script.
+
+### `ProdRelease.bat` — manual deploy script, and a Windows batch gotcha (v0.15.2, 2026-08-06)
+Farzad's own deploy script (kept outside the repo at
+`Desktop\logs\ProdRelease.bat`, not checked in — same reasoning as the
+guide above) runs, in order: `git pull origin main` → `flutter build web
+--release` (host-side; see caveat below) → `docker compose -f
+docker-compose.prod.yml up -d --build` → `docker compose -f
+docker-compose.prod.yml ps` to confirm. It self-elevates via UAC
+(`net session` check + `Start-Process -Verb RunAs`) and writes a
+timestamped log file next to itself.
+
+**Gotcha that cost real debugging time:** `flutter` on Windows is
+`flutter.bat`, not a native `.exe`. Invoking a `.bat`/`.cmd` from inside
+another `.bat` **without the `call` keyword** can hand control to it and
+never return — if the inner script's own chain ends with a plain `exit`
+anywhere (common in multi-layer tool wrappers like Flutter's), it
+terminates the *entire parent process*, not just that step. Symptom: the
+build would finish successfully, print "Built for web", and the whole
+terminal window would close instantly with zero error output — visually
+indistinguishable from a crash or hang, and cost several rounds of
+misdiagnosis (self-elevation breaking PATH, Docker Desktop cold-start
+timing, browser caching) before the missing `call` surfaced as the actual
+cause. **Rule for any future Windows batch tooling in this project: always
+`call` another `.bat`/`.cmd` invoked from inside a `.bat`.** `git` and
+`docker` are native `.exe`s and are unaffected — this is specific to tools
+like Flutter that ship a `.bat` entry point on Windows.
+
+The host-side `flutter build web --release` step is being kept
+deliberately even though it shouldn't be load-bearing — prod's `web`
+service already builds the frontend from scratch *inside* Docker
+(`frontend/Dockerfile`). Farzad reported a deploy without it didn't show
+the latest frontend changes; leading suspect is the browser-caching gotcha
+above (`main.dart.js` has no cache-busting hash), not an actually-stale
+Docker image, but this wasn't re-investigated — kept as a deliberate,
+explicit trade-off (~3 extra minutes per deploy) rather than spending more
+time on it. Don't re-open this unprompted.
+
+**First real production deploy of v0.14.0–v0.15.1 happened 2026-08-06**,
+after the `call` fix: both images rebuilt (`garajos-api`,
+`garajos-web:prod`), all three containers came up, and the
+`011_vehicle_identifiers.sql` migration was applied by hand per the
+section above. **Open item, not yet confirmed resolved:** `docker compose
+-f docker-compose.prod.yml ps` showed `repairshop_web` bound to
+`0.0.0.0:8083` instead of the intended loopback-only `127.0.0.1:8083`.
+The committed compose file is correct, so this points at a leftover local
+modification to `docker-compose.prod.yml` on the server — Farzad had
+briefly renamed it to `docker-compose.yml` earlier that day while working
+around the `-f` flag issue below, then reverted; that revert may not have
+fully restored the original content. Check with `git status`/`git diff
+docker-compose.prod.yml` on the server; if modified, `git checkout --
+docker-compose.prod.yml` and redeploy.
+
+**Earlier the same day, a near-miss was caught before it ran:**
+`ProdRelease.bat` originally ran a bare `docker compose up -d --build`
+(no `-f` flag). Since dev and prod compose files shared identical
+`container_name`s, that would have resolved to whichever file was named
+`docker-compose.yml` and replaced the live prod containers with
+dev-networked ones (`web` off `127.0.0.1:8083`, breaking the Cloudflare
+Tunnel; `api` exposed on `0.0.0.0:3000` instead of unpublished). This is
+the reason `docker-compose.yml` was renamed to `docker-compose.dev.yml`
+repo-wide (v0.15.1, see the Docker Compose services section above) —
+removing the implicit default entirely so the same mistake now fails
+loudly instead of silently doing the dangerous thing.
+
 ---
 
 ## Known Limitations / Future Work

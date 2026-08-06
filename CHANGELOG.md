@@ -5,6 +5,48 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.15.2] — 2026-08-06  *(First Real Production Rollout of v0.14.0–v0.15.1 — Deployment Script Fix)*
+
+### Fixed
+#### DevOps
+- **`ProdRelease.bat` (Farzad's manual deploy script, kept at
+  `Desktop\logs\ProdRelease.bat`, outside this repo) had a bug that
+  silently killed the entire deploy on the `flutter build web --release`
+  step** — no error, no log output, the whole terminal window just closed
+  right after Flutter finished and printed success. Root cause: `flutter`
+  ships as `flutter.bat` on Windows, not a native `.exe`; invoking a `.bat`
+  from inside another `.bat` without the `call` keyword can hand control
+  to it and never return — if the inner script's chain ends with a plain
+  `exit` anywhere (common in multi-layer tool wrappers like Flutter's), it
+  terminates the *entire parent process*, not just that step. Fixed by
+  prefixing with `call`. See DECISIONS.md's DevOps section for the general
+  rule (applies to any future Windows batch tooling in this project —
+  `git`/`docker` are native `.exe`s and unaffected, this is specific to
+  `.bat`-wrapped tools like Flutter).
+- Confirmed working end-to-end after the fix: `docker-compose.prod.yml`
+  rebuilt both images (`garajos-api`, `garajos-web:prod`) and all three
+  containers (`repairshop_db`/`repairshop_api`/`repairshop_web`) came up
+  healthy, bringing prod from `39a57c1` up to `16579f9` — the Turkish-only
+  usability-test mode (v0.14.0–v0.14.4), the Corporate-tone l10n backfill
+  and vehicle Şasi No./Motor No./Renk fields (v0.14.5, v0.15.0), and the
+  `docker-compose.dev.yml` rename (v0.15.1) are live for the first time.
+  The `db/init/011_vehicle_identifiers.sql` migration (chassis/engine/
+  color columns) was applied by hand against the prod database, per the
+  documented pattern — `db/init/*.sql` files only auto-run on a brand-new
+  empty Postgres volume, never against an already-provisioned one.
+- **Open item, not yet confirmed resolved:** `docker compose -f
+  docker-compose.prod.yml ps` showed `repairshop_web` bound to
+  `0.0.0.0:8083` instead of the intended loopback-only `127.0.0.1:8083`.
+  The committed `docker-compose.prod.yml` is correct, so this points at a
+  leftover local modification on the server from an earlier
+  troubleshooting step (see DECISIONS.md), not a repo bug — needs
+  `git status`/`git diff docker-compose.prod.yml` on the server to
+  confirm and, if so, `git checkout -- docker-compose.prod.yml` + redeploy.
+  _Files: none in-repo (external `ProdRelease.bat`); DECISIONS.md updated
+  with the general `call` rule and current deployment status_
+
+---
+
 ## [0.15.1] — 2026-08-06  *(Rename docker-compose.yml → docker-compose.dev.yml — Remove the Implicit Default)*
 
 ### Changed
