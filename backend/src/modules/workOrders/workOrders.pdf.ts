@@ -6,6 +6,7 @@ import { Response } from "express";
 import { NotFoundError } from "../../utils/errors";
 import { SHOP_LOGOS_DIR } from "../../config/uploads";
 import { FONT_REGULAR, FONT_BOLD } from "../../config/fonts";
+import { ORDER_TAX_AND_DISCOUNT_VISIBLE } from "../../config/featureFlags";
 
 interface PdfWorkOrder {
   order_no: number;
@@ -267,10 +268,12 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
   }
 
   totalsRow("Subtotal", money(order.subtotal));
-  if (Number(order.discount_amount) > 0) {
-    totalsRow("Discount", `−${money(order.discount_amount)}`);
+  if (ORDER_TAX_AND_DISCOUNT_VISIBLE) {
+    if (Number(order.discount_amount) > 0) {
+      totalsRow("Discount", `−${money(order.discount_amount)}`);
+    }
+    totalsRow(`Tax (${order.tax_rate}%)`, money(order.tax_amount));
   }
-  totalsRow(`Tax (${order.tax_rate}%)`, money(order.tax_amount));
 
   y += 4;
   const grandBoxW = 230;

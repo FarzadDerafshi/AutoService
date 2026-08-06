@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
@@ -196,8 +197,8 @@ class _DetailContent extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   _TotalRow(l.subtotal, order.subtotal),
-                  if (order.discountAmount > 0) _TotalRow(l.discount, -order.discountAmount),
-                  _TotalRow(l.taxWithRate(order.taxRate.toString()), order.taxAmount),
+                  if (kOrderTaxAndDiscountVisible && order.discountAmount > 0) _TotalRow(l.discount, -order.discountAmount),
+                  if (kOrderTaxAndDiscountVisible) _TotalRow(l.taxWithRate(order.taxRate.toString()), order.taxAmount),
                   const Divider(),
                   _TotalRow(l.grandTotal, order.grandTotal, emphasize: true),
                 ],

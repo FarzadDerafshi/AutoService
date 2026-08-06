@@ -546,6 +546,39 @@ wording before adding a plain/neutral label to the default files.
 **Known gap:** `TopWrenchLeaderboard` (see below) is still unlocalized —
 low priority since it's also unwired to any real data source.
 
+### Order-level VAT/tax and discount hidden across the app (v0.16.3, temporary)
+
+Farzad's request (2026-08-06), same "single named `const bool`, gate the
+UI, leave the data/calculation intact" pattern already used for
+`kLanguageToggleVisible`/`kRegistrationOpen` above — see the language
+switcher entry for the full precedent this follows. No end date was given
+("we can view them again later"), and explicitly **hide, don't delete**.
+
+`discountAmount`/`taxRate`/`taxAmount`, `computeTotals`
+(`workOrders.service.ts`), and the `grand_total` written to the DB are all
+untouched — a work order with real historical discount/tax (created before
+this, or via a direct API call) still computes and stores its grand total
+correctly. Only the three places that render the individual breakdown
+lines are gated:
+
+- **Frontend** — `kOrderTaxAndDiscountVisible` in
+  `core/config/feature_flags.dart` wraps the work order form's discount/
+  tax-rate `TextFormField`s and its totals card's tax line
+  (`work_order_form_screen.dart`), and the detail panel's discount/tax
+  `_TotalRow`s (`work_order_detail_panel.dart`).
+- **Backend** — the PDF (`workOrders.pdf.ts`) renders its own "Discount"/
+  "Tax (rate%)" lines server-side, so the frontend flag can't reach it. A
+  parallel `ORDER_TAX_AND_DISCOUNT_VISIBLE` constant lives in a new
+  `backend/src/config/featureFlags.ts`, gating the same two `totalsRow`
+  calls. **There's no shared config between the Flutter app and the Node
+  API** — these two flags must be flipped back to `true` together by hand;
+  nothing enforces they stay in sync.
+
+Subtotal and Grand Total stay visible everywhere (Grand Total already
+bakes in whatever discount/tax is stored, hidden or not — for a new work
+order created while this is off, that's always 0 either way, since the
+input fields that would set them to something else are gone).
+
 ### Flutter Web plugin registration — stale build cache (hit in practice, v0.10.1)
 
 A plugin that has a web implementation (`file_picker`, `flutter_secure_storage`,

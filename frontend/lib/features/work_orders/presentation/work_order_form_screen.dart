@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/search_autocomplete_field.dart';
 import '../../../generated/app_localizations.dart';
@@ -295,28 +296,30 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
             const SizedBox(height: 12),
             for (int i = 0; i < _items.length; i++) _buildItemRow(l10n, i),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _discount,
-                    decoration: InputDecoration(labelText: l10n.discount),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => setState(() {}),
+            if (kOrderTaxAndDiscountVisible) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _discount,
+                      decoration: InputDecoration(labelText: l10n.discount),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      onChanged: (_) => setState(() {}),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _taxRate,
-                    decoration: InputDecoration(labelText: l10n.taxRateLabel),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => setState(() {}),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _taxRate,
+                      decoration: InputDecoration(labelText: l10n.taxRateLabel),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      onChanged: (_) => setState(() {}),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
             TextFormField(controller: _notes, decoration: InputDecoration(labelText: l10n.notes), maxLines: 2),
             const SizedBox(height: 16),
             Card(
@@ -326,7 +329,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text('${l10n.subtotal}: ${formatCurrency(_subtotal)}'),
-                    Text('${l10n.taxLabel}: ${formatCurrency(_taxAmount)}'),
+                    if (kOrderTaxAndDiscountVisible) Text('${l10n.taxLabel}: ${formatCurrency(_taxAmount)}'),
                     Text('${l10n.grandTotal}: ${formatCurrency(_grandTotal)}',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   ],

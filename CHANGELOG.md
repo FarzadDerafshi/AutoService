@@ -5,6 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.3] — 2026-08-06  *(Hide VAT/Tax and Discount, Temporarily)*
+
+### Changed
+- **Order-level VAT/tax and discount hidden throughout the app** — Farzad's
+  request, a pricing simplification with no fixed end date ("we can view
+  them again later"). Hidden, not removed: `discountAmount`/`taxRate`/
+  `taxAmount` columns, `computeTotals`, and the grand-total math are all
+  untouched — an existing work order with real historical tax/discount
+  still computes and stores its grand total correctly, it just doesn't
+  print the individual breakdown lines anymore. Gated behind a `const bool`
+  flag per the established temporary-hide pattern (see DECISIONS.md's
+  Internationalisation section for the precedent with the language toggle):
+  - Frontend: `kOrderTaxAndDiscountVisible` in `feature_flags.dart` — hides
+    the work order form's discount/tax rate input fields and its totals
+    card's tax line, and the detail panel's discount/tax breakdown rows.
+  - Backend: `ORDER_TAX_AND_DISCOUNT_VISIBLE` in a new
+    `backend/src/config/featureFlags.ts` (no shared config between the two
+    apps, so kept in sync by hand) — hides the same two lines on the
+    printed PDF.
+  _Files: `frontend/lib/core/config/feature_flags.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_detail_panel.dart`,
+  `backend/src/config/featureFlags.ts`,
+  `backend/src/modules/workOrders/workOrders.pdf.ts`_
+
+---
+
 ## [0.16.2] — 2026-08-06  *(Vehicle Make/Model: Search-As-You-Type Suggestions)*
 
 ### Added
