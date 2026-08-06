@@ -107,6 +107,7 @@
   "addNewClientOption": "+ Yeni müşteri ekle: \"{name}\"",
   "addNewVehicleOption": "+ Yeni araç ekle: \"{name}\"",
   "addNewCatalogItemOption": "+ Yeni ürün ekle: \"{name}\"",
+  "useTypedTextOption": "+ \"{value}\" kullan",
   "descriptionLabel": "Açıklama",
   "qtyLabel": "Adet",
   "priceLabel": "Fiyat",

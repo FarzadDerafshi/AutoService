@@ -96,6 +96,7 @@
   "addNewClientOption": "+ Add new client \"{name}\"",
   "addNewVehicleOption": "+ Add new vehicle \"{name}\"",
   "addNewCatalogItemOption": "+ Add new item \"{name}\"",
+  "useTypedTextOption": "+ Use \"{value}\"",
   "descriptionLabel": "Description",
   "qtyLabel": "Qty",
   "priceLabel": "Price",

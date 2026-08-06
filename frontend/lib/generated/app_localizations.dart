@@ -676,6 +676,12 @@ abstract class AppLocalizations {
   /// **'+ Add new item \"{name}\"'**
   String addNewCatalogItemOption(String name);
 
+  /// No description provided for @useTypedTextOption.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Use \"{value}\"'**
+  String useTypedTextOption(String value);
+
   /// No description provided for @descriptionLabel.
   ///
   /// In en, this message translates to:

@@ -30,5 +30,18 @@ export const searchVehiclesQuerySchema = z.object({
   clientId: z.string().uuid().optional(),
 });
 
+// Make/model aren't a separate master-data entity with their own table —
+// there's nothing to "quick-create" beyond the typed text itself, so these
+// just suggest distinct values already used elsewhere in the shop's own
+// vehicles (see DECISIONS.md's "Master-data search-autocomplete pattern").
+export const searchMakesQuerySchema = z.object({
+  q: z.string().trim().min(2).max(50),
+});
+
+export const searchModelsQuerySchema = z.object({
+  q: z.string().trim().min(2).max(50),
+  make: z.string().trim().max(50).optional(),
+});
+
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
 export type UpdateVehicleInput = z.infer<typeof updateVehicleSchema>;

@@ -321,6 +321,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String useTypedTextOption(String value) {
+    return '+ Use \"$value\"';
+  }
+
+  @override
   String get descriptionLabel => 'Description';
 
   @override
@@ -961,6 +966,11 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   @override
   String addNewCatalogItemOption(String name) {
     return '+ Add new item \"$name\"';
+  }
+
+  @override
+  String useTypedTextOption(String value) {
+    return '+ Use \"$value\"';
   }
 
   @override

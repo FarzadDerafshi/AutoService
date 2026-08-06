@@ -34,6 +34,7 @@ class SearchAutocompleteField<T extends Object> extends StatefulWidget {
     this.subtitleForOption,
     this.initialText = '',
     this.validator,
+    this.onChanged,
     this.minChars = 2,
     this.debounce = const Duration(milliseconds: 300),
   });
@@ -47,6 +48,12 @@ class SearchAutocompleteField<T extends Object> extends StatefulWidget {
   final String? Function(T option)? subtitleForOption;
   final String initialText;
   final String? Function(String?)? validator;
+  /// Fires on every keystroke, not just on selection — for fields whose raw
+  /// typed text is itself a valid value with nothing else to select (e.g.
+  /// vehicle make/model, which aren't a separate entity with an id; see
+  /// DECISIONS.md). Most fields backed by a real entity don't need this,
+  /// since their value only becomes meaningful once [onSelected] fires.
+  final void Function(String text)? onChanged;
   final int minChars;
   final Duration debounce;
 
@@ -109,6 +116,7 @@ class SearchAutocompleteFieldState<T extends Object> extends State<SearchAutocom
           focusNode: focusNode,
           decoration: InputDecoration(labelText: widget.labelText),
           validator: widget.validator,
+          onChanged: widget.onChanged,
           onFieldSubmitted: (_) => onFieldSubmitted(),
         );
       },

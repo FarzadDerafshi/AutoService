@@ -7,6 +7,7 @@ import '../../../generated/app_localizations.dart';
 import '../../clients/application/clients_provider.dart';
 import '../../clients/data/client_model.dart';
 import '../../clients/presentation/client_form_sheet.dart';
+import '../application/vehicles_provider.dart';
 import '../data/vehicle_model.dart';
 
 class VehicleFormResult {
@@ -47,8 +48,6 @@ class _VehicleFormSheet extends ConsumerStatefulWidget {
 class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _plate;
-  late final TextEditingController _make;
-  late final TextEditingController _model;
   late final TextEditingController _engineType;
   late final TextEditingController _year;
   late final TextEditingController _mileage;
@@ -56,8 +55,12 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   late final TextEditingController _engineNo;
   late final TextEditingController _color;
   final _ownerFieldKey = GlobalKey<SearchAutocompleteFieldState<Client>>();
+  final _makeFieldKey = GlobalKey<SearchAutocompleteFieldState<String>>();
+  final _modelFieldKey = GlobalKey<SearchAutocompleteFieldState<String>>();
   String? _clientId;
   Client? _selectedClient;
+  String _make = '';
+  String _model = '';
 
   @override
   void initState() {
@@ -72,16 +75,16 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
       // is up rather than blocking the first frame on it.
       Future.microtask(_loadOwnerName);
     }
+    _make = e?.make ?? '';
+    _model = e?.model ?? '';
     _plate = TextEditingController(text: e?.licensePlate ?? widget.initialPlate ?? '');
-    _make = TextEditingController(text: e?.make ?? '');
-    _model = TextEditingController(text: e?.model ?? '');
     _engineType = TextEditingController(text: e?.engineType ?? '');
     _year = TextEditingController(text: e?.year?.toString() ?? '');
     _mileage = TextEditingController(text: e?.currentMileageKm.toString() ?? '');
     _chassisNo = TextEditingController(text: e?.chassisNo ?? '');
     _engineNo = TextEditingController(text: e?.engineNo ?? '');
     _color = TextEditingController(text: e?.color ?? '');
-    for (final c in [_plate, _make, _model, _engineType, _year, _mileage, _chassisNo, _engineNo, _color]) {
+    for (final c in [_plate, _engineType, _year, _mileage, _chassisNo, _engineNo, _color]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -89,8 +92,6 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   @override
   void dispose() {
     _plate.dispose();
-    _make.dispose();
-    _model.dispose();
     _engineType.dispose();
     _year.dispose();
     _mileage.dispose();
@@ -116,8 +117,8 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   List<(String, bool)> _completenessFields(AppLocalizations l) => [
         (l.owner, _clientId != null),
         (l.licensePlate, _plate.text.trim().isNotEmpty),
-        (l.make, _make.text.trim().isNotEmpty),
-        (l.model, _model.text.trim().isNotEmpty),
+        (l.make, _make.trim().isNotEmpty),
+        (l.model, _model.trim().isNotEmpty),
         (l.engineLabel, _engineType.text.trim().isNotEmpty),
         (l.yearFieldLabel, _year.text.trim().isNotEmpty),
         (l.currentMileageKmLabel, _mileage.text.trim().isNotEmpty),
@@ -132,8 +133,8 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
       VehicleFormResult({
         'clientId': _clientId,
         'licensePlate': _plate.text.trim(),
-        'make': _make.text.trim(),
-        'model': _model.text.trim(),
+        'make': _make.trim(),
+        'model': _model.trim(),
         'engineType': _engineType.text.trim(),
         if (_year.text.trim().isNotEmpty) 'year': int.tryParse(_year.text.trim()),
         if (_mileage.text.trim().isNotEmpty) 'currentMileageKm': int.tryParse(_mileage.text.trim()),
@@ -197,10 +198,42 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
             ),
             const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: TextFormField(controller: _make, decoration: InputDecoration(labelText: l10n.make))),
+                Expanded(
+                  child: SearchAutocompleteField<String>(
+                    key: _makeFieldKey,
+                    labelText: l10n.make,
+                    initialText: _make,
+                    search: (q) => ref.read(vehiclesRepositoryProvider).searchMakes(q),
+                    displayStringForOption: (s) => s,
+                    createOptionLabel: l10n.useTypedTextOption,
+                    onCreateNew: (typedText) async => typedText,
+                    onChanged: (text) => setState(() => _make = text),
+                    onSelected: (value) => setState(() {
+                      _make = value;
+                      // A model typed for the old make is likely stale once
+                      // the make changes — clear it, same as the work-order
+                      // form clears vehicle when its client changes.
+                      _model = '';
+                      _modelFieldKey.currentState?.clear();
+                    }),
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: TextFormField(controller: _model, decoration: InputDecoration(labelText: l10n.model))),
+                Expanded(
+                  child: SearchAutocompleteField<String>(
+                    key: _modelFieldKey,
+                    labelText: l10n.model,
+                    initialText: _model,
+                    search: (q) => ref.read(vehiclesRepositoryProvider).searchModels(q, make: _make.isEmpty ? null : _make),
+                    displayStringForOption: (s) => s,
+                    createOptionLabel: l10n.useTypedTextOption,
+                    onCreateNew: (typedText) async => typedText,
+                    onChanged: (text) => setState(() => _model = text),
+                    onSelected: (value) => setState(() => _model = value),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),

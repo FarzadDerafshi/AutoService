@@ -1,7 +1,14 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { parsePagination } from "../../utils/pagination";
-import { createVehicleSchema, updateVehicleSchema, listVehiclesQuerySchema, searchVehiclesQuerySchema } from "./vehicles.schema";
+import {
+  createVehicleSchema,
+  updateVehicleSchema,
+  listVehiclesQuerySchema,
+  searchVehiclesQuerySchema,
+  searchMakesQuerySchema,
+  searchModelsQuerySchema,
+} from "./vehicles.schema";
 import * as vehiclesService from "./vehicles.service";
 
 export const list = asyncHandler(async (req: Request, res: Response) => {
@@ -18,6 +25,18 @@ export const search = asyncHandler(async (req: Request, res: Response) => {
   const { q, clientId } = searchVehiclesQuerySchema.parse(req.query);
   const vehicles = await vehiclesService.searchVehicles(req.db!, q, clientId);
   res.status(200).json(vehicles);
+});
+
+export const searchMakes = asyncHandler(async (req: Request, res: Response) => {
+  const { q } = searchMakesQuerySchema.parse(req.query);
+  const makes = await vehiclesService.searchMakes(req.db!, q);
+  res.status(200).json(makes);
+});
+
+export const searchModels = asyncHandler(async (req: Request, res: Response) => {
+  const { q, make } = searchModelsQuerySchema.parse(req.query);
+  const models = await vehiclesService.searchModels(req.db!, q, make);
+  res.status(200).json(models);
 });
 
 export const getById = asyncHandler(async (req: Request, res: Response) => {

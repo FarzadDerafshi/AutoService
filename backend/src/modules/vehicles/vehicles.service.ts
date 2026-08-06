@@ -43,6 +43,43 @@ export async function searchVehicles(db: PoolClient, q: string, clientId?: strin
   return toCamelList(rows);
 }
 
+// Distinct make/model values already used in this shop's own vehicles,
+// most-frequent first — self-bootstrapping (a brand-new shop sees no
+// suggestions until its first vehicle is entered) rather than a maintained
+// reference table, since make/model have no id/FK of their own to look up.
+const MAKE_MODEL_SEARCH_LIMIT = 10;
+
+export async function searchMakes(db: PoolClient, q: string) {
+  const { rows } = await db.query(
+    `SELECT make FROM vehicles
+     WHERE make IS NOT NULL AND make <> '' AND make ILIKE $1 AND ${SHOP_SCOPE}
+     GROUP BY make
+     ORDER BY COUNT(*) DESC, make ASC
+     LIMIT $2`,
+    [`%${q}%`, MAKE_MODEL_SEARCH_LIMIT]
+  );
+  return rows.map((r) => r.make as string);
+}
+
+export async function searchModels(db: PoolClient, q: string, make?: string) {
+  const conditions = [`model IS NOT NULL`, `model <> ''`, `model ILIKE $1`, SHOP_SCOPE];
+  const params: unknown[] = [`%${q}%`];
+  if (make) {
+    params.push(make);
+    conditions.push(`make ILIKE $${params.length}`);
+  }
+  params.push(MAKE_MODEL_SEARCH_LIMIT);
+  const { rows } = await db.query(
+    `SELECT model FROM vehicles
+     WHERE ${conditions.join(" AND ")}
+     GROUP BY model
+     ORDER BY COUNT(*) DESC, model ASC
+     LIMIT $${params.length}`,
+    params
+  );
+  return rows.map((r) => r.model as string);
+}
+
 export async function listVehicles(
   db: PoolClient,
   filters: { plate?: string; clientId?: string },

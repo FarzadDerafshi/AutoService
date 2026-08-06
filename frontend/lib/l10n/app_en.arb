@@ -137,6 +137,10 @@
   "@addNewCatalogItemOption": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "useTypedTextOption": "+ Use \"{value}\"",
+  "@useTypedTextOption": {
+    "placeholders": { "value": { "type": "String" } }
+  },
   "descriptionLabel": "Description",
   "qtyLabel": "Qty",
   "priceLabel": "Price",

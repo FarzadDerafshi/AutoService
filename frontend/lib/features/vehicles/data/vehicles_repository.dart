@@ -33,6 +33,24 @@ class VehiclesRepository {
     return (response.data as List).map((e) => Vehicle.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  /// Distinct make values already used in this shop's own vehicles — not a
+  /// separate entity/id, just typeahead suggestions over existing free text
+  /// (see DECISIONS.md's "Master-data search-autocomplete pattern").
+  Future<List<String>> searchMakes(String q) async {
+    final response = await _client.dio.get('/vehicles/makes/search', queryParameters: {'q': q});
+    return (response.data as List).cast<String>();
+  }
+
+  /// Same as [searchMakes], for model values — optionally narrowed to one
+  /// make so suggestions stay relevant once a make has been typed/picked.
+  Future<List<String>> searchModels(String q, {String? make}) async {
+    final response = await _client.dio.get('/vehicles/models/search', queryParameters: {
+      'q': q,
+      'make': ?make,
+    });
+    return (response.data as List).cast<String>();
+  }
+
   Future<Vehicle> getById(String id) async {
     final response = await _client.dio.get('/vehicles/$id');
     return Vehicle.fromJson(response.data as Map<String, dynamic>);

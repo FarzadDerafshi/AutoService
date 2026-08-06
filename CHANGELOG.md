@@ -5,6 +5,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.2] — 2026-08-06  *(Vehicle Make/Model: Search-As-You-Type Suggestions)*
+
+### Added
+- **`vehicle_form_sheet.dart`'s "Marka"/"Model" fields** — now
+  `SearchAutocompleteField<String>`, suggesting distinct make/model values
+  already used elsewhere in the shop's own vehicles, most-frequent first;
+  Model's suggestions are scoped to whichever Make is currently typed.
+  Unlike client/vehicle/catalog, make/model aren't a separate entity with
+  an id — there's nothing to "quick-create" beyond the typed text itself,
+  so `onCreateNew` just returns the typed text directly (no modal), and the
+  field's raw typed text is always the submitted value whether or not a
+  suggestion was tapped. Picking a Make clears an already-typed Model
+  (stale otherwise); typing doesn't, to avoid wiping Model mid-keystroke.
+- **`SearchAutocompleteField<T>`** gained an optional `onChanged: void
+  Function(String)?` passthrough for this — fields whose live typed text
+  (not just a selected option) is itself meaningful.
+- **New endpoints**: `GET /vehicles/makes/search?q=`, `GET
+  /vehicles/models/search?q=&make=` — distinct values from the shop's own
+  `vehicles` rows, no separate table. New `pg_trgm` indexes on
+  `vehicles.make`/`model` (`db/init/013_vehicle_make_model_indexes.sql`) —
+  neither column had any index before.
+  _Files: `frontend/lib/core/widgets/search_autocomplete_field.dart`,
+  `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+  `frontend/lib/features/vehicles/data/vehicles_repository.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`,
+  `backend/src/modules/vehicles/vehicles.{schema,service,controller,routes}.ts`,
+  `db/init/013_vehicle_make_model_indexes.sql`_
+
+---
+
 ## [0.16.1] — 2026-08-06  *(Vehicle Form's Owner Field: Same Autocomplete Pattern)*
 
 ### Added

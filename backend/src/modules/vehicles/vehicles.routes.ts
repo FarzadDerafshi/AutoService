@@ -11,6 +11,8 @@ vehiclesRoutes.use(authenticate, tenantScope);
 vehiclesRoutes.get("/", vehiclesController.list);
 // Must precede "/:id" — otherwise Express would match "search" as an :id param.
 vehiclesRoutes.get("/search", vehiclesController.search);
+vehiclesRoutes.get("/makes/search", vehiclesController.searchMakes);
+vehiclesRoutes.get("/models/search", vehiclesController.searchModels);
 vehiclesRoutes.get("/:id", vehiclesController.getById);
 vehiclesRoutes.get("/:id/history", vehiclesController.history);
 vehiclesRoutes.post("/", vehiclesController.create);

@@ -932,6 +932,40 @@ dropdown and the work-order form's old client dropdown) and the
 resurrecting either as a "quick fix" for some other screen; the search
 endpoint is the intended replacement now.
 
+**Not every field fits the "real entity with an id" shape — make/model
+(v0.16.2) are the exception, and show what to do when a field is closer to
+free text than a master-data record.** `vehicles.make`/`model` are plain
+`VARCHAR` columns, not foreign keys into any table — there's no id to
+select, and thus nothing a "quick-create" modal would meaningfully add
+beyond the text already typed. Rather than inventing a `vehicle_makes`/
+`vehicle_models` reference table (a bigger, harder-to-justify addition —
+no canonical brand/model dataset is bundled, and a shop's real vehicles
+are a perfectly good, self-maintaining source of suggestions), the
+existing `vehicles` table itself is the source: `GET
+/vehicles/makes/search?q=` and `GET /vehicles/models/search?q=&make=`
+return `SELECT DISTINCT` values (grouped + counted, most-frequent first)
+from the shop's own rows — no new table, no migration beyond two new
+`pg_trgm` indexes. Consequences of this shape worth knowing:
+- **A brand-new shop sees zero suggestions until its first vehicle is
+  entered.** This is expected, not a bug — the list is self-bootstrapping
+  from real data, not seeded from a static reference list.
+- **`onCreateNew` needs no modal.** It's `(typedText) async => typedText`
+  — "creating" a make/model is just using the text you already typed, so
+  the widget's existing create-new codepath (open a sheet, persist,
+  return the result) collapses to an identity function.
+- **The field's raw typed text is always what gets submitted, selection or
+  not** — `_make`/`_model` are plain `String` state updated via a new
+  `onChanged` passthrough on `SearchAutocompleteField<T>` (fires on every
+  keystroke, unlike every other field's `onSelected`-only wiring), not an
+  id captured only when a suggestion is tapped. A user who types a
+  brand-new make and never taps anything still gets it saved correctly.
+- **Selecting a Make clears an already-typed Model** (same reasoning as
+  vehicle-clears-on-client-change in the work-order form: a Model typed
+  for the old Make is likely wrong for the new one) — **but only on
+  selection, not on every keystroke** of Make, or Model would be wiped
+  mid-typing every time Make's text changes. `onChanged` and `onSelected`
+  intentionally do different things here.
+
 **Trigram indexes added for substring search** (`db/init/012_search_indexes.sql`):
 `vehicles.license_plate` and `catalog_items.name`/`sku` had no `pg_trgm`
 GIN index before this (only `clients.full_name` did, from
