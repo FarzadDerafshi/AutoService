@@ -5,6 +5,7 @@ import {
   createWorkOrderSchema,
   updateWorkOrderSchema,
   updateStatusSchema,
+  rollbackWorkOrderSchema,
   listWorkOrdersQuerySchema,
 } from "./workOrders.schema";
 import * as workOrdersService from "./workOrders.service";
@@ -48,6 +49,13 @@ export const update = asyncHandler(async (req: Request, res: Response) => {
 export const updateStatus = asyncHandler(async (req: Request, res: Response) => {
   const input = updateStatusSchema.parse(req.body);
   const order = await workOrdersService.updateWorkOrderStatus(req.db!, req.params.id, input);
+  res.status(200).json(order);
+});
+
+export const rollback = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.auth) throw new UnauthorizedError();
+  const input = rollbackWorkOrderSchema.parse(req.body);
+  const order = await workOrdersService.rollbackWorkOrderStatus(req.db!, req.params.id, input, req.auth.userId);
   res.status(200).json(order);
 });
 

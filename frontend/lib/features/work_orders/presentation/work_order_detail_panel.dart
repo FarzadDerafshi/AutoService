@@ -17,13 +17,14 @@ const _nextStatus = {'draft': 'completed', 'completed': 'paid', 'paid': null};
 const _paymentMethods = ['cash', 'card', 'bank_transfer', 'other'];
 
 String _statusLabel(AppLocalizations l, String status) => switch (status) {
-      'draft' => l.draft,
-      'completed' => l.completed,
-      'paid' => l.paid,
-      _ => status,
-    };
+  'draft' => l.draft,
+  'completed' => l.completed,
+  'paid' => l.paid,
+  _ => status,
+};
 
-String _paymentMethodLabel(AppLocalizations l, String method) => switch (method) {
+String _paymentMethodLabel(AppLocalizations l, String method) =>
+    switch (method) {
       'cash' => l.cash,
       'card' => l.card,
       'bank_transfer' => l.bankTransfer,
@@ -32,7 +33,11 @@ String _paymentMethodLabel(AppLocalizations l, String method) => switch (method)
     };
 
 class WorkOrderDetailPanel extends ConsumerWidget {
-  const WorkOrderDetailPanel({required this.workOrderId, this.onClose, super.key});
+  const WorkOrderDetailPanel({
+    required this.workOrderId,
+    this.onClose,
+    super.key,
+  });
   final String workOrderId;
   final VoidCallback? onClose;
 
@@ -44,13 +49,18 @@ class WorkOrderDetailPanel extends ConsumerWidget {
     return AsyncValueWidget(
       value: orderAsync,
       onRetry: () => ref.invalidate(workOrderDetailProvider(workOrderId)),
-      data: (order) => _DetailContent(order: order, canManage: canManage, onClose: onClose),
+      data: (order) =>
+          _DetailContent(order: order, canManage: canManage, onClose: onClose),
     );
   }
 }
 
 class _DetailContent extends ConsumerWidget {
-  const _DetailContent({required this.order, required this.canManage, this.onClose});
+  const _DetailContent({
+    required this.order,
+    required this.canManage,
+    this.onClose,
+  });
   final WorkOrder order;
   final bool canManage;
   final VoidCallback? onClose;
@@ -67,7 +77,12 @@ class _DetailContent extends ConsumerWidget {
         builder: (context) => SimpleDialog(
           title: Text(l.paymentMethodTitle),
           children: _paymentMethods
-              .map((m) => SimpleDialogOption(onPressed: () => Navigator.pop(context, m), child: Text(_paymentMethodLabel(l, m))))
+              .map(
+                (m) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context, m),
+                  child: Text(_paymentMethodLabel(l, m)),
+                ),
+              )
               .toList(),
         ),
       );
@@ -75,12 +90,67 @@ class _DetailContent extends ConsumerWidget {
     }
 
     try {
-      await ref.read(workOrdersRepositoryProvider).updateStatus(order.id, status: next, paymentMethod: paymentMethod);
+      await ref
+          .read(workOrdersRepositoryProvider)
+          .updateStatus(order.id, status: next, paymentMethod: paymentMethod);
       ref.invalidate(workOrderDetailProvider(order.id));
       ref.invalidate(workOrdersListProvider);
       // TODO: fire the Lottie confetti / checkered-flag burst here on success,
       // e.g. showing a transient overlay — this is the moment the game
       // wants a payoff for the mechanic advancing a work order.
+    } catch (e) {
+      if (context.mounted) _showError(context, e);
+    }
+  }
+
+  Future<void> _rollback(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l.rollbackConfirmTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.rollbackConfirmBody(_statusLabel(l, order.status))),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(labelText: l.rollbackReasonLabel),
+              maxLines: 2,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l.cancel),
+          ),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: reasonController,
+            builder: (context, value, _) => FilledButton(
+              onPressed: value.text.trim().length < 3
+                  ? null
+                  : () => Navigator.pop(context, true),
+              child: Text(l.rollbackToDraft),
+            ),
+          ),
+        ],
+      ),
+    );
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(workOrdersRepositoryProvider)
+          .rollback(order.id, reason: reason);
+      ref.invalidate(workOrderDetailProvider(order.id));
+      ref.invalidate(workOrdersListProvider);
     } catch (e) {
       if (context.mounted) _showError(context, e);
     }
@@ -95,8 +165,14 @@ class _DetailContent extends ConsumerWidget {
           title: Text(dl.deleteWorkOrderTitle),
           content: Text(dl.deleteWorkOrderBody(order.orderNo)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(dl.cancel)),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(dl.delete)),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(dl.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(dl.delete),
+            ),
           ],
         );
       },
@@ -129,7 +205,11 @@ class _DetailContent extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l.orderNo(order.orderNo)),
         actions: [
-          IconButton(icon: const Icon(Icons.print), tooltip: l.printPdf, onPressed: () => _printPdf(context, ref)),
+          IconButton(
+            icon: const Icon(Icons.print),
+            tooltip: l.printPdf,
+            onPressed: () => _printPdf(context, ref),
+          ),
           if (canManage && order.status == 'draft')
             IconButton(
               icon: const Icon(Icons.edit),
@@ -150,13 +230,25 @@ class _DetailContent extends ConsumerWidget {
           if (order.paymentMethod != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Chip(label: Text(_paymentMethodLabel(l, order.paymentMethod!))),
+              child: Chip(
+                label: Text(_paymentMethodLabel(l, order.paymentMethod!)),
+              ),
             ),
           PitStopStepper(
             status: order.status,
             nextLabel: next == null ? null : l.markAs(_statusLabel(l, next)),
             onAdvance: () => _advanceStatus(context, ref),
           ),
+          if (canManage &&
+              (order.status == 'paid' || order.status == 'completed'))
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => _rollback(context, ref),
+                icon: const Icon(Icons.undo, size: 18),
+                label: Text(l.rollbackToDraft),
+              ),
+            ),
           const SizedBox(height: 16),
           Card(
             child: Padding(
@@ -165,11 +257,19 @@ class _DetailContent extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(l.clientLabel(order.clientName ?? order.clientId)),
-                  Text(l.vehicleLabel(
-                    '${order.vehiclePlate ?? order.vehicleId} ${order.vehicleMake ?? ''} ${order.vehicleModel ?? ''}'.trim(),
-                  )),
-                  if (order.mileageAtService != null) Text(l.mileageAtService(order.mileageAtService!)),
-                  Text(l.dateLabel(order.createdAt.toLocal().toString().split('.').first)),
+                  Text(
+                    l.vehicleLabel(
+                      '${order.vehiclePlate ?? order.vehicleId} ${order.vehicleMake ?? ''} ${order.vehicleModel ?? ''}'
+                          .trim(),
+                    ),
+                  ),
+                  if (order.mileageAtService != null)
+                    Text(l.mileageAtService(order.mileageAtService!)),
+                  Text(
+                    l.dateLabel(
+                      order.createdAt.toLocal().toString().split('.').first,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -183,8 +283,15 @@ class _DetailContent extends ConsumerWidget {
                 for (final item in order.items)
                   ListTile(
                     title: Text(item.description),
-                    subtitle: Text('${item.quantity} x ${formatCurrency(item.unitPrice)}'),
-                    trailing: Text(formatCurrency(item.lineTotal), style: AppFonts.mono(const TextStyle(fontWeight: FontWeight.w600))),
+                    subtitle: Text(
+                      '${item.quantity} x ${formatCurrency(item.unitPrice)}',
+                    ),
+                    trailing: Text(
+                      formatCurrency(item.lineTotal),
+                      style: AppFonts.mono(
+                        const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -197,8 +304,13 @@ class _DetailContent extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   _TotalRow(l.subtotal, order.subtotal),
-                  if (kOrderTaxAndDiscountVisible && order.discountAmount > 0) _TotalRow(l.discount, -order.discountAmount),
-                  if (kOrderTaxAndDiscountVisible) _TotalRow(l.taxWithRate(order.taxRate.toString()), order.taxAmount),
+                  if (kOrderTaxAndDiscountVisible && order.discountAmount > 0)
+                    _TotalRow(l.discount, -order.discountAmount),
+                  if (kOrderTaxAndDiscountVisible)
+                    _TotalRow(
+                      l.taxWithRate(order.taxRate.toString()),
+                      order.taxAmount,
+                    ),
                   const Divider(),
                   _TotalRow(l.grandTotal, order.grandTotal, emphasize: true),
                 ],
@@ -225,18 +337,34 @@ class _TotalRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = AppFonts.mono(TextStyle(
-      fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
-      fontSize: emphasize ? 16 : 13,
-      color: emphasize ? AppColors.neonGreen : AppColors.textHigh,
-    ));
+    final style = AppFonts.mono(
+      TextStyle(
+        fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
+        fontSize: emphasize ? 16 : 13,
+        color: emphasize ? AppColors.neonGreen : AppColors.textHigh,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text('$label: ', style: AppFonts.body(style.copyWith(color: emphasize ? AppColors.textHigh : AppColors.textMuted))),
-          SizedBox(width: 90, child: Text(formatCurrency(amount), style: style, textAlign: TextAlign.right)),
+          Text(
+            '$label: ',
+            style: AppFonts.body(
+              style.copyWith(
+                color: emphasize ? AppColors.textHigh : AppColors.textMuted,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 90,
+            child: Text(
+              formatCurrency(amount),
+              style: style,
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );
@@ -244,5 +372,7 @@ class _TotalRow extends StatelessWidget {
 }
 
 void _showError(BuildContext context, Object error) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toApiException(error).message)));
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(toApiException(error).message)));
 }

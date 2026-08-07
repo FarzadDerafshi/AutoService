@@ -33,6 +33,10 @@ export const updateStatusSchema = z.object({
   paymentMethod: paymentMethodSchema.optional(),
 });
 
+export const rollbackWorkOrderSchema = z.object({
+  reason: z.string().trim().min(3).max(1000),
+});
+
 export const listWorkOrdersQuerySchema = z.object({
   status: workOrderStatusSchema.optional(),
   clientId: z.string().uuid().optional(),
@@ -47,3 +51,4 @@ export type LineItemInput = z.infer<typeof lineItemSchema>;
 export type CreateWorkOrderInput = z.infer<typeof createWorkOrderSchema>;
 export type UpdateWorkOrderInput = z.infer<typeof updateWorkOrderSchema>;
 export type UpdateStatusInput = z.infer<typeof updateStatusSchema>;
+export type RollbackWorkOrderInput = z.infer<typeof rollbackWorkOrderSchema>;

@@ -15,16 +15,22 @@ class WorkOrdersRepository {
     int page = 1,
     int pageSize = 50,
   }) async {
-    final response = await _client.dio.get('/work-orders', queryParameters: {
-      if (status != null && status.isNotEmpty) 'status': status,
-      if (clientId != null && clientId.isNotEmpty) 'clientId': clientId,
-      if (vehicleId != null && vehicleId.isNotEmpty) 'vehicleId': vehicleId,
-      if (dateFrom != null) 'dateFrom': dateFrom.toIso8601String(),
-      if (dateTo != null) 'dateTo': dateTo.toIso8601String(),
-      'page': page,
-      'pageSize': pageSize,
-    });
-    return PaginatedResponse.fromJson(response.data as Map<String, dynamic>, WorkOrder.fromJson);
+    final response = await _client.dio.get(
+      '/work-orders',
+      queryParameters: {
+        if (status != null && status.isNotEmpty) 'status': status,
+        if (clientId != null && clientId.isNotEmpty) 'clientId': clientId,
+        if (vehicleId != null && vehicleId.isNotEmpty) 'vehicleId': vehicleId,
+        if (dateFrom != null) 'dateFrom': dateFrom.toIso8601String(),
+        if (dateTo != null) 'dateTo': dateTo.toIso8601String(),
+        'page': page,
+        'pageSize': pageSize,
+      },
+    );
+    return PaginatedResponse.fromJson(
+      response.data as Map<String, dynamic>,
+      WorkOrder.fromJson,
+    );
   }
 
   Future<WorkOrder> getById(String id) async {
@@ -42,15 +48,28 @@ class WorkOrdersRepository {
     return WorkOrder.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<WorkOrder> updateStatus(String id, {required String status, String? paymentMethod}) async {
-    final response = await _client.dio.patch('/work-orders/$id/status', data: {
-      'status': status,
-      'paymentMethod': ?paymentMethod,
-    });
+  Future<WorkOrder> updateStatus(
+    String id, {
+    required String status,
+    String? paymentMethod,
+  }) async {
+    final response = await _client.dio.patch(
+      '/work-orders/$id/status',
+      data: {'status': status, 'paymentMethod': ?paymentMethod},
+    );
+    return WorkOrder.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<WorkOrder> rollback(String id, {required String reason}) async {
+    final response = await _client.dio.patch(
+      '/work-orders/$id/rollback',
+      data: {'reason': reason},
+    );
     return WorkOrder.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<void> delete(String id) => _client.dio.delete('/work-orders/$id');
 
-  String pdfUrl(String id, String token) => '$apiBaseUrl/work-orders/$id/pdf?token=$token';
+  String pdfUrl(String id, String token) =>
+      '$apiBaseUrl/work-orders/$id/pdf?token=$token';
 }

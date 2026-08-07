@@ -5,6 +5,57 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.8] — 2026-08-07  *(Owner/Manager Rollback — Revert Paid/Completed Orders Back to Draft)*
+
+### Added
+- **Owners and managers can now roll a `paid` or `completed` work order back
+  to `draft`**, straight to draft rather than through the intermediate
+  step — the one deliberate, audited exception to the otherwise forward-only
+  `draft -> completed -> paid` status machine
+  (`workOrders.service.ts`'s `ALLOWED_TRANSITIONS`). A typed reason (3+
+  characters) is required and every rollback is permanently logged.
+  - New `PATCH /api/v1/work-orders/:id/rollback` endpoint,
+    `authorize("owner", "manager")`-gated — the same bar as editing/
+    deleting a draft, not the stricter owner-only bar first floated during
+    design (see DECISIONS.md). Clears `paymentMethod`/`completedAt`/
+    `paidAt` and returns the order to `draft`, re-opening its line items
+    for editing; `subtotal`/`discountAmount`/`taxRate`/`taxAmount`/
+    `grandTotal` are left untouched.
+  - New `work_order_rollbacks` audit table
+    (`db/init/014_work_order_rollback_audit.sql`) — one row per rollback,
+    recording who, when, why, and a snapshot of everything being
+    discarded. Deliberately survives deletion of the now-draft parent
+    order (`ON DELETE SET NULL` + denormalized `order_no`/
+    `performed_by_name`/`prior_*` columns) — verified by rolling an order
+    back, deleting it, and confirming the audit row was still intact
+    afterward.
+  - **Detail panel** (`work_order_detail_panel.dart`) gained a "Taslağa
+    Geri Al" text button below the Pit Stop stepper, shown only for
+    `canManage` users on `paid`/`completed` orders — deliberately kept
+    outside `PitStopStepper` itself so it doesn't read as a normal forward
+    step. Confirmation dialog requires a typed reason before its confirm
+    button enables (reactive via `ValueListenableBuilder` on the reason
+    field's controller — an earlier draft of this dialog let the button
+    submit with an empty reason and silently no-op, caught before
+    shipping) and explicitly warns that the order will drop out of past
+    revenue reports until re-marked paid.
+  _Files: `db/init/014_work_order_rollback_audit.sql`,
+  `backend/src/modules/workOrders/workOrders.{schema,service,controller,routes}.ts`,
+  `frontend/lib/features/work_orders/data/work_orders_repository.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_detail_panel.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+### Known, deliberate consequence — not a bug
+- **Rolling back a `paid` order retroactively changes past revenue
+  reports.** `reports.service.ts`'s revenue query filters on
+  `status = 'paid' AND paid_at IS NOT NULL` — the moment either is
+  cleared, the order silently disappears from whatever historical period
+  it was previously counted in. This is why the confirmation dialog states
+  it explicitly and why every rollback is audited with a mandatory reason;
+  see DECISIONS.md for the full reasoning.
+
+---
+
 ## [0.16.7] — 2026-08-07  *(Draft Protection — Warn Before Losing Unsaved Work-Order Edits)*
 
 ### Added

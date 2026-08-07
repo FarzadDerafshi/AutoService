@@ -383,6 +383,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get rollbackToDraft => 'Roll Back to Draft';
+
+  @override
+  String get rollbackConfirmTitle => 'Roll Back This Order?';
+
+  @override
+  String rollbackConfirmBody(String status) {
+    return 'This order is currently marked $status. Rolling it back will reopen it as a draft — line items become editable again, and it will drop out of past revenue reports until marked paid again.';
+  }
+
+  @override
+  String get rollbackReasonLabel => 'Reason for rollback';
+
+  @override
   String markAs(String status) {
     return 'Mark as $status';
   }
@@ -1051,6 +1065,20 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String deleteWorkOrderBody(int orderNo) {
     return 'Order #$orderNo will be permanently deleted.';
   }
+
+  @override
+  String get rollbackToDraft => 'Roll Back to Draft';
+
+  @override
+  String get rollbackConfirmTitle => 'Roll back this order?';
+
+  @override
+  String rollbackConfirmBody(String status) {
+    return 'This order is currently marked $status. Rolling it back will return it to draft — line items become editable again, and it will be excluded from past revenue reports until marked paid again.';
+  }
+
+  @override
+  String get rollbackReasonLabel => 'Reason for rollback';
 
   @override
   String markAs(String status) {

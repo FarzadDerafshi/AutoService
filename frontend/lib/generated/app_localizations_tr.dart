@@ -384,6 +384,20 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get rollbackToDraft => 'Taslağa Geri Al';
+
+  @override
+  String get rollbackConfirmTitle => 'Bu Kayıt Geri Alınsın mı?';
+
+  @override
+  String rollbackConfirmBody(String status) {
+    return 'Bu kayıt şu anda $status olarak işaretli. Geri almak onu taslağa döndürür — kalemler tekrar düzenlenebilir hale gelir ve tekrar ödendi olarak işaretlenene kadar geçmiş gelir raporlarından çıkar.';
+  }
+
+  @override
+  String get rollbackReasonLabel => 'Geri alma nedeni';
+
+  @override
   String markAs(String status) {
     return '$status İşaretle';
   }
@@ -1052,6 +1066,20 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String deleteWorkOrderBody(int orderNo) {
     return '#$orderNo numaralı servis kaydı kalıcı olarak silinecek.';
   }
+
+  @override
+  String get rollbackToDraft => 'Taslağa Geri Al';
+
+  @override
+  String get rollbackConfirmTitle => 'Bu kayıt geri alınsın mı?';
+
+  @override
+  String rollbackConfirmBody(String status) {
+    return 'Bu kayıt şu anda $status olarak işaretli. Geri alma işlemi kaydı taslağa döndürür — kalemler tekrar düzenlenebilir olur ve tekrar ödendi olarak işaretlenene kadar geçmiş gelir raporlarından hariç tutulur.';
+  }
+
+  @override
+  String get rollbackReasonLabel => 'Geri alma nedeni';
 
   @override
   String markAs(String status) {

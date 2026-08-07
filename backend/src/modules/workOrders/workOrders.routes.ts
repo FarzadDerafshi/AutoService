@@ -14,4 +14,5 @@ workOrdersRoutes.get("/:id/pdf", workOrdersController.pdf);
 workOrdersRoutes.post("/", workOrdersController.create);
 workOrdersRoutes.patch("/:id", workOrdersController.update);
 workOrdersRoutes.patch("/:id/status", workOrdersController.updateStatus);
+workOrdersRoutes.patch("/:id/rollback", authorize("owner", "manager"), workOrdersController.rollback);
 workOrdersRoutes.delete("/:id", authorize("owner", "manager"), workOrdersController.remove);

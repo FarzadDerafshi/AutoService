@@ -90,6 +90,64 @@ their work orders exist would be silently discarding who did the work).
 per shop) was deferred; it would require a `shop_counters` table and an
 advisory lock or `FOR UPDATE` to avoid race conditions at scale.
 
+### Status rollback (paid/completed -> draft) — the one audited exception to the forward-only machine (v0.16.8)
+
+`workOrders.service.ts`'s `ALLOWED_TRANSITIONS` is documented as
+forward-only (`draft -> completed -> paid`, no skipping, no going back) —
+rollback is a deliberate, narrow exception to that, gated by its own
+`ALLOWED_ROLLBACKS` map and its own `authorize()` check, not a loosening
+of `ALLOWED_TRANSITIONS` itself. Both `paid` and `completed` roll back
+straight to `draft` (never to the intermediate step) — the real-world
+reason this exists is "we marked this wrong, undo it," which doesn't
+benefit from passing back through `completed` on the way down.
+
+**Audit-pointer FK trap, caught before shipping:** the first draft of
+`work_order_rollbacks.work_order_id` used `ON DELETE CASCADE`, matching
+`work_order_items`. That's wrong for an audit table specifically: a
+rollback sets the order's status to `draft`, and `deleteWorkOrder`
+(`workOrders.service.ts`) allows deleting any `draft` order — so `CASCADE`
+would let deleting the now-draft order silently erase the very audit row
+proving the rollback happened. Fixed with `ON DELETE SET NULL` (same
+precedent as `shop_invites.created_by`/`used_by`, see the "Audit-pointer
+foreign keys" entry above) plus denormalizing `order_no`,
+`performed_by_name`, and every `prior_*` column onto the audit row at
+write time, so it stays meaningful even after the order — or the acting
+user — is later deleted. Verified directly: rolled an order back, deleted
+it, confirmed the audit row survived with `work_order_id = NULL` and every
+other field intact.
+
+**Authorization bar: `owner`+`manager` (`canManage`), same as edit/delete
+of a draft — not owner-only.** Owner-only was the first instinct during
+design, reasoning that this can retroactively rewrite recognized revenue
+(see the reports note below) — a materially bigger blast radius than
+editing or deleting a draft. Farzad's call: `owner`+`manager`, matching
+the existing bar elsewhere in this module. If misuse becomes a real
+problem in practice, tightening to owner-only is a one-argument change on
+the route (`authorize("owner")`) — no schema or audit-table change needed,
+since `performed_by`/`performed_by_name` already record exactly who did it
+regardless of which roles are allowed to.
+
+**Retroactively changes past revenue reports — by design, not a bug.**
+`reports.service.ts`'s `getRevenueReport` filters on
+`status = 'paid' AND paid_at IS NOT NULL`. The moment a rollback clears
+either, the order silently drops out of whatever historical period it was
+previously counted in — a month that already "closed" can shrink after
+the fact. This is exactly why the feature requires a mandatory reason and
+writes a permanent, un-deletable-by-normal-means audit trail: the point is
+that this consequence stays traceable and explainable, not that it doesn't
+happen. The frontend's confirmation dialog states this consequence
+explicitly before the user confirms, rather than letting them discover it
+later on the Reports screen.
+
+**Actor's name is looked up, not carried on the JWT.** `signToken`
+(`auth.service.ts`) only ever signs `{ userId, shopId, role }`. Widening
+the JWT payload to include `fullName` would leave every already-issued
+token (still valid for up to 8h, `JWT_EXPIRES_IN`) without it until
+re-login. Since rollback is a rare, low-volume action, `rollbackWorkOrderStatus`
+does one extra `SELECT full_name FROM users WHERE id = $1` instead —
+simpler than reasoning about token-shape migration for a field that's
+only ever read in one place.
+
 ### Schema changes on a live dev database — apply the new `db/init` file directly, don't reset the volume (v0.15.0)
 `db/init/*.sql` files only run automatically on a brand-new `pgdata` volume
 (Postgres's own init-script behavior) — they do **not** re-run against an

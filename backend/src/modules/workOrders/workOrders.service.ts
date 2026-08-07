@@ -5,6 +5,7 @@ import { Pagination } from "../../utils/pagination";
 import {
   CreateWorkOrderInput,
   LineItemInput,
+  RollbackWorkOrderInput,
   UpdateStatusInput,
   UpdateWorkOrderInput,
 } from "./workOrders.schema";
@@ -32,6 +33,15 @@ const ALLOWED_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
   draft: ["completed"],
   completed: ["paid"],
   paid: [],
+};
+
+// The one deliberate, audited exception to the forward-only rule above.
+// Both roll back straight to draft (not to the intermediate step) — going
+// through "completed" on the way down from "paid" doesn't match the
+// real-world reason this exists ("we marked this wrong, put it back").
+const ALLOWED_ROLLBACKS: Partial<Record<WorkOrderStatus, true>> = {
+  completed: true,
+  paid: true,
 };
 
 function computeTotals(items: LineItemInput[], discountAmount: number, taxRate: number) {
@@ -273,6 +283,60 @@ export async function updateWorkOrderStatus(db: PoolClient, id: string, input: U
          ${timestampColumn ? `, ${timestampColumn} = now()` : ""}
      WHERE id = $3 AND ${SHOP_SCOPE}`,
     [input.status, input.paymentMethod ?? null, id]
+  );
+
+  return getWorkOrderById(db, id);
+}
+
+export async function rollbackWorkOrderStatus(
+  db: PoolClient,
+  id: string,
+  input: RollbackWorkOrderInput,
+  actorUserId: string
+) {
+  const header = await getHeaderById(db, id);
+  const current = header.status as WorkOrderStatus;
+
+  if (!ALLOWED_ROLLBACKS[current]) {
+    throw new ValidationError(
+      `Cannot roll back a work order from '${current}'. Only 'completed' or 'paid' orders can be rolled back to draft.`
+    );
+  }
+
+  // Looked up here rather than carried on the JWT — the JWT payload
+  // (auth.service.ts's signToken) only ever held userId/shopId/role, and
+  // widening it would leave already-issued tokens without the field until
+  // they expire. This is a rare, owner/manager-only action, so one extra
+  // lookup per rollback is a non-issue.
+  const { rows: actorRows } = await db.query(`SELECT full_name FROM users WHERE id = $1`, [actorUserId]);
+  const actorName = actorRows[0]?.full_name ?? "Unknown";
+
+  await db.query(
+    `UPDATE work_orders
+     SET status = 'draft', payment_method = NULL, completed_at = NULL, paid_at = NULL
+     WHERE id = $1 AND ${SHOP_SCOPE}`,
+    [id]
+  );
+
+  await db.query(
+    `INSERT INTO work_order_rollbacks
+       (shop_id, work_order_id, order_no, from_status, to_status, reason,
+        performed_by, performed_by_name,
+        prior_payment_method, prior_completed_at, prior_paid_at, prior_grand_total)
+     VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, 'draft', $4,
+             $5, $6, $7, $8, $9, $10)`,
+    [
+      id,
+      header.order_no,
+      current,
+      input.reason,
+      actorUserId,
+      actorName,
+      header.payment_method,
+      header.completed_at,
+      header.paid_at,
+      header.grand_total,
+    ]
   );
 
   return getWorkOrderById(db, id);

@@ -162,6 +162,13 @@
   "@deleteWorkOrderBody": {
     "placeholders": { "orderNo": { "type": "int" } }
   },
+  "rollbackToDraft": "Roll Back to Draft",
+  "rollbackConfirmTitle": "Roll Back This Order?",
+  "rollbackConfirmBody": "This order is currently marked {status}. Rolling it back will reopen it as a draft — line items become editable again, and it will drop out of past revenue reports until marked paid again.",
+  "@rollbackConfirmBody": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "rollbackReasonLabel": "Reason for rollback",
   "markAs": "Mark as {status}",
   "@markAs": {
     "placeholders": { "status": { "type": "String" } }

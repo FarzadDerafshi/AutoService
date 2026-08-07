@@ -790,6 +790,30 @@ abstract class AppLocalizations {
   /// **'Order #{orderNo} will be permanently deleted.'**
   String deleteWorkOrderBody(int orderNo);
 
+  /// No description provided for @rollbackToDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Roll Back to Draft'**
+  String get rollbackToDraft;
+
+  /// No description provided for @rollbackConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Roll Back This Order?'**
+  String get rollbackConfirmTitle;
+
+  /// No description provided for @rollbackConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This order is currently marked {status}. Rolling it back will reopen it as a draft — line items become editable again, and it will drop out of past revenue reports until marked paid again.'**
+  String rollbackConfirmBody(String status);
+
+  /// No description provided for @rollbackReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for rollback'**
+  String get rollbackReasonLabel;
+
   /// No description provided for @markAs.
   ///
   /// In en, this message translates to:
