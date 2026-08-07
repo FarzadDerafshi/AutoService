@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.14] — 2026-08-07  *(Backfill Line-Item Unit on Pre-Existing Work Orders)*
+
+### Fixed
+- **Every work order line item created before v0.16.13 shipped showed a
+  blank Unit/Birim field** — the new `unit` column was only ever populated
+  by the frontend at add-time going forward, so historical lines (the
+  pilot user's real, pre-existing service slips) stayed `NULL` forever
+  with no way to fix themselves. New `db/init/018_backfill_work_order_item_unit.sql`
+  backfills every catalog-linked line item's `unit` from that catalog
+  item's *current* `unit` value — the exact value at original add-time
+  isn't recoverable, but a catalog item's unit rarely changes after
+  creation, so "current" is a reasonable stand-in. Idempotent (only
+  touches `unit IS NULL` rows) and a no-op on a fresh install. Custom
+  (non-catalog) line items are correctly left `NULL` — there's no catalog
+  definition to backfill them from, same as a freshly-added custom line.
+  Verified against the local dev DB: 8 of 10 existing line items were
+  catalog-linked and got backfilled; the other 2 (custom lines) correctly
+  stayed `NULL`. **Still needs to be applied by hand against the
+  production DB**, same standing pattern as every other migration since
+  v0.11.0 (see `DECISIONS.md`'s DevOps section) — not yet confirmed done.
+  _File: `db/init/018_backfill_work_order_item_unit.sql`_
+
+---
+
 ## [0.16.13] — 2026-08-07  *(Numeric-Only Quantity, Line-Item Unit Column, Clearer Labels)*
 
 ### Fixed
