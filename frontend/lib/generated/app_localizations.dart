@@ -622,6 +622,30 @@ abstract class AppLocalizations {
   /// **'Edit Order #{no}'**
   String editWorkOrderTitle(int no);
 
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold Up — Unsaved Work'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve got changes that aren\'t locked in yet. What\'s the move?'**
+  String get unsavedChangesBody;
+
+  /// No description provided for @saveAsDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock In as Draft'**
+  String get saveAsDraft;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Scrap the Changes'**
+  String get discardChanges;
+
   /// No description provided for @client.
   ///
   /// In en, this message translates to:

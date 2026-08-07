@@ -762,6 +762,49 @@ controllers from a `Provider`/`Riverpod`-backed value *without* going
 through an `AsyncValueWidget`-style `data:` builder (which structurally
 can't render before the data exists) needs this same treatment.
 
+### PopScope "unsaved changes" guard — dirty tracking and a pop-blocking gotcha (v0.16.7)
+
+`work_order_form_screen.dart` is the first screen in the app to intercept
+back navigation. Two decisions worth knowing before touching it or copying
+the pattern elsewhere:
+
+**Dirty tracking is "touched," not diffed.** A single `_dirty` bool is
+flipped by a listener attached to every field's `TextEditingController`
+(added *after* `initState`'s existing seeding, so a freshly opened form —
+including the one default blank line item every new order starts with,
+see the v0.16.4 fix above — never starts dirty) plus the client/vehicle
+`onSelected` callbacks and the add/remove-line-item paths. This means
+typing a character and deleting it back to the original value still
+counts as dirty — deliberate; diffing against a snapshot of every
+`_ItemRow` would be real complexity for a one-screen problem, and false
+positives here cost the user one extra "are you sure" dialog, not data
+loss. Don't "improve" this into snapshot-diffing without a concrete reason.
+
+**`PopScope`'s `canPop: false` blocks *every* pop attempt on the route, not
+just user-initiated back gestures — including your own imperative
+`context.pop()` calls.** This isn't obvious from a quick skim of the
+widget and caused a near-bug during implementation: `_submit()`'s existing
+success path already called `context.pop()` to close the form after
+saving, and the new exit-confirmation dialog's "discard" branch does the
+same. With `canPop` still `false` at the moment either of those runs (the
+form is still "dirty" until the pop actually completes), the pop is
+intercepted exactly like a back-button press would be, re-opening the
+same unsaved-changes dialog instead of leaving — a save or a chosen
+discard would have looked like it silently did nothing. Fix: both code
+paths set `_dirty = false` *immediately before* calling `context.pop()`,
+never after. Any future screen adding a `PopScope` guard needs the same
+ordering for every one of its own imperative pop sites, not just the
+system-back path.
+
+**API note:** as of Flutter 3.41.9 (this project's pinned version), the
+callback is `onPopInvokedWithResult: (bool didPop, T? result)` —
+`PopScope` is now generic (`PopScope<T>`). `onPopInvokedWithDidPop`, the
+name commonly referenced in older Flutter docs/tutorials (introduced
+3.22), was superseded by this before this project's pin; `flutter analyze`
+will flag it as an undefined named parameter if used. Check the installed
+SDK's `pop_scope.dart` rather than trusting an older reference if this
+API surface changes again.
+
 ### Routing
 `go_router` with a `redirect` guard re-evaluates auth state on every
 navigation. The guard is driven by a `ChangeNotifier` that listens to the

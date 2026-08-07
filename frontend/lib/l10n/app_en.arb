@@ -119,6 +119,10 @@
   "@editWorkOrderTitle": {
     "placeholders": { "no": { "type": "int" } }
   },
+  "unsavedChangesTitle": "Hold Up — Unsaved Work",
+  "unsavedChangesBody": "You've got changes that aren't locked in yet. What's the move?",
+  "saveAsDraft": "Lock In as Draft",
+  "discardChanges": "Scrap the Changes",
   "client": "Client",
   "vehicle": "Vehicle",
   "selectAClient": "Select a client",

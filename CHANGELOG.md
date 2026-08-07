@@ -5,6 +5,51 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.7] — 2026-08-07  *(Draft Protection — Warn Before Losing Unsaved Work-Order Edits)*
+
+### Added
+- **Leaving the New/Edit Work Order form with unsaved changes now prompts
+  first**, instead of silently discarding whatever was typed — Farzad's
+  request, to prevent accidental data loss from a stray back-gesture/back-
+  button press. Covers the AppBar back arrow, Android hardware/gesture
+  back, and Windows back, all of which route through the same
+  `Navigator.maybePop()` path a `PopScope` intercepts.
+  - New `_dirty` flag on `_WorkOrderFormScreenState`, flipped by a listener
+    attached to every field controller (mileage, discount, tax rate,
+    notes, and each line item's description/quantity/price) plus the
+    client/vehicle-selection and add/remove-line-item callbacks — attached
+    *after* the form's initial data is seeded, so a freshly opened form
+    (including the one default blank line item every new order starts
+    with, see v0.16.4) never starts dirty.
+  - `PopScope(canPop: !_dirty, ...)` wraps the screen's `Scaffold`. A
+    pristine form pops immediately with no interception; a dirty one opens
+    a three-choice `AlertDialog` (same style as the existing delete
+    confirmation in `work_order_detail_panel.dart`): **Lock In as Draft**
+    (reuses the existing `_submit()` — every work order reachable from
+    this form is already in `draft` status, editing is only reachable
+    while `status == 'draft'`, so "saving as a draft" needed no new
+    backend behavior at all), **Scrap the Changes** (pops with no backend
+    call — an unsaved edit was never persisted, so there's nothing to
+    revert), or **Cancel** (closes the dialog, stays on the form).
+  - New ARB keys — `unsavedChangesTitle`, `unsavedChangesBody`,
+    `saveAsDraft`, `discardChanges` — added to all four locale files.
+  _Files: `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+### Fixed
+- **A naive reuse of the pop-blocking flag would have broken every normal
+  save, not just the new exit-dialog flow:** `PopScope`'s `canPop: false`
+  intercepts *any* pop attempt on the route — including the imperative
+  `context.pop()` calls `_submit()` and the dialog's discard branch already
+  make — not just user-initiated back gestures. Caught before it shipped:
+  without clearing `_dirty = false` immediately before each of those
+  `pop()` calls, a successful save (or a chosen discard) would have
+  re-triggered the same unsaved-changes dialog instead of actually
+  leaving, since the form was still technically "dirty" at the moment the
+  pop ran.
+
+---
+
 ## [0.16.6] — 2026-08-06  *("New" Button Consistency: AppBar, Not FAB)*
 
 ### Changed

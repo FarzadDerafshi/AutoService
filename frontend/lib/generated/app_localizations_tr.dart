@@ -289,6 +289,19 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get unsavedChangesTitle => 'Dur Bakalım';
+
+  @override
+  String get unsavedChangesBody =>
+      'Henüz kaydedilmemiş değişikliklerin var. Ne yapmak istersin?';
+
+  @override
+  String get saveAsDraft => 'Taslak Olarak Kaydet';
+
+  @override
+  String get discardChanges => 'Değişiklikleri Hurdaya At';
+
+  @override
   String get client => 'Müşteri';
 
   @override
@@ -944,6 +957,19 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String editWorkOrderTitle(int no) {
     return '#$no Nolu Kaydı Düzenle';
   }
+
+  @override
+  String get unsavedChangesTitle => 'Kaydedilmemiş Değişiklikler';
+
+  @override
+  String get unsavedChangesBody =>
+      'Kaydedilmemiş değişiklikleriniz var. Ne yapmak istersiniz?';
+
+  @override
+  String get saveAsDraft => 'Taslak Olarak Kaydet';
+
+  @override
+  String get discardChanges => 'Değişiklikleri Yoksay';
 
   @override
   String get client => 'Müşteri';

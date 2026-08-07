@@ -98,6 +98,10 @@
 
   "newWorkOrder": "Yeni İş Emri Patlat",
   "editWorkOrderTitle": "#{no} Nolu Kaydı Düzenle",
+  "unsavedChangesTitle": "Dur Bakalım",
+  "unsavedChangesBody": "Henüz kaydedilmemiş değişikliklerin var. Ne yapmak istersin?",
+  "saveAsDraft": "Taslak Olarak Kaydet",
+  "discardChanges": "Değişiklikleri Hurdaya At",
   "client": "Müşteri",
   "vehicle": "Araç",
   "selectAClient": "Bir müşteri seçin",

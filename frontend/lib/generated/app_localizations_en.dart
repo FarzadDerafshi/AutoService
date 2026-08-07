@@ -288,6 +288,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get unsavedChangesTitle => 'Hold Up — Unsaved Work';
+
+  @override
+  String get unsavedChangesBody =>
+      'You\'ve got changes that aren\'t locked in yet. What\'s the move?';
+
+  @override
+  String get saveAsDraft => 'Lock In as Draft';
+
+  @override
+  String get discardChanges => 'Scrap the Changes';
+
+  @override
   String get client => 'Client';
 
   @override
@@ -943,6 +956,19 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String editWorkOrderTitle(int no) {
     return 'Edit Order #$no';
   }
+
+  @override
+  String get unsavedChangesTitle => 'Unsaved Changes';
+
+  @override
+  String get unsavedChangesBody =>
+      'You have unsaved changes. What would you like to do?';
+
+  @override
+  String get saveAsDraft => 'Save as Draft';
+
+  @override
+  String get discardChanges => 'Discard Changes';
 
   @override
   String get client => 'Client';
