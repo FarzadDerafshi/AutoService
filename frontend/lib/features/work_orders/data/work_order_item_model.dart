@@ -4,6 +4,7 @@ class WorkOrderItem {
   final String description;
   final double quantity;
   final double unitPrice;
+  final String? unit;
   final double lineTotal;
 
   const WorkOrderItem({
@@ -12,6 +13,7 @@ class WorkOrderItem {
     required this.unitPrice,
     this.id,
     this.catalogItemId,
+    this.unit,
     this.lineTotal = 0,
   });
 
@@ -21,6 +23,7 @@ class WorkOrderItem {
         description: json['description'] as String,
         quantity: (json['quantity'] as num).toDouble(),
         unitPrice: (json['unitPrice'] as num).toDouble(),
+        unit: json['unit'] as String?,
         lineTotal: (json['lineTotal'] as num?)?.toDouble() ?? 0,
       );
 
@@ -29,6 +32,7 @@ class WorkOrderItem {
         'description': description,
         'quantity': quantity,
         'unitPrice': unitPrice,
+        if (unit != null) 'unit': unit,
       };
 
   WorkOrderItem copyWith({String? description, double? quantity, double? unitPrice}) => WorkOrderItem(
@@ -37,5 +41,6 @@ class WorkOrderItem {
         description: description ?? this.description,
         quantity: quantity ?? this.quantity,
         unitPrice: unitPrice ?? this.unitPrice,
+        unit: unit,
       );
 }

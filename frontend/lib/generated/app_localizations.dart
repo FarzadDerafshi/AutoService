@@ -757,7 +757,7 @@ abstract class AppLocalizations {
   /// No description provided for @priceLabel.
   ///
   /// In en, this message translates to:
-  /// **'Price'**
+  /// **'Unit Price'**
   String get priceLabel;
 
   /// No description provided for @taxRateLabel.

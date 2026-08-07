@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
@@ -25,20 +26,34 @@ enum _ExitAction { save, discard, cancel }
 
 class _ItemRow {
   String? catalogItemId;
+  // Snapshotted from the catalog item's own "unit" field at the moment it's
+  // added to the order (same precedent as description/unitPrice) — not
+  // user-editable here (its TextFormField is readOnly), and blank for a
+  // custom (non-catalog) line item. Kept as a controller like the other
+  // fields, not a plain String read via `initialValue`: `_addItem` can
+  // replace `_items[0]` in place (same list slot, no widget Key change),
+  // and a bare `initialValue` is only applied the first time a
+  // TextFormField's State is created — it's silently ignored on later
+  // rebuilds with a different value, which left this field blank for the
+  // (most common) case of picking the very first line item from catalog.
+  final TextEditingController unit;
   final TextEditingController description;
   final TextEditingController quantity;
   final TextEditingController unitPrice;
 
   _ItemRow({
     this.catalogItemId,
+    String unit = '',
     String description = '',
     String quantity = '1',
     String unitPrice = '0',
-  }) : description = TextEditingController(text: description),
+  }) : unit = TextEditingController(text: unit),
+       description = TextEditingController(text: description),
        quantity = TextEditingController(text: quantity),
        unitPrice = TextEditingController(text: unitPrice);
 
   void dispose() {
+    unit.dispose();
     description.dispose();
     quantity.dispose();
     unitPrice.dispose();
@@ -104,6 +119,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
         _items.add(
           _ItemRow(
             catalogItemId: item.catalogItemId,
+            unit: item.unit ?? '',
             description: item.description,
             quantity: item.quantity.toString(),
             unitPrice: item.unitPrice.toString(),
@@ -212,6 +228,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
             description: row.description.text.trim(),
             quantity: double.tryParse(row.quantity.text) ?? 0,
             unitPrice: double.tryParse(row.unitPrice.text) ?? 0,
+            unit: row.unit.text.isEmpty ? null : row.unit.text,
           ).toJson(),
         )
         .toList();
@@ -507,6 +524,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                   _addItem(
                     _ItemRow(
                       catalogItemId: item.id,
+                      unit: item.unit,
                       description: item.name,
                       quantity: '1',
                       unitPrice: item.defaultUnitPrice.toString(),
@@ -621,7 +639,22 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+              validator: (v) {
+                final n = double.tryParse(v ?? '');
+                return (n == null || n <= 0) ? l10n.enterValidNumber : null;
+              },
               onChanged: (_) => setState(() {}),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextFormField(
+              controller: row.unit,
+              readOnly: true,
+              decoration: InputDecoration(labelText: l10n.unit),
             ),
           ),
           const SizedBox(width: 8),
@@ -632,6 +665,13 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+              validator: (v) {
+                final n = double.tryParse(v ?? '');
+                return (n == null || n < 0) ? l10n.enterValidNumber : null;
+              },
               onChanged: (_) => setState(() {}),
             ),
           ),

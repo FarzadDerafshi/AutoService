@@ -55,9 +55,9 @@ function computeTotals(items: LineItemInput[], discountAmount: number, taxRate: 
 async function insertItems(db: PoolClient, workOrderId: string, items: LineItemInput[]) {
   for (const [index, item] of items.entries()) {
     await db.query(
-      `INSERT INTO work_order_items (work_order_id, catalog_item_id, description, quantity, unit_price, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [workOrderId, item.catalogItemId ?? null, item.description, item.quantity, item.unitPrice, index]
+      `INSERT INTO work_order_items (work_order_id, catalog_item_id, description, quantity, unit_price, unit, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [workOrderId, item.catalogItemId ?? null, item.description, item.quantity, item.unitPrice, item.unit ?? null, index]
     );
   }
 }

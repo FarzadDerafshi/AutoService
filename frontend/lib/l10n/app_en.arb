@@ -153,7 +153,7 @@
   },
   "descriptionLabel": "Description",
   "qtyLabel": "Qty",
-  "priceLabel": "Price",
+  "priceLabel": "Unit Price",
   "taxRateLabel": "Tax rate (%)",
   "taxLabel": "Tax",
   "noWorkOrders": "No work orders",

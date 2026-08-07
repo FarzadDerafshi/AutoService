@@ -361,10 +361,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get descriptionLabel => 'Açıklama';
 
   @override
-  String get qtyLabel => 'Adet';
+  String get qtyLabel => 'Miktar';
 
   @override
-  String get priceLabel => 'Fiyat';
+  String get priceLabel => 'Birim Fiyat';
 
   @override
   String get taxRateLabel => 'Vergi oranı (%)';
@@ -1054,10 +1054,10 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String get descriptionLabel => 'Açıklama';
 
   @override
-  String get qtyLabel => 'Adet';
+  String get qtyLabel => 'Miktar';
 
   @override
-  String get priceLabel => 'Fiyat';
+  String get priceLabel => 'Birim Fiyat';
 
   @override
   String get taxRateLabel => 'Vergi oranı (%)';

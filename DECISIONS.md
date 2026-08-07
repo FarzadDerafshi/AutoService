@@ -90,6 +90,18 @@ their work orders exist would be silently discarding who did the work).
 per shop) was deferred; it would require a `shop_counters` table and an
 advisory lock or `FOR UPDATE` to avoid race conditions at scale.
 
+### Line-item `unit` is snapshotted, not live-joined from the catalog item (v0.16.13)
+`work_order_items.unit` is populated once, when the line is added (from the
+picked `CatalogItem.unit`), and never re-read from `catalog_items`
+afterward. This follows the same reasoning already documented on
+`description`/`unit_price` in `db/init/006_work_order_items.sql`: a work
+order is a historical record of what was actually sold/serviced, and a
+later edit to (or deletion of) the catalog item must not retroactively
+change what an already-issued order says. The frontend's `_ItemRow.unit`
+mirrors this — it's a plain `String` captured once at construction, not a
+live lookup against the catalog provider's cache, and stays blank for a
+custom (non-catalog) line item since there's nothing to snapshot from.
+
 ### Status rollback (paid/completed -> draft) — the one audited exception to the forward-only machine (v0.16.8)
 
 `workOrders.service.ts`'s `ALLOWED_TRANSITIONS` is documented as

@@ -13,6 +13,7 @@ export const lineItemSchema = z.object({
   description: z.string().trim().min(1).max(255),
   quantity: z.coerce.number().positive(),
   unitPrice: z.coerce.number().min(0),
+  unit: z.string().trim().max(20).optional(),
 });
 
 export const createWorkOrderSchema = z.object({

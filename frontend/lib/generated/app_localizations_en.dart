@@ -363,7 +363,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qtyLabel => 'Qty';
 
   @override
-  String get priceLabel => 'Price';
+  String get priceLabel => 'Unit Price';
 
   @override
   String get taxRateLabel => 'Tax rate (%)';
@@ -1056,7 +1056,7 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String get qtyLabel => 'Qty';
 
   @override
-  String get priceLabel => 'Price';
+  String get priceLabel => 'Unit Price';
 
   @override
   String get taxRateLabel => 'Tax rate (%)';

@@ -5,6 +5,57 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.13] — 2026-08-07  *(Numeric-Only Quantity, Line-Item Unit Column, Clearer Labels)*
+
+### Fixed
+- **A work order's line-item Quantity field silently accepted non-numeric
+  text.** Anything unparsable (`double.tryParse(...) ?? 0`) fell through to
+  `0`, which then either failed the backend's `positive()` check with a
+  generic 400 or, on rare paths, printed a nonsensical `0`-quantity line —
+  the bug only surfaced downstream, far from where the bad value was typed.
+  - Added `inputFormatters` (`FilteringTextInputFormatter`) to both the
+    Quantity and Unit Price fields on the work order form's line items, so
+    a letter keystroke never lands in the field at all — not just a
+    keyboard hint (`keyboardType`), which physical keyboards and paste both
+    ignore.
+  - Added real `validator`s to both fields, wired into the form's existing
+    `_formKey.currentState!.validate()` gate: Quantity must parse to a
+    number `> 0`, Unit Price to a number `>= 0`, reusing the existing
+    `enterValidNumber` message (already used by the catalog item form's own
+    price field) rather than adding a new string.
+  _File: `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`_
+
+### Added
+- **New read-only Unit column between Quantity and Unit Price on the work
+  order line-items form**, showing the unit of measure from the picked
+  catalog item's own `unit` field (e.g. "adet", "lt", "saat") — previously
+  invisible on the work order itself, even though catalog items have
+  carried a `unit` field since their original design. Blank for a custom
+  (non-catalog) line item, since there's no catalog definition to read it
+  from.
+  - Snapshotted onto the line item at add-time, same precedent as
+    `description`/`unit_price` (`db/init/006_work_order_items.sql`'s own
+    comment: "snapshot, editable even if catalog item changes later") —
+    not a live join to the catalog item, so a work order stays accurate
+    even if the catalog item's unit is edited or the item is deleted
+    afterward.
+  - New `work_order_items.unit` column (`db/init/017_work_order_item_unit.sql`,
+    nullable, purely additive).
+  _Files: `db/init/017_work_order_item_unit.sql`,
+  `backend/src/modules/workOrders/workOrders.{schema,service}.ts`,
+  `frontend/lib/features/work_orders/data/work_order_item_model.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`_
+
+### Changed
+- **Clearer line-item labels, requested by the pilot user**: Turkish
+  Quantity label "Adet" → "Miktar"; Unit Price label (previously bare
+  "Fiyat"/"Price") → "Birim Fiyat"/"Unit Price" in all four locale
+  variants, to make explicit that it's a per-unit price, not a line total.
+  English Quantity label ("Qty") was already fine and left unchanged.
+  _Files: `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+---
+
 ## [0.16.12] — 2026-08-07  *(Turkish-Format Plate Display — Read-Only Only)*
 
 ### Added
