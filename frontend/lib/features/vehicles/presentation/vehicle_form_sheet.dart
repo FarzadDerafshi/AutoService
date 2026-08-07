@@ -150,7 +150,10 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pop(
       VehicleFormResult({
-        'clientId': _clientId,
+        // Omitted entirely (not sent as an explicit null) when there's no
+        // owner — a walk-in vehicle. The backend schema treats the key as
+        // optional-if-absent, not optional-if-null.
+        if (_clientId != null) 'clientId': _clientId,
         'licensePlate': _plate.text.trim(),
         'make': _make.trim(),
         'model': _model.trim(),
@@ -194,7 +197,7 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
               const SizedBox(height: 16),
               SearchAutocompleteField<Client>(
                 key: _ownerFieldKey,
-                labelText: l10n.owner,
+                labelText: l10n.ownerOptional,
                 initialText: _selectedClient?.fullName ?? '',
                 search: (q) => ref.read(clientsRepositoryProvider).search(q),
                 displayStringForOption: (c) => c.fullName,
@@ -219,7 +222,9 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
                   _selectedClient = client;
                   _clientId = client.id;
                 }),
-                validator: (_) => _clientId == null ? l10n.selectAnOwner : null,
+                // No validator — a walk-in vehicle can be entered with no
+                // owner at all. The license plate (validated below) is this
+                // app's real per-shop identity key for a vehicle.
               ),
               const SizedBox(height: 12),
               TextFormField(

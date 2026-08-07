@@ -5,6 +5,99 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.12] — 2026-08-07  *(Turkish-Format Plate Display — Read-Only Only)*
+
+### Added
+- **Every read-only display of a license plate now shows it with the
+  standard Turkish spacing** (`34ABC123` → `34 ABC 123`) — the vehicles
+  list, the global search bar's vehicle results, the vehicle history
+  screen's heading, the work-orders list, the work order detail panel, the
+  work order form's edit-mode header, the vehicle Autocomplete's picker
+  text in the work order form, and the printed PDF.
+  - New `formatPlateDisplay` helper
+    (`frontend/lib/core/utils/plate_formatter.dart`, mirrored in
+    `workOrders.pdf.ts` for the backend-rendered PDF) matches the general
+    digits-letters-digits shape of a Turkish plate (2 digits, 1–3 letters,
+    2–4 digits) and inserts spaces at the boundaries. Deliberately doesn't
+    validate the exact official letter/digit-count combination — a plate
+    that doesn't fit the general shape (a foreign plate, unusual data)
+    prints/displays completely unchanged rather than being force-fitted.
+  - **Display only, confirmed nowhere near an editable value:** the
+    "Plaka" input field's seeded/submitted value, all search-query text,
+    and everything stored in the database stay exactly as they were
+    (uppercase, no spaces) — formatting is applied only at the final
+    `Text(...)`/PDF-render call site, never to state that flows back into
+    a form field or an API request. Verified directly: editing a vehicle
+    whose plate displays as "34 ABC 123" shows the raw "34ABC123" in the
+    actual Plaka field.
+  - One real edge case closed proactively: the work order form's vehicle
+    picker can seed a *different* editable field — the quick-create
+    vehicle sheet's own Plaka input — with whatever text is currently
+    typed/selected in the picker (`initialPlate`, via `onCreateNew`).
+    Since the picker's own display text is now formatted, that hand-off
+    now strips spaces before seeding the editable field, so formatting
+    can never leak into an edit context even through that indirect path.
+  _Files: `frontend/lib/core/utils/plate_formatter.dart` (new),
+  `backend/src/modules/workOrders/workOrders.pdf.ts`,
+  `frontend/lib/core/widgets/global_search_bar.dart`,
+  `frontend/lib/features/vehicles/presentation/{vehicles_screen,vehicle_history_screen}.dart`,
+  `frontend/lib/features/work_orders/presentation/{work_orders_master_list,work_order_detail_panel,work_order_form_screen}.dart`_
+
+---
+
+## [0.16.11] — 2026-08-07  *(Optional Client Link — Walk-In Vehicles and Work Orders)*
+
+### Added
+- **A vehicle no longer requires a linked client, and a work order no
+  longer requires a linked client either** — a real gap for this
+  business: many walk-in customers never give contact details, only the
+  car. The license plate (already the shop's real per-vehicle identity
+  key — `vehicles` already had `UNIQUE (shop_id, license_plate)`) is now
+  genuinely the only mandatory identifier; the client link is optional
+  everywhere it touches.
+  - `vehicles.client_id` and `work_orders.client_id` both changed from
+    `NOT NULL` to nullable (`db/init/016_optional_client_link.sql`) —
+    purely additive, no data loss, every existing row already had one.
+  - Vehicle form's "Sahip" (owner) field has no validator anymore — can
+    be left blank on create or edit. Work order form's client field lost
+    its validator too; only the vehicle field (and its unique plate) is
+    still required to create a work order.
+  - **A client can still be attached to a walk-in vehicle at the work
+    order level, independent of the vehicle's own record** — selecting a
+    client while a client-less vehicle is already picked doesn't clear
+    the vehicle, and doesn't retroactively rewrite the vehicle's stored
+    owner. This is deliberate: "the customer identified themselves this
+    time" shouldn't require editing the vehicle master record.
+  - Every place that displayed a client name now falls back to "Walk-in
+    Customer" / "Kayıtsız Müşteri" instead of a raw client UUID (or
+    crashing) when there isn't one: the work-orders list, the detail
+    panel, the printed PDF.
+  - Four `JOIN clients` became `LEFT JOIN` (work order list, work order
+    detail, the printed PDF, vehicle search, and the global search bar's
+    order-number lookup) — an inner join would have silently hidden every
+    walk-in record from search results and lists the moment this shipped.
+  _Files: `db/init/016_optional_client_link.sql`,
+  `backend/src/modules/vehicles/vehicles.{schema,service}.ts`,
+  `backend/src/modules/workOrders/workOrders.{schema,service,pdf}.ts`,
+  `backend/src/modules/search/search.service.ts`,
+  `frontend/lib/features/vehicles/data/vehicle_model.dart`,
+  `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+  `frontend/lib/features/work_orders/data/work_order_model.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_detail_panel.dart`,
+  `frontend/lib/features/work_orders/presentation/work_orders_master_list.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+- **The existing vehicle/client-ownership consistency check in
+  `createWorkOrder` still applies, narrowed correctly**: submitting a
+  `clientId` that genuinely conflicts with a vehicle's own *set* owner is
+  still rejected (400) exactly as before — the check simply no longer
+  fires when either side has no owner to conflict with. Verified both
+  paths directly against the API: a real mismatch still 400s, and
+  attaching a client to a previously client-less vehicle succeeds without
+  touching the vehicle's own `client_id`.
+
+---
+
 ## [0.16.10] — 2026-08-07  *(Editable Service Date — Backdated Slips, List Shows Date Instead of Order #)*
 
 ### Added

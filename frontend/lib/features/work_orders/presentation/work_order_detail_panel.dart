@@ -7,6 +7,7 @@ import '../../../core/config/feature_flags.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../../core/utils/plate_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../core/widgets/pit_stop_stepper.dart';
 import '../../../generated/app_localizations.dart';
@@ -257,10 +258,14 @@ class _DetailContent extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l.clientLabel(order.clientName ?? order.clientId)),
+                  Text(
+                    l.clientLabel(
+                      order.clientName ?? order.clientId ?? l.walkInCustomer,
+                    ),
+                  ),
                   Text(
                     l.vehicleLabel(
-                      '${order.vehiclePlate ?? order.vehicleId} ${order.vehicleMake ?? ''} ${order.vehicleModel ?? ''}'
+                      '${order.vehiclePlate != null ? formatPlateDisplay(order.vehiclePlate!) : order.vehicleId} ${order.vehicleMake ?? ''} ${order.vehicleModel ?? ''}'
                           .trim(),
                     ),
                   ),

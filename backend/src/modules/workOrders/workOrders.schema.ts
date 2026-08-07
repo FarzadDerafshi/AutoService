@@ -16,7 +16,9 @@ export const lineItemSchema = z.object({
 });
 
 export const createWorkOrderSchema = z.object({
-  clientId: z.string().uuid(),
+  // Optional — a walk-in job can be opened against a client-less vehicle
+  // with no client at all. See DECISIONS.md's "Optional client link" entry.
+  clientId: z.string().uuid().optional(),
   vehicleId: z.string().uuid(),
   mileageAtService: z.coerce.number().int().min(0).optional(),
   items: z.array(lineItemSchema).min(1, "At least one line item is required"),

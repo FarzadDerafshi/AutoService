@@ -1,6 +1,6 @@
 class Vehicle {
   final String id;
-  final String clientId;
+  final String? clientId; // null for a walk-in vehicle with no linked client
   final String licensePlate;
   final String? make;
   final String? model;
@@ -10,11 +10,12 @@ class Vehicle {
   final String? chassisNo;
   final String? engineNo;
   final String? color;
-  final String? clientName; // only populated by VehiclesRepository.search's owner join
+  final String?
+  clientName; // only populated by VehiclesRepository.search's owner join
 
   const Vehicle({
     required this.id,
-    required this.clientId,
+    this.clientId,
     required this.licensePlate,
     required this.currentMileageKm,
     this.make,
@@ -27,20 +28,21 @@ class Vehicle {
     this.clientName,
   });
 
-  String get displayName => [make, model].where((s) => s != null && s.isNotEmpty).join(' ');
+  String get displayName =>
+      [make, model].where((s) => s != null && s.isNotEmpty).join(' ');
 
   factory Vehicle.fromJson(Map<String, dynamic> json) => Vehicle(
-        id: json['id'] as String,
-        clientId: json['clientId'] as String,
-        licensePlate: json['licensePlate'] as String,
-        make: json['make'] as String?,
-        model: json['model'] as String?,
-        engineType: json['engineType'] as String?,
-        year: json['year'] as int?,
-        currentMileageKm: json['currentMileageKm'] as int? ?? 0,
-        chassisNo: json['chassisNo'] as String?,
-        engineNo: json['engineNo'] as String?,
-        color: json['color'] as String?,
-        clientName: json['clientName'] as String?,
-      );
+    id: json['id'] as String,
+    clientId: json['clientId'] as String?,
+    licensePlate: json['licensePlate'] as String,
+    make: json['make'] as String?,
+    model: json['model'] as String?,
+    engineType: json['engineType'] as String?,
+    year: json['year'] as int?,
+    currentMileageKm: json['currentMileageKm'] as int? ?? 0,
+    chassisNo: json['chassisNo'] as String?,
+    engineNo: json['engineNo'] as String?,
+    color: json['color'] as String?,
+    clientName: json['clientName'] as String?,
+  );
 }

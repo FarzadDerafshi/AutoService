@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../../core/utils/plate_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../generated/app_localizations.dart';
 import '../application/work_orders_provider.dart';
@@ -103,9 +104,11 @@ class WorkOrdersMasterList extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   leading: _StatusDot(color: color),
-                  title: Text(order.clientName ?? order.clientId),
+                  title: Text(
+                    order.clientName ?? order.clientId ?? l.walkInCustomer,
+                  ),
                   subtitle: Text(
-                    '${order.vehiclePlate ?? order.vehicleId} · ${formatDateDMY(order.serviceDate)}',
+                    '${order.vehiclePlate != null ? formatPlateDisplay(order.vehiclePlate!) : order.vehicleId} · ${formatDateDMY(order.serviceDate)}',
                     style: AppFonts.mono(
                       const TextStyle(
                         color: AppColors.textMuted,

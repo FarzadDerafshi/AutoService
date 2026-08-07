@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const createVehicleSchema = z.object({
-  clientId: z.string().uuid(),
+  // Optional — a walk-in vehicle can be entered with only a plate, no
+  // linked client. See DECISIONS.md's "Optional client link" entry.
+  clientId: z.string().uuid().optional(),
   licensePlate: z.string().trim().min(1).max(20),
   make: z.string().trim().max(50).optional(),
   model: z.string().trim().max(50).optional(),

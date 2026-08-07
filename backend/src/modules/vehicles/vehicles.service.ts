@@ -30,9 +30,11 @@ export async function searchVehicles(db: PoolClient, q: string, clientId?: strin
   }
   params.push(normalizedPlate, `${normalizedPlate}%`, SEARCH_LIMIT);
   const { rows } = await db.query(
+    // LEFT JOIN — a walk-in vehicle has no client_id at all, and an INNER
+    // JOIN here would silently drop it from every search result.
     `SELECT v.*, c.full_name AS client_name
      FROM vehicles v
-     JOIN clients c ON c.id = v.client_id
+     LEFT JOIN clients c ON c.id = v.client_id
      WHERE ${conditions.join(" AND ")}
      ORDER BY (v.license_plate = $${params.length - 2}) DESC,
               (v.license_plate ILIKE $${params.length - 1}) DESC,
@@ -134,7 +136,7 @@ export async function createVehicle(db: PoolClient, input: CreateVehicleInput) {
      VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING *`,
     [
-      input.clientId,
+      input.clientId ?? null,
       normalizePlate(input.licensePlate),
       input.make || null,
       input.model || null,

@@ -5,6 +5,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/config/feature_flags.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../../core/utils/plate_formatter.dart';
 import '../../../core/widgets/search_autocomplete_field.dart';
 import '../../../generated/app_localizations.dart';
 import '../../catalog/application/catalog_provider.dart';
@@ -187,8 +188,11 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
-    if (!_isEdit && (_selectedClient == null || _selectedVehicle == null)) {
-      setState(() => _errorMessage = l10n.selectClientAndVehicle);
+    // Client is optional — a walk-in job can be opened against a vehicle
+    // with no linked client at all. The vehicle (the app's real per-shop
+    // identity key, via its unique plate) is still required.
+    if (!_isEdit && _selectedVehicle == null) {
+      setState(() => _errorMessage = l10n.selectAVehicle);
       return;
     }
     if (_items.isEmpty) {
@@ -227,7 +231,10 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
         ref.invalidate(workOrderDetailProvider(widget.existing!.id));
       } else {
         await repo.create({
-          'clientId': _selectedClient!.id,
+          // Omitted entirely (not sent as an explicit null) when no client
+          // was selected — the backend schema treats the key as
+          // optional-if-absent, not optional-if-null.
+          if (_selectedClient != null) 'clientId': _selectedClient!.id,
           'vehicleId': _selectedVehicle!.id,
           if (_mileage.text.trim().isNotEmpty)
             'mileageAtService': int.tryParse(_mileage.text.trim()),
@@ -314,12 +321,16 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
               if (_isEdit) ...[
                 Text(
                   l10n.clientLabel(
-                    widget.existing!.clientName ?? widget.existing!.clientId,
+                    widget.existing!.clientName ??
+                        widget.existing!.clientId ??
+                        l10n.walkInCustomer,
                   ),
                 ),
                 Text(
                   l10n.vehicleLabel(
-                    widget.existing!.vehiclePlate ?? widget.existing!.vehicleId,
+                    widget.existing!.vehiclePlate != null
+                        ? formatPlateDisplay(widget.existing!.vehiclePlate!)
+                        : widget.existing!.vehicleId,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -349,14 +360,19 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                   onSelected: (client) => setState(() {
                     _dirty = true;
                     _selectedClient = client;
+                    // Only clear the vehicle if it already has a *different*
+                    // set owner — a walk-in vehicle (clientId null) has no
+                    // real conflict, and picking a client to attach to it
+                    // shouldn't wipe out the vehicle the user just chose.
                     if (_selectedVehicle != null &&
+                        _selectedVehicle!.clientId != null &&
                         _selectedVehicle!.clientId != client.id) {
                       _selectedVehicle = null;
                       _vehicleFieldKey.currentState?.clear();
                     }
                   }),
-                  validator: (_) =>
-                      _selectedClient == null ? l10n.selectAClient : null,
+                  // No validator — client is optional, a walk-in job can be
+                  // opened against a vehicle with no linked client at all.
                 ),
                 if (_selectedClient != null &&
                     ((_selectedClient!.phone?.isNotEmpty ?? false) ||
@@ -381,7 +397,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                       .read(vehiclesRepositoryProvider)
                       .search(q, clientId: _selectedClient?.id),
                   displayStringForOption: (v) =>
-                      '${v.licensePlate} — ${v.displayName}',
+                      '${formatPlateDisplay(v.licensePlate)} — ${v.displayName}',
                   subtitleForOption: (v) =>
                       (v.clientName == null ||
                           v.clientName == _selectedClient?.fullName)
@@ -392,7 +408,13 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                     final result = await showVehicleFormSheet(
                       context,
                       presetClient: _selectedClient,
-                      initialPlate: typedText,
+                      // Strip spaces before seeding the editable Plaka field
+                      // — typedText can carry the display-formatted spacing
+                      // from an already-selected vehicle's text (see
+                      // displayStringForOption above) if the user edited it
+                      // back into "create new" territory. The plate input
+                      // itself must never show formatted-for-display text.
+                      initialPlate: typedText.replaceAll(' ', ''),
                     );
                     if (result == null) return null;
                     final created = await ref
@@ -406,11 +428,18 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                       _dirty = true;
                       _selectedVehicle = vehicle;
                     });
-                    if (_selectedClient == null ||
-                        _selectedClient!.id != vehicle.clientId) {
+                    // A walk-in vehicle (clientId null) has no owner to
+                    // auto-fill — leave whatever client (if any) is already
+                    // selected untouched, rather than clearing it. This is
+                    // what lets a walk-in car get a client attached at the
+                    // order level without needing to edit the vehicle record.
+                    final ownerId = vehicle.clientId;
+                    if (ownerId != null &&
+                        (_selectedClient == null ||
+                            _selectedClient!.id != ownerId)) {
                       final client = await ref
                           .read(clientsRepositoryProvider)
-                          .getById(vehicle.clientId);
+                          .getById(ownerId);
                       if (!mounted) return;
                       setState(() => _selectedClient = client);
                       _clientFieldKey.currentState?.setText(client.fullName);

@@ -154,6 +154,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get owner => 'Owner';
 
   @override
+  String get ownerOptional => 'Owner (optional)';
+
+  @override
+  String get walkInCustomer => 'Walk-in Customer';
+
+  @override
   String get selectAnOwner => 'Select an owner';
 
   @override
@@ -842,6 +848,12 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
 
   @override
   String get owner => 'Owner';
+
+  @override
+  String get ownerOptional => 'Owner (optional)';
+
+  @override
+  String get walkInCustomer => 'Walk-in Customer';
 
   @override
   String get selectAnOwner => 'Select an owner';

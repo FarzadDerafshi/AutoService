@@ -26,7 +26,7 @@ interface PdfWorkOrder {
   shop_tax_id: string | null;
   shop_tax_office: string | null;
   shop_logo_path: string | null;
-  client_name: string;
+  client_name: string | null; // null for a walk-in job with no linked client
   client_phone: string | null;
   license_plate: string;
   make: string | null;
@@ -50,6 +50,20 @@ function money(value: number) {
 function formatDMY(isoDate: string) {
   const [y, m, d] = isoDate.split("-");
   return `${d}.${m}.${y}`;
+}
+
+// Display only — the stored plate (vehicles.license_plate) stays
+// space-free everywhere else (storage, search, uniqueness). Matches the
+// general digits-letters-digits shape of a Turkish plate rather than
+// validating the exact official letter/digit-count combinations, so a
+// foreign or otherwise non-matching plate prints completely unchanged
+// instead of being force-fitted into a Turkish pattern. Kept in sync with
+// frontend/lib/core/utils/plate_formatter.dart's identical logic.
+const TR_PLATE_PATTERN = /^(\d{2})([A-Z]{1,3})(\d{2,4})$/;
+function formatPlateDisplay(plate: string) {
+  const match = TR_PLATE_PATTERN.exec(plate.toUpperCase());
+  if (!match) return plate;
+  return `${match[1]} ${match[2]} ${match[3]}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +136,7 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
             v.license_plate, v.make, v.model
      FROM work_orders wo
      JOIN shops s ON s.id = wo.shop_id
-     JOIN clients c ON c.id = wo.client_id
+     LEFT JOIN clients c ON c.id = wo.client_id
      JOIN vehicles v ON v.id = wo.vehicle_id
      WHERE wo.id = $1 AND wo.shop_id = current_setting('app.current_shop_id')::uuid`,
     [workOrderId]
@@ -204,13 +218,13 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
   doc.roundedRect(LEFT, y, cardW, cardH, 6).fillColor(COLORS.panel).fill();
   doc.roundedRect(LEFT + cardW + gap, y, cardW, cardH, 6).fillColor(COLORS.panel).fill();
 
-  let cy = drawLabelValue(doc, LEFT + cardPad, y + cardPad, cardW - cardPad * 2, "Client", order.client_name);
+  let cy = drawLabelValue(doc, LEFT + cardPad, y + cardPad, cardW - cardPad * 2, "Client", order.client_name ?? "Walk-in Customer");
   if (order.client_phone) {
     doc.font(FONT).fontSize(9.5).fillColor(COLORS.sub).text(order.client_phone, LEFT + cardPad, cy + 3);
   }
 
   const vehicleTitle = `${order.make ?? ""} ${order.model ?? ""}`.trim() || "Vehicle";
-  cy = drawLabelValue(doc, LEFT + cardW + gap + cardPad, y + cardPad, cardW - cardPad * 2, "Vehicle", `${order.license_plate}  —  ${vehicleTitle}`);
+  cy = drawLabelValue(doc, LEFT + cardW + gap + cardPad, y + cardPad, cardW - cardPad * 2, "Vehicle", `${formatPlateDisplay(order.license_plate)}  —  ${vehicleTitle}`);
   if (order.mileage_at_service != null) {
     doc.font(FONT).fontSize(9.5).fillColor(COLORS.sub).text(`${order.mileage_at_service.toLocaleString()} km at service`, LEFT + cardW + gap + cardPad, cy + 3);
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/plate_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../generated/app_localizations.dart';
 import '../application/vehicles_provider.dart';
@@ -31,15 +32,24 @@ class VehicleHistoryScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(vehicle.licensePlate, style: Theme.of(context).textTheme.headlineSmall),
+                      Text(
+                        formatPlateDisplay(vehicle.licensePlate),
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
                       const SizedBox(height: 4),
                       Text(vehicle.displayName),
-                      if (vehicle.engineType != null) Text(l.engine(vehicle.engineType!)),
-                      if (vehicle.year != null) Text(l.yearLabel(vehicle.year.toString())),
-                      Text(l.currentMileage(vehicle.currentMileageKm.toString())),
-                      if (vehicle.chassisNo != null && vehicle.chassisNo!.isNotEmpty)
+                      if (vehicle.engineType != null)
+                        Text(l.engine(vehicle.engineType!)),
+                      if (vehicle.year != null)
+                        Text(l.yearLabel(vehicle.year.toString())),
+                      Text(
+                        l.currentMileage(vehicle.currentMileageKm.toString()),
+                      ),
+                      if (vehicle.chassisNo != null &&
+                          vehicle.chassisNo!.isNotEmpty)
                         Text('${l.chassisNoLabel}: ${vehicle.chassisNo}'),
-                      if (vehicle.engineNo != null && vehicle.engineNo!.isNotEmpty)
+                      if (vehicle.engineNo != null &&
+                          vehicle.engineNo!.isNotEmpty)
                         Text('${l.engineNoLabel}: ${vehicle.engineNo}'),
                       if (vehicle.color != null && vehicle.color!.isNotEmpty)
                         Text('${l.colorLabel}: ${vehicle.color}'),
@@ -48,19 +58,28 @@ class VehicleHistoryScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(l.serviceHistoryCount(history.workOrders.length),
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                l.serviceHistoryCount(history.workOrders.length),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               if (history.workOrders.isEmpty)
-                Padding(padding: const EdgeInsets.all(16), child: Text(l.noWorkOrdersYet)),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(l.noWorkOrdersYet),
+                ),
               for (final order in history.workOrders)
                 Card(
                   child: ListTile(
-                    title: Text('${l.orderNo(order['orderNo'] as int)} — ${_statusLabel(l, order['status'] as String)}'),
+                    title: Text(
+                      '${l.orderNo(order['orderNo'] as int)} — ${_statusLabel(l, order['status'] as String)}',
+                    ),
                     subtitle: Text(
                       '${l.mileageKm((order['mileageAtService'] ?? '—').toString())} · ${DateTime.parse(order['createdAt'] as String).toLocal().toString().split('.').first}',
                     ),
-                    trailing: Text(formatCurrency((order['grandTotal'] as num).toDouble())),
+                    trailing: Text(
+                      formatCurrency((order['grandTotal'] as num).toDouble()),
+                    ),
                     onTap: () => context.push('/work-orders/${order['id']}'),
                   ),
                 ),
@@ -73,8 +92,8 @@ class VehicleHistoryScreen extends ConsumerWidget {
 }
 
 String _statusLabel(AppLocalizations l, String status) => switch (status) {
-      'draft' => l.draft,
-      'completed' => l.completed,
-      'paid' => l.paid,
-      _ => status,
-    };
+  'draft' => l.draft,
+  'completed' => l.completed,
+  'paid' => l.paid,
+  _ => status,
+};

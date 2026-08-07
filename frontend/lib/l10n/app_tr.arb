@@ -55,6 +55,8 @@
   "newVehicle": "Yeni Araç",
   "editVehicle": "Aracı Düzenle",
   "owner": "Sahip",
+  "ownerOptional": "Sahip (isteğe bağlı)",
+  "walkInCustomer": "Kayıtsız Müşteri",
   "selectAnOwner": "Bir sahip seçin",
   "licensePlate": "Plaka",
   "licensePlateHint": "34 AAA 5678",

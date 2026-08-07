@@ -55,6 +55,8 @@
   "newVehicle": "New Vehicle",
   "editVehicle": "Edit Vehicle",
   "owner": "Owner",
+  "ownerOptional": "Owner (optional)",
+  "walkInCustomer": "Walk-in Customer",
   "selectAnOwner": "Select an owner",
   "licensePlate": "License plate",
   "licensePlateHint": "34 AAA 5678",

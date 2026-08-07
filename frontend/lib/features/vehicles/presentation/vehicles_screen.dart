@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/utils/plate_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../generated/app_localizations.dart';
 import '../../auth/application/auth_provider.dart';
@@ -20,7 +21,8 @@ class VehiclesScreen extends ConsumerWidget {
     final currentFilter = ref.read(vehiclesFilterProvider);
     if (clientId != currentFilter.clientId) {
       Future.microtask(() {
-        ref.read(vehiclesFilterProvider.notifier).state = currentFilter.copyWith(clientId: clientId ?? '');
+        ref.read(vehiclesFilterProvider.notifier).state = currentFilter
+            .copyWith(clientId: clientId ?? '');
       });
     }
 
@@ -35,7 +37,10 @@ class VehiclesScreen extends ConsumerWidget {
             tooltip: l.newVehicle,
             icon: const Icon(Icons.add),
             onPressed: () async {
-              final result = await showVehicleFormSheet(context, presetClientId: clientId);
+              final result = await showVehicleFormSheet(
+                context,
+                presetClientId: clientId,
+              );
               if (result == null) return;
               try {
                 await ref.read(vehiclesRepositoryProvider).create(result.data);
@@ -59,7 +64,9 @@ class VehiclesScreen extends ConsumerWidget {
               ),
               textCapitalization: TextCapitalization.characters,
               onChanged: (value) =>
-                  ref.read(vehiclesFilterProvider.notifier).state = ref.read(vehiclesFilterProvider).copyWith(plate: value),
+                  ref.read(vehiclesFilterProvider.notifier).state = ref
+                      .read(vehiclesFilterProvider)
+                      .copyWith(plate: value),
             ),
           ),
         ),
@@ -78,26 +85,36 @@ class VehiclesScreen extends ConsumerWidget {
               final vehicle = vehicles[index];
               return ListTile(
                 leading: const Icon(Icons.directions_car),
-                title: Text(vehicle.licensePlate),
-                subtitle: Text([vehicle.displayName, if (vehicle.year != null) vehicle.year.toString()]
-                    .where((s) => s.isNotEmpty)
-                    .join(' · ')),
+                title: Text(formatPlateDisplay(vehicle.licensePlate)),
+                subtitle: Text(
+                  [
+                    vehicle.displayName,
+                    if (vehicle.year != null) vehicle.year.toString(),
+                  ].where((s) => s.isNotEmpty).join(' · '),
+                ),
                 onTap: () => context.push('/vehicles/${vehicle.id}/history'),
                 trailing: canManage
                     ? PopupMenuButton<String>(
                         onSelected: (action) async {
                           if (action == 'edit') {
-                            final result = await showVehicleFormSheet(context, existing: vehicle);
+                            final result = await showVehicleFormSheet(
+                              context,
+                              existing: vehicle,
+                            );
                             if (result == null) return;
                             try {
-                              await ref.read(vehiclesRepositoryProvider).update(vehicle.id, result.data);
+                              await ref
+                                  .read(vehiclesRepositoryProvider)
+                                  .update(vehicle.id, result.data);
                               ref.invalidate(vehiclesListProvider);
                             } catch (e) {
                               if (context.mounted) _showError(context, e);
                             }
                           } else if (action == 'delete') {
                             try {
-                              await ref.read(vehiclesRepositoryProvider).delete(vehicle.id);
+                              await ref
+                                  .read(vehiclesRepositoryProvider)
+                                  .delete(vehicle.id);
                               ref.invalidate(vehiclesListProvider);
                             } catch (e) {
                               if (context.mounted) _showError(context, e);
@@ -120,5 +137,7 @@ class VehiclesScreen extends ConsumerWidget {
 }
 
 void _showError(BuildContext context, Object error) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toApiException(error).message)));
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(toApiException(error).message)));
 }

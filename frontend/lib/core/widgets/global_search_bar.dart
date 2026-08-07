@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/search/application/search_provider.dart';
 import '../../features/search/data/search_repository.dart';
 import '../../generated/app_localizations.dart';
+import '../utils/plate_formatter.dart';
 
 /// Persistent global search bar (see architecture doc 4.3): queries
 /// /api/v1/search with a ~300ms debounce and shows sectioned results,
@@ -41,7 +42,10 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
       _removeOverlay();
       return;
     }
-    _debounce = Timer(const Duration(milliseconds: 300), () => _runSearch(query.trim()));
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+      () => _runSearch(query.trim()),
+    );
   }
 
   Future<void> _runSearch(String query) async {
@@ -94,7 +98,10 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
   Widget _buildResultsList() {
     final results = _results;
     if (results == null || results.isEmpty) {
-      return const Padding(padding: EdgeInsets.all(16), child: Text('No matches'));
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('No matches'),
+      );
     }
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 400),
@@ -105,7 +112,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             ListTile(
               dense: true,
               leading: const Icon(Icons.directions_car),
-              title: Text(vehicle.licensePlate),
+              title: Text(formatPlateDisplay(vehicle.licensePlate)),
               subtitle: Text(vehicle.displayName),
               onTap: () {
                 _dismiss();
@@ -157,12 +164,22 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             suffixIcon: _loading
                 ? const Padding(
                     padding: EdgeInsets.all(10),
-                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   )
                 : (_controller.text.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: _dismiss)
-                    : null),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: _dismiss,
+                        )
+                      : null),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
       ),

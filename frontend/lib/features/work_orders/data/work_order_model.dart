@@ -3,7 +3,7 @@ import 'work_order_item_model.dart';
 class WorkOrder {
   final String id;
   final int orderNo;
-  final String clientId;
+  final String? clientId; // null for a walk-in job with no linked client
   final String vehicleId;
   final int? mileageAtService;
   final String status; // draft | completed | paid
@@ -33,7 +33,7 @@ class WorkOrder {
   const WorkOrder({
     required this.id,
     required this.orderNo,
-    required this.clientId,
+    this.clientId,
     required this.vehicleId,
     required this.status,
     required this.subtotal,
@@ -56,7 +56,7 @@ class WorkOrder {
   factory WorkOrder.fromJson(Map<String, dynamic> json) => WorkOrder(
     id: json['id'] as String,
     orderNo: json['orderNo'] as int,
-    clientId: json['clientId'] as String,
+    clientId: json['clientId'] as String?,
     vehicleId: json['vehicleId'] as String,
     mileageAtService: json['mileageAtService'] as int?,
     status: json['status'] as String,

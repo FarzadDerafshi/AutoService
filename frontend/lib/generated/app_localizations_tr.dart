@@ -155,6 +155,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get owner => 'Sahip';
 
   @override
+  String get ownerOptional => 'Sahip (isteğe bağlı)';
+
+  @override
+  String get walkInCustomer => 'Kayıtsız Müşteri';
+
+  @override
   String get selectAnOwner => 'Bir sahip seçin';
 
   @override
@@ -843,6 +849,12 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
 
   @override
   String get owner => 'Sahip';
+
+  @override
+  String get ownerOptional => 'Sahip (isteğe bağlı)';
+
+  @override
+  String get walkInCustomer => 'Kayıtsız Müşteri';
 
   @override
   String get selectAnOwner => 'Bir sahip seçin';

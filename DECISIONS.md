@@ -148,6 +148,109 @@ does one extra `SELECT full_name FROM users WHERE id = $1` instead —
 simpler than reasoning about token-shape migration for a field that's
 only ever read in one place.
 
+### Turkish-format plate display — a display-layer concern only, never touching the stored/edited value (v0.16.12)
+
+`formatPlateDisplay` (`frontend/lib/core/utils/plate_formatter.dart`,
+mirrored in `workOrders.pdf.ts` for the PDF) reformats an already-stored
+plate ("34ABC123") to "34 ABC 123" for display. Two decisions worth
+knowing before touching plate formatting anywhere else in the app:
+
+**Shape-matching, not official-rule validation.** The regex
+(`^(\d{2})([A-Z]{1,3})(\d{2,4})$`) matches 2 digits + 1–3 letters + 2–4
+digits — the general shape of a Turkish plate — rather than the exact
+official letter/digit-count pairing (1 letter+4 digits, 2+3, or 3+2).
+Deliberate: hard-coding the exact combination table risks *rejecting* a
+genuinely valid Turkish plate if that table is ever misremembered or the
+rule changes, whereas the general shape reliably catches every real
+Turkish plate and safely leaves anything else (foreign plates, odd data)
+completely untouched — which is the actual requirement ("if it's a
+foreign plate just keep it as it is"), not exact format validation.
+
+**Strictly display-only — verified there's no path back into an editable
+value.** `vehicles.license_plate`/`normalizePlate` and everything the
+frontend sends to the API stay uppercase-no-spaces exactly as before;
+`formatPlateDisplay` is called only at final `Text(...)`/PDF-render call
+sites. One real leak path existed and was closed: the work order form's
+vehicle `SearchAutocompleteField`'s `displayStringForOption` is now
+formatted (since its dropdown/selected text is a genuine "showing"
+context), but that same text can flow into `onCreateNew`'s `initialPlate`
+— which seeds the *editable* Plaka field of the quick-create vehicle
+sheet, if a user edits an already-selected vehicle's text back into
+"create new" territory. Fixed by stripping spaces at that specific
+hand-off (`initialPlate: typedText.replaceAll(' ', '')`) rather than by
+leaving the picker's own display unformatted — the picker's display value
+benefits from formatting, and the one downstream consumer that needs the
+raw value now gets it explicitly, rather than the whole feature being
+scoped back to avoid the one edge case.
+`vehicles.service.ts`'s `createVehicle`/`updateVehicle` also call
+`normalizePlate()` unconditionally on write regardless, so even if a
+space had leaked through, the stored value would still end up correct —
+this fix closes the *cosmetic* gap during editing, not a data-integrity
+one that didn't otherwise exist.
+
+**Any future new display site for a plate must call `formatPlateDisplay`
+too — it doesn't happen automatically.** Grep for `licensePlate`/
+`vehiclePlate`/`license_plate` when adding one; the seven call sites
+fixed in v0.16.12 were all found this way, not by guessing which screens
+show a plate.
+
+### Optional client link — vehicles and work orders can exist with no linked client (v0.16.11)
+
+`vehicles.client_id` and `work_orders.client_id` both went from `NOT NULL`
+to nullable. Business reality driving this: a real fraction of walk-in
+jobs never get a client record at all — only the car. The plate is this
+app's actual per-shop identity key for a vehicle (`vehicles` already had
+`UNIQUE (shop_id, license_plate)` since `003_vehicles.sql` — this wasn't a
+new constraint, just a fact the schema already reflected before this
+feature made it load-bearing).
+
+**Both tables had to change, not just `vehicles`.** The request that
+triggered this only mentioned the vehicle→client link, but relaxing just
+that one FK would have been incomplete: if a work order still hard-required
+a client, a client-less vehicle could never actually be serviced — the
+walk-in case would exist in the data model but be unreachable in practice.
+Both nullability changes ship together for this reason.
+
+**A client can be attached to a walk-in vehicle at the order level without
+touching the vehicle's own record.** `createWorkOrder`'s ownership-pairing
+check (`workOrders.service.ts`) only rejects a *genuine* mismatch — a
+`clientId` that conflicts with a vehicle's own *already-set* `client_id`.
+If the vehicle has no owner at all, any submitted `clientId` is accepted
+as-is, and nothing writes back to `vehicles.client_id`. This was a
+deliberate design choice, not an oversight: "the customer identified
+themselves for this one job" is common and shouldn't force an edit to the
+vehicle master record just to record it. The same reasoning is mirrored in
+`work_order_form_screen.dart`'s field-sync logic — selecting a client
+while a client-less vehicle is already picked doesn't clear the vehicle
+selection (it only would if the vehicle had a *different set* owner), and
+selecting a client-less vehicle doesn't clear an already-selected client.
+
+**Four `JOIN clients` had to become `LEFT JOIN`, found by grepping every
+`JOIN clients` in the backend, not by waiting for a bug report:**
+`workOrders.service.ts` (list + detail), `workOrders.pdf.ts`,
+`vehicles.service.ts`'s `searchVehicles`, and `search.service.ts`'s
+order-number lookup. An inner join on a now-optional FK doesn't error —
+it just silently drops every row where the join target is `NULL`, which
+here would have meant every walk-in vehicle/work order quietly vanishing
+from search results, lists, and the printed PDF the moment this shipped,
+with no exception or log line pointing at why. Any future query joining
+`work_orders`/`vehicles` to `clients` needs the same `LEFT JOIN`, not the
+habitual `JOIN` — this is now a permanently optional relationship, not an
+occasionally-null one.
+
+**Frontend fallback display: "Walk-in Customer" / "Kayıtsız Müşteri",
+not a blank or a raw UUID.** `WorkOrder.clientId`/`clientName` and
+`Vehicle.clientId` are all `String?` now; every display site that used to
+assume a client always exists (`clientLabel(order.clientName ??
+order.clientId)`) would otherwise have either shown a raw UUID or, if
+`clientId` itself is also null, hit a non-nullable-parameter type error.
+Fixed with an explicit final fallback (`?? l.walkInCustomer`) at each of
+the three call sites (work-orders list, detail panel, work order form's
+edit-mode header) plus the PDF's own English-language equivalent (the PDF
+has no l10n system at all — every label on it, e.g. "CLIENT"/"VEHICLE", is
+hardcoded English regardless of the shop's locale, so "Walk-in Customer"
+matches that existing convention rather than being translated).
+
 ### work_orders.service_date — a plain DATE string end-to-end, never a Date/DateTime object (v0.16.10)
 
 `service_date` (`db/init/015_work_order_service_date.sql`) is the

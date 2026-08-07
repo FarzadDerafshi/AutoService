@@ -102,9 +102,11 @@ export async function listWorkOrders(db: PoolClient, filters: WorkOrderFilters, 
 
   params.push(pagination.pageSize, pagination.offset);
   const { rows } = await db.query(
+    // LEFT JOIN clients — a walk-in work order has no client_id at all,
+    // and an INNER JOIN would silently drop it from the list.
     `SELECT wo.*, c.full_name AS client_name, v.license_plate AS vehicle_plate, v.make AS vehicle_make, v.model AS vehicle_model
      FROM work_orders wo
-     JOIN clients c ON c.id = wo.client_id
+     LEFT JOIN clients c ON c.id = wo.client_id
      JOIN vehicles v ON v.id = wo.vehicle_id
      ${where}
      ORDER BY wo.service_date DESC, wo.created_at DESC
@@ -127,13 +129,14 @@ export async function getWorkOrderById(db: PoolClient, id: string) {
   // fields the list endpoint returns. Without the JOIN the detail view only
   // receives raw UUIDs and displays them instead of human-readable values.
   const { rows } = await db.query(
+    // LEFT JOIN clients — see the same note in listWorkOrders above.
     `SELECT wo.*,
             c.full_name        AS client_name,
             v.license_plate    AS vehicle_plate,
             v.make             AS vehicle_make,
             v.model            AS vehicle_model
      FROM   work_orders wo
-     JOIN   clients  c ON c.id = wo.client_id
+     LEFT JOIN clients  c ON c.id = wo.client_id
      JOIN   vehicles v ON v.id = wo.vehicle_id
      WHERE  wo.id = $1 AND ${WO_SHOP_SCOPE}`,
     [id]
@@ -144,29 +147,39 @@ export async function getWorkOrderById(db: PoolClient, id: string) {
 }
 
 export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInput, createdBy: string) {
-  // Verify the referenced client/vehicle actually belong to this shop before
-  // creating a work order against them — otherwise a caller could pass another
-  // shop's id and (a) attach their own work order to someone else's records, or
-  // (b) via the mileage-sync UPDATE below, write into another shop's vehicle row.
-  const { rows: ownedRows } = await db.query(
-    `SELECT
-       EXISTS(SELECT 1 FROM clients  WHERE id = $1 AND ${SHOP_SCOPE}) AS client_owned,
-       EXISTS(SELECT 1 FROM vehicles WHERE id = $2 AND ${SHOP_SCOPE}) AS vehicle_owned`,
-    [input.clientId, input.vehicleId]
+  // Verify the referenced client (if any) and vehicle actually belong to
+  // this shop before creating a work order against them — otherwise a
+  // caller could pass another shop's id and (a) attach their own work
+  // order to someone else's records, or (b) via the mileage-sync UPDATE
+  // below, write into another shop's vehicle row. clientId is optional —
+  // a walk-in job can be opened against a vehicle with no linked client
+  // at all — so this check only runs when one was actually submitted.
+  const { rows: vehicleRows } = await db.query(
+    `SELECT client_id, EXISTS(SELECT 1 FROM vehicles WHERE id = $1 AND ${SHOP_SCOPE}) AS owned
+     FROM vehicles WHERE id = $1`,
+    [input.vehicleId]
   );
-  if (!ownedRows[0].client_owned) throw new NotFoundError("Client not found");
-  if (!ownedRows[0].vehicle_owned) throw new NotFoundError("Vehicle not found");
+  if (!vehicleRows[0]?.owned) throw new NotFoundError("Vehicle not found");
 
-  // The two ownership checks above don't verify the pair belongs together —
-  // a vehicle owned by a *different* client in the same shop would otherwise
-  // slip through. This matters more now that the frontend's vehicle-search
-  // Autocomplete can auto-fill the owner (see DECISIONS.md's master-data
-  // search-autocomplete pattern): if that client/vehicle sync ever drifts
-  // (stale state, a future client-only edit flow, a direct API call), this
-  // is the backstop that keeps a work order's client and vehicle consistent.
-  const { rows: pairRows } = await db.query(`SELECT client_id FROM vehicles WHERE id = $1`, [input.vehicleId]);
-  if (pairRows[0].client_id !== input.clientId) {
-    throw new ValidationError("Selected vehicle does not belong to the selected client");
+  if (input.clientId) {
+    const { rows: clientRows } = await db.query(
+      `SELECT EXISTS(SELECT 1 FROM clients WHERE id = $1 AND ${SHOP_SCOPE}) AS owned`,
+      [input.clientId]
+    );
+    if (!clientRows[0].owned) throw new NotFoundError("Client not found");
+
+    // Doesn't apply when the vehicle has no client of its own (a walk-in
+    // vehicle can be assigned a client at the order level without that
+    // requiring an edit to the vehicle record itself) — only a genuine
+    // mismatch between two *set* owners is rejected. This matters more now
+    // that the frontend's vehicle-search Autocomplete can auto-fill the
+    // owner (see DECISIONS.md's master-data search-autocomplete pattern):
+    // if that client/vehicle sync ever drifts (stale state, a future
+    // client-only edit flow, a direct API call), this is the backstop that
+    // keeps a work order's client and vehicle consistent.
+    if (vehicleRows[0].client_id && vehicleRows[0].client_id !== input.clientId) {
+      throw new ValidationError("Selected vehicle does not belong to the selected client");
+    }
   }
 
   const { subtotal, taxAmount, grandTotal } = computeTotals(input.items, input.discountAmount, input.taxRate);
@@ -180,7 +193,7 @@ export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInpu
      VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING *`,
     [
-      input.clientId,
+      input.clientId ?? null,
       input.vehicleId,
       input.mileageAtService ?? null,
       subtotal,

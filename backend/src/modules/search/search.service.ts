@@ -35,7 +35,7 @@ export async function searchAll(db: PoolClient, q: string) {
     ? await db.query(
         `SELECT wo.*, c.full_name AS client_name, v.license_plate AS vehicle_plate
          FROM work_orders wo
-         JOIN clients c ON c.id = wo.client_id
+         LEFT JOIN clients c ON c.id = wo.client_id
          JOIN vehicles v ON v.id = wo.vehicle_id
          WHERE wo.order_no = $1 AND wo.shop_id = current_setting('app.current_shop_id')::uuid
          LIMIT $2`,

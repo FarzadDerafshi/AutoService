@@ -388,6 +388,18 @@ abstract class AppLocalizations {
   /// **'Owner'**
   String get owner;
 
+  /// No description provided for @ownerOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner (optional)'**
+  String get ownerOptional;
+
+  /// No description provided for @walkInCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in Customer'**
+  String get walkInCustomer;
+
   /// No description provided for @selectAnOwner.
   ///
   /// In en, this message translates to:
