@@ -682,6 +682,12 @@ abstract class AppLocalizations {
   /// **'Add at least one line item'**
   String get addAtLeastOneLineItem;
 
+  /// No description provided for @serviceDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Date'**
+  String get serviceDateLabel;
+
   /// No description provided for @mileageAtServiceLabel.
   ///
   /// In en, this message translates to:

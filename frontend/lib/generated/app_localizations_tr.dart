@@ -320,6 +320,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addAtLeastOneLineItem => 'En az bir kalem ekleyin';
 
   @override
+  String get serviceDateLabel => 'Servis Tarihi';
+
+  @override
   String get mileageAtServiceLabel => 'Servis kilometresi (km)';
 
   @override
@@ -1002,6 +1005,9 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
 
   @override
   String get addAtLeastOneLineItem => 'En az bir kalem ekleyin';
+
+  @override
+  String get serviceDateLabel => 'Servis Tarihi';
 
   @override
   String get mileageAtServiceLabel => 'Servis kilometresi (km)';

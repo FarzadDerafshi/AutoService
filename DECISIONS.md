@@ -148,6 +148,60 @@ does one extra `SELECT full_name FROM users WHERE id = $1` instead —
 simpler than reasoning about token-shape migration for a field that's
 only ever read in one place.
 
+### work_orders.service_date — a plain DATE string end-to-end, never a Date/DateTime object (v0.16.10)
+
+`service_date` (`db/init/015_work_order_service_date.sql`) is the
+user-facing, backdatable date on a work order — what prints on the slip
+and what drives the work-orders list's sort order. Deliberately separate
+from `created_at`, which stays a pure system audit timestamp (row insert
+time) and is never edited. Two decisions here are worth knowing before
+touching this column or adding another `DATE`-typed one elsewhere:
+
+**The column stays a plain `"YYYY-MM-DD"` string in every layer — Postgres,
+Express JSON, and the Flutter model — never a JS `Date` or Dart
+`DateTime`.** node-postgres's default type parser for `DATE` (OID 1082)
+constructs a JS `Date` from the column's local calendar components, which
+is a real timezone-shift trap for a value that's a calendar date with no
+time component: round-tripping it through a `Date`/`DateTime` object
+anywhere in the stack means picking a timezone to interpret it in, and a
+plain date has no correct one. Fixed by registering a custom type parser
+in `config/db.ts` (next to the existing `NUMERIC` override) that returns
+the raw string unchanged:
+```ts
+const DATE_OID = 1082;
+types.setTypeParser(DATE_OID, (value: string) => value);
+```
+The Zod schema validates it as a string (`/^\d{4}-\d{2}-\d{2}$/`), the
+Flutter `WorkOrder` model stores it as `String serviceDate` (not
+`DateTime`), and `frontend/lib/core/utils/date_formatter.dart`'s helpers
+do all display/picker-seeding work via string splitting or a
+component-wise `DateTime(y, m, d)` construction — never
+`DateTime.parse`, which treats a bare date string as UTC and can silently
+land on the wrong calendar day once anything downstream calls
+`.toLocal()` on it.
+
+**`serviceDate` is a *required* field on `createWorkOrderSchema`, with no
+server-side default.** The natural-looking alternative —
+`.default(() => new Date().toISOString().slice(0, 10))` — would compute
+"today" using the *server's* clock and timezone, not the shop's. This app
+is Turkey-only (UTC+3); the backend container almost certainly runs in
+UTC regardless of host timezone. Any order created between local midnight
+and 3am would silently get dated "yesterday" by that default — a subtle,
+narrow-window bug that's exactly the kind that ships unnoticed and then
+looks like data corruption months later. Instead, the frontend — which
+actually knows the device's local date — always sends `serviceDate`
+explicitly (`work_order_form_screen.dart` seeds it via `todayIso()` on a
+new form). The DB column's own `DEFAULT CURRENT_DATE` is left in place as
+a fallback purely for a direct-SQL insert that bypasses the API entirely,
+not as the primary path.
+
+**List sort order changed from `created_at DESC` to `service_date DESC,
+created_at DESC`.** Not optional once the list displays this date instead
+of the order number (see CHANGELOG v0.16.10): without the sort change, a
+backdated entry would still appear at the top of the list (most recently
+inserted) while showing an old date — visually contradicting itself and
+defeating the reason backdating exists.
+
 ### Schema changes on a live dev database — apply the new `db/init` file directly, don't reset the volume (v0.15.0)
 `db/init/*.sql` files only run automatically on a brand-new `pgdata` volume
 (Postgres's own init-script behavior) — they do **not** re-run against an

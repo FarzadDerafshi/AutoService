@@ -319,6 +319,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addAtLeastOneLineItem => 'Add at least one line item';
 
   @override
+  String get serviceDateLabel => 'Service Date';
+
+  @override
   String get mileageAtServiceLabel => 'Mileage at service (km)';
 
   @override
@@ -1001,6 +1004,9 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
 
   @override
   String get addAtLeastOneLineItem => 'Add at least one line item';
+
+  @override
+  String get serviceDateLabel => 'Service Date';
 
   @override
   String get mileageAtServiceLabel => 'Mileage at service (km)';

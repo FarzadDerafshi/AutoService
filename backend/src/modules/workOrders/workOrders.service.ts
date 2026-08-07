@@ -107,7 +107,7 @@ export async function listWorkOrders(db: PoolClient, filters: WorkOrderFilters, 
      JOIN clients c ON c.id = wo.client_id
      JOIN vehicles v ON v.id = wo.vehicle_id
      ${where}
-     ORDER BY wo.created_at DESC
+     ORDER BY wo.service_date DESC, wo.created_at DESC
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params
   );
@@ -176,8 +176,8 @@ export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInpu
   } = await db.query(
     `INSERT INTO work_orders
        (shop_id, client_id, vehicle_id, mileage_at_service, subtotal,
-        discount_amount, tax_rate, tax_amount, grand_total, notes, created_by)
-     VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        discount_amount, tax_rate, tax_amount, grand_total, notes, created_by, service_date)
+     VALUES (current_setting('app.current_shop_id')::uuid, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING *`,
     [
       input.clientId,
@@ -190,6 +190,7 @@ export async function createWorkOrder(db: PoolClient, input: CreateWorkOrderInpu
       grandTotal,
       input.notes || null,
       createdBy,
+      input.serviceDate,
     ]
   );
 
@@ -239,9 +240,20 @@ export async function updateWorkOrder(db: PoolClient, id: string, input: UpdateW
     `UPDATE work_orders
      SET mileage_at_service = COALESCE($1, mileage_at_service),
          subtotal = $2, discount_amount = $3, tax_rate = $4, tax_amount = $5, grand_total = $6,
-         notes = COALESCE($7, notes)
-     WHERE id = $8 AND ${SHOP_SCOPE}`,
-    [input.mileageAtService ?? null, subtotal, discountAmount, taxRate, taxAmount, grandTotal, input.notes ?? null, id]
+         notes = COALESCE($7, notes),
+         service_date = COALESCE($8, service_date)
+     WHERE id = $9 AND ${SHOP_SCOPE}`,
+    [
+      input.mileageAtService ?? null,
+      subtotal,
+      discountAmount,
+      taxRate,
+      taxAmount,
+      grandTotal,
+      input.notes ?? null,
+      input.serviceDate ?? null,
+      id,
+    ]
   );
 
   if (input.mileageAtService) {

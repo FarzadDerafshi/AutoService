@@ -19,7 +19,7 @@ interface PdfWorkOrder {
   tax_amount: number;
   grand_total: number;
   notes: string | null;
-  created_at: Date;
+  service_date: string;
   shop_name: string;
   shop_address: string | null;
   shop_phone: string | null;
@@ -42,6 +42,14 @@ interface PdfItem {
 
 function money(value: number) {
   return value.toFixed(2);
+}
+
+// service_date arrives as a plain "YYYY-MM-DD" string (see config/db.ts's
+// DATE type-parser override) — reformatted by string manipulation, not a
+// Date object, so there's no timezone conversion to get wrong here.
+function formatDMY(isoDate: string) {
+  const [y, m, d] = isoDate.split("-");
+  return `${d}.${m}.${y}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,7 +115,7 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
   const { rows } = await db.query<PdfWorkOrder>(
     `SELECT wo.order_no, wo.status, wo.payment_method, wo.mileage_at_service,
             wo.subtotal, wo.discount_amount, wo.tax_rate, wo.tax_amount, wo.grand_total,
-            wo.notes, wo.created_at,
+            wo.notes, wo.service_date,
             s.name AS shop_name, s.address AS shop_address, s.phone AS shop_phone,
             s.tax_id AS shop_tax_id, s.tax_office AS shop_tax_office, s.logo_path AS shop_logo_path,
             c.full_name AS client_name, c.phone AS client_phone,
@@ -174,7 +182,7 @@ export async function renderWorkOrderPdf(db: PoolClient, workOrderId: string, re
   const rightColX = RIGHT - rightColWidth;
   doc.font(FONT).fontSize(8.5).fillColor(COLORS.faint).text("WORK ORDER", rightColX, headerTop, { width: rightColWidth, align: "right", characterSpacing: 0.6 });
   doc.font(FONT_BOLD_NAME).fontSize(27).fillColor(COLORS.ink).text(`#${order.order_no}`, rightColX, headerTop + 11, { width: rightColWidth, align: "right" });
-  doc.font(FONT).fontSize(9).fillColor(COLORS.sub).text(order.created_at.toDateString(), rightColX, headerTop + 45, { width: rightColWidth, align: "right" });
+  doc.font(FONT).fontSize(9).fillColor(COLORS.sub).text(formatDMY(order.service_date), rightColX, headerTop + 45, { width: rightColWidth, align: "right" });
 
   const statusInfo = statusStyleFor(order.status);
   const statusText = order.payment_method ? `${statusInfo.label} · ${order.payment_method.toUpperCase()}` : statusInfo.label;

@@ -108,6 +108,7 @@
   "selectAVehicle": "Bir araç seçin",
   "selectClientAndVehicle": "Bir müşteri ve araç seçin",
   "addAtLeastOneLineItem": "En az bir kalem ekleyin",
+  "serviceDateLabel": "Servis Tarihi",
   "mileageAtServiceLabel": "Servis kilometresi (km)",
   "fromCatalog": "Katalogdan seç",
   "customLineItem": "Özel",

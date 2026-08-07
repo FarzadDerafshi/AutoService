@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+// Plain "YYYY-MM-DD" — validated as a string, never coerced into a JS Date.
+// See config/db.ts's DATE type-parser override for why this column stays a
+// string end-to-end rather than round-tripping through Date objects.
+const dateOnlySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
+
 export const workOrderStatusSchema = z.enum(["draft", "completed", "paid"]);
 export const paymentMethodSchema = z.enum(["cash", "card", "bank_transfer", "other"]);
 
@@ -18,6 +23,14 @@ export const createWorkOrderSchema = z.object({
   discountAmount: z.coerce.number().min(0).default(0),
   taxRate: z.coerce.number().min(0).max(100).default(0),
   notes: z.string().trim().max(4000).optional(),
+  // Required, not defaulted here: "today" depends on the caller's local
+  // timezone (this app is Turkey-only, UTC+3), and the server's own clock
+  // — likely UTC inside the Docker container regardless of host timezone —
+  // would silently misdate anything created between local midnight and 3am.
+  // The frontend always sends its own device-local date; the DB column's
+  // own DEFAULT CURRENT_DATE (see db/init/015_*.sql) is the fallback for
+  // any direct-SQL/manual insert that bypasses the API entirely.
+  serviceDate: dateOnlySchema,
 });
 
 export const updateWorkOrderSchema = z.object({
@@ -26,6 +39,7 @@ export const updateWorkOrderSchema = z.object({
   discountAmount: z.coerce.number().min(0).optional(),
   taxRate: z.coerce.number().min(0).max(100).optional(),
   notes: z.string().trim().max(4000).optional(),
+  serviceDate: dateOnlySchema.optional(),
 });
 
 export const updateStatusSchema = z.object({

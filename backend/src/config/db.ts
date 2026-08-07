@@ -9,6 +9,14 @@ import { logger } from "../utils/logger";
 const NUMERIC_OID = 1700;
 types.setTypeParser(NUMERIC_OID, (value: string) => parseFloat(value));
 
+// DATE columns (work_orders.service_date) come back from pg as a JS Date
+// by default, constructed from local server time — a real timezone-shift
+// risk for a plain calendar date with no time component. Keep it as the
+// raw "YYYY-MM-DD" string instead; nothing downstream (JSON response,
+// SQL writes) needs it as a Date object.
+const DATE_OID = 1082;
+types.setTypeParser(DATE_OID, (value: string) => value);
+
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,
   max: 10,

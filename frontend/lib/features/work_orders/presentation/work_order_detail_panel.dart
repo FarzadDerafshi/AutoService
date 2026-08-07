@@ -6,6 +6,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/config/feature_flags.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../core/widgets/pit_stop_stepper.dart';
 import '../../../generated/app_localizations.dart';
@@ -265,11 +266,7 @@ class _DetailContent extends ConsumerWidget {
                   ),
                   if (order.mileageAtService != null)
                     Text(l.mileageAtService(order.mileageAtService!)),
-                  Text(
-                    l.dateLabel(
-                      order.createdAt.toLocal().toString().split('.').first,
-                    ),
-                  ),
+                  Text(l.dateLabel(formatDateDMY(order.serviceDate))),
                 ],
               ),
             ),

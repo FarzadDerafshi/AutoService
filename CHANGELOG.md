@@ -5,6 +5,67 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.10] — 2026-08-07  *(Editable Service Date — Backdated Slips, List Shows Date Instead of Order #)*
+
+### Added
+- **Work orders now carry an editable "Servis Tarihi" (service date),
+  settable on creation and while editing a draft — including backdating
+  to enter a repair that happened before today.** Requested by the pilot
+  user, who needed to log older jobs accurately rather than have every
+  slip dated "today."
+  - New `work_orders.service_date` column (`DATE`, `db/init/015_*.sql`) —
+    deliberately separate from `created_at`, which stays a pure,
+    never-edited system audit timestamp (when the row was inserted).
+    `service_date` is the business-meaningful date: what prints on the
+    slip, what the customer sees, what the shop actually backdates.
+  - Date field placed right above "Servis kilometresi (km)" in the work
+    order form (both create and edit), a standard Material date picker
+    capped at today (`lastDate: DateTime.now()`) — no future-dated
+    service records.
+  - **The printed PDF and the detail panel's "Tarih" line now show
+    `service_date`, not `created_at`** — both previously displayed the
+    system insert timestamp as a stand-in for "the date," which is
+    exactly the gap this feature closes. A backdated slip now actually
+    prints the backdated date.
+  - **The work-orders list now sorts by `service_date DESC` instead of
+    `created_at DESC`.** Necessary, not optional: without this, a
+    backdated entry would still appear at the top of the list (newest
+    inserted) while displaying an old date next to it — defeating the
+    entire point of backdating. Verified: creating a today-dated order
+    after an already-backdated one still shows the backdated one lower
+    in the list, correctly.
+  _Files: `db/init/015_work_order_service_date.sql`,
+  `backend/src/config/db.ts`,
+  `backend/src/modules/workOrders/workOrders.{schema,service,pdf}.ts`,
+  `frontend/lib/core/utils/date_formatter.dart` (new),
+  `frontend/lib/features/work_orders/data/work_order_model.dart`,
+  `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+### Changed
+- **The work-orders list no longer shows the `#N` order number — it shows
+  the client name as the title and the service date alongside the plate
+  in the subtitle instead** (per the pilot user's request). The order
+  number itself is untouched everywhere else (detail panel title, edit
+  title, the printed PDF, the rollback audit trail) — this is a display
+  change on one screen, not a removal of the underlying `order_no`
+  column or its other uses.
+  _File: `frontend/lib/features/work_orders/presentation/work_orders_master_list.dart`_
+
+### Fixed / avoided
+- **A server-timezone default would have silently misdated orders
+  created between local midnight and 3am.** This app is Turkey-only
+  (UTC+3); the backend container likely runs in UTC regardless of host
+  timezone. `serviceDate` is therefore a *required* field on create — no
+  server-side "default to today" — so the frontend, which actually knows
+  the device's local date, always supplies it explicitly. See
+  DECISIONS.md for the full reasoning and the matching DATE type-parser
+  decision that keeps this column a plain string end-to-end rather than
+  round-tripping through JS/Dart `Date`/`DateTime` objects (a second,
+  related timezone-shift trap this avoids by construction).
+
+---
+
 ## [0.16.9] — 2026-08-07  *(Fix — Quick-Create Sheets' Save Button Unreachable on Short Screens)*
 
 ### Fixed

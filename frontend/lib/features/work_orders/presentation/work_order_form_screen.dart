@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/config/feature_flags.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../core/widgets/search_autocomplete_field.dart';
 import '../../../generated/app_localizations.dart';
 import '../../catalog/application/catalog_provider.dart';
@@ -64,6 +65,8 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
       GlobalKey<SearchAutocompleteFieldState<CatalogItem>>();
   Client? _selectedClient;
   Vehicle? _selectedVehicle;
+  late String _serviceDate;
+  late final TextEditingController _serviceDateController;
   late final TextEditingController _mileage;
   late final TextEditingController _discount;
   late final TextEditingController _taxRate;
@@ -83,6 +86,10 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   void initState() {
     super.initState();
     final e = widget.existing;
+    _serviceDate = e?.serviceDate ?? todayIso();
+    _serviceDateController = TextEditingController(
+      text: formatDateDMY(_serviceDate),
+    );
     _mileage = TextEditingController(
       text: e?.mileageAtService?.toString() ?? '',
     );
@@ -120,6 +127,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
 
   @override
   void dispose() {
+    _serviceDateController.dispose();
     _mileage.dispose();
     _discount.dispose();
     _taxRate.dispose();
@@ -151,6 +159,21 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
         _items.add(row);
       }
       _dirty = true;
+    });
+  }
+
+  Future<void> _pickServiceDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: isoToDate(_serviceDate),
+      firstDate: DateTime(2015),
+      lastDate: DateTime.now(),
+    );
+    if (picked == null) return;
+    setState(() {
+      _dirty = true;
+      _serviceDate = dateToIso(picked);
+      _serviceDateController.text = formatDateDMY(_serviceDate);
     });
   }
 
@@ -199,6 +222,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
           'discountAmount': _discountValue,
           'taxRate': _taxRateValue,
           'notes': _notes.text.trim(),
+          'serviceDate': _serviceDate,
         });
         ref.invalidate(workOrderDetailProvider(widget.existing!.id));
       } else {
@@ -211,6 +235,7 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
           'discountAmount': _discountValue,
           'taxRate': _taxRateValue,
           'notes': _notes.text.trim(),
+          'serviceDate': _serviceDate,
         });
       }
       ref.invalidate(workOrdersListProvider);
@@ -396,6 +421,16 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
+              TextFormField(
+                readOnly: true,
+                onTap: _pickServiceDate,
+                controller: _serviceDateController,
+                decoration: InputDecoration(
+                  labelText: l10n.serviceDateLabel,
+                  suffixIcon: const Icon(Icons.calendar_today, size: 18),
+                ),
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _mileage,
                 decoration: InputDecoration(
