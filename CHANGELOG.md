@@ -5,6 +5,49 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.9] — 2026-08-07  *(Fix — Quick-Create Sheets' Save Button Unreachable on Short Screens)*
+
+### Fixed
+- **The Vehicle/Client/Catalog quick-create sheets (opened inline from any
+  master-data search field — most commonly the Work Order form's "+ Add
+  new vehicle" flow) could push their Save button off the bottom of the
+  screen with no way to reach it**, reported by the pilot user: creating a
+  new car while building a work order left Save below the fold, and the
+  sheet had no scrolling. Root cause: all three sheets
+  (`vehicle_form_sheet.dart`, `client_form_sheet.dart`,
+  `catalog_item_form_sheet.dart`) rendered their fields in a plain
+  `Column` with no scrollable ancestor — `showModalBottomSheet`'s
+  `isScrollControlled: true` only lets the sheet *grow* up to the screen
+  height, it doesn't make oversized *content* scrollable. On any
+  viewport short enough that the field count didn't fit (smaller
+  monitors, tablets, phones — and worse with the on-screen keyboard
+  open), the Column simply overflowed past the visible area with the
+  Save button unreachable. The vehicle sheet was the worst case (10
+  fields + a completeness bar) and the one actually hit, but all three
+  had the identical structural bug.
+
+  Fixed by wrapping each sheet's `Form` in a `SingleChildScrollView`
+  (kept the existing keyboard-avoidance `viewInsets.bottom` padding on
+  the outer `Padding`, moved the fixed 20px content padding onto the
+  scroll view itself) — content taller than the available space now
+  scrolls instead of clipping. Verified by reproducing the exact
+  reported flow (Work Order form → quick-create client → quick-create
+  vehicle) against a viewport short enough that the fully-filled vehicle
+  sheet's Save button sat below the fold, confirming it scrolls into
+  reach and the save completes correctly.
+
+  Audited every other dialog/bottom sheet in the app for the same
+  structural risk (team invite dialog, payment-method picker, delete/
+  rollback confirmations, the unsaved-changes dialog) — all are short,
+  fixed-content dialogs, not at risk the way a growing form is. No
+  changes needed there, but worth knowing this class of bug was checked
+  project-wide, not just patched where it was reported.
+  _Files: `frontend/lib/features/vehicles/presentation/vehicle_form_sheet.dart`,
+  `frontend/lib/features/clients/presentation/client_form_sheet.dart`,
+  `frontend/lib/features/catalog/presentation/catalog_item_form_sheet.dart`_
+
+---
+
 ## [0.16.8] — 2026-08-07  *(Owner/Manager Rollback — Revert Paid/Completed Orders Back to Draft)*
 
 ### Added

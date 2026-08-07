@@ -35,7 +35,12 @@ Future<VehicleFormResult?> showVehicleFormSheet(
 }
 
 class _VehicleFormSheet extends ConsumerStatefulWidget {
-  const _VehicleFormSheet({this.existing, this.presetClientId, this.presetClient, this.initialPlate});
+  const _VehicleFormSheet({
+    this.existing,
+    this.presetClientId,
+    this.presetClient,
+    this.initialPlate,
+  });
   final Vehicle? existing;
   final String? presetClientId;
   final Client? presetClient;
@@ -77,14 +82,26 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
     }
     _make = e?.make ?? '';
     _model = e?.model ?? '';
-    _plate = TextEditingController(text: e?.licensePlate ?? widget.initialPlate ?? '');
+    _plate = TextEditingController(
+      text: e?.licensePlate ?? widget.initialPlate ?? '',
+    );
     _engineType = TextEditingController(text: e?.engineType ?? '');
     _year = TextEditingController(text: e?.year?.toString() ?? '');
-    _mileage = TextEditingController(text: e?.currentMileageKm.toString() ?? '');
+    _mileage = TextEditingController(
+      text: e?.currentMileageKm.toString() ?? '',
+    );
     _chassisNo = TextEditingController(text: e?.chassisNo ?? '');
     _engineNo = TextEditingController(text: e?.engineNo ?? '');
     _color = TextEditingController(text: e?.color ?? '');
-    for (final c in [_plate, _engineType, _year, _mileage, _chassisNo, _engineNo, _color]) {
+    for (final c in [
+      _plate,
+      _engineType,
+      _year,
+      _mileage,
+      _chassisNo,
+      _engineNo,
+      _color,
+    ]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -103,7 +120,9 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
 
   Future<void> _loadOwnerName() async {
     try {
-      final client = await ref.read(clientsRepositoryProvider).getById(_clientId!);
+      final client = await ref
+          .read(clientsRepositoryProvider)
+          .getById(_clientId!);
       if (!mounted) return;
       setState(() => _selectedClient = client);
       _ownerFieldKey.currentState?.setText(client.fullName);
@@ -115,17 +134,17 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
   }
 
   List<(String, bool)> _completenessFields(AppLocalizations l) => [
-        (l.owner, _clientId != null),
-        (l.licensePlate, _plate.text.trim().isNotEmpty),
-        (l.make, _make.trim().isNotEmpty),
-        (l.model, _model.trim().isNotEmpty),
-        (l.engineLabel, _engineType.text.trim().isNotEmpty),
-        (l.yearFieldLabel, _year.text.trim().isNotEmpty),
-        (l.currentMileageKmLabel, _mileage.text.trim().isNotEmpty),
-        (l.chassisNoLabel, _chassisNo.text.trim().isNotEmpty),
-        (l.engineNoLabel, _engineNo.text.trim().isNotEmpty),
-        (l.colorLabel, _color.text.trim().isNotEmpty),
-      ];
+    (l.owner, _clientId != null),
+    (l.licensePlate, _plate.text.trim().isNotEmpty),
+    (l.make, _make.trim().isNotEmpty),
+    (l.model, _model.trim().isNotEmpty),
+    (l.engineLabel, _engineType.text.trim().isNotEmpty),
+    (l.yearFieldLabel, _year.text.trim().isNotEmpty),
+    (l.currentMileageKmLabel, _mileage.text.trim().isNotEmpty),
+    (l.chassisNoLabel, _chassisNo.text.trim().isNotEmpty),
+    (l.engineNoLabel, _engineNo.text.trim().isNotEmpty),
+    (l.colorLabel, _color.text.trim().isNotEmpty),
+  ];
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
@@ -136,8 +155,10 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
         'make': _make.trim(),
         'model': _model.trim(),
         'engineType': _engineType.text.trim(),
-        if (_year.text.trim().isNotEmpty) 'year': int.tryParse(_year.text.trim()),
-        if (_mileage.text.trim().isNotEmpty) 'currentMileageKm': int.tryParse(_mileage.text.trim()),
+        if (_year.text.trim().isNotEmpty)
+          'year': int.tryParse(_year.text.trim()),
+        if (_mileage.text.trim().isNotEmpty)
+          'currentMileageKm': int.tryParse(_mileage.text.trim()),
         'chassisNo': _chassisNo.text.trim(),
         'engineNo': _engineNo.text.trim(),
         'color': _color.text.trim(),
@@ -151,144 +172,177 @@ class _VehicleFormSheetState extends ConsumerState<_VehicleFormSheet> {
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(widget.existing == null ? l10n.newVehicle : l10n.editVehicle, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 14),
-            ProfileCompletenessBar(fields: _completenessFields(l10n), title: l10n.garageCompleteness),
-            const SizedBox(height: 16),
-            SearchAutocompleteField<Client>(
-              key: _ownerFieldKey,
-              labelText: l10n.owner,
-              initialText: _selectedClient?.fullName ?? '',
-              search: (q) => ref.read(clientsRepositoryProvider).search(q),
-              displayStringForOption: (c) => c.fullName,
-              subtitleForOption: (c) =>
-                  [c.phone, c.email].where((s) => s != null && s.isNotEmpty).join(' · '),
-              createOptionLabel: l10n.addNewClientOption,
-              onCreateNew: (typedText) async {
-                final result = await showClientFormSheet(context, initialFullName: typedText);
-                if (result == null) return null;
-                final created = await ref.read(clientsRepositoryProvider).create(result.data);
-                ref.invalidate(clientsListProvider);
-                return created;
-              },
-              onSelected: (client) => setState(() {
-                _selectedClient = client;
-                _clientId = client.id;
-              }),
-              validator: (_) => _clientId == null ? l10n.selectAnOwner : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _plate,
-              decoration: InputDecoration(labelText: l10n.licensePlate, hintText: l10n.licensePlateHint),
-              textCapitalization: TextCapitalization.characters,
-              style: AppFonts.mono(const TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.6)),
-              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: SearchAutocompleteField<String>(
-                    key: _makeFieldKey,
-                    labelText: l10n.make,
-                    initialText: _make,
-                    search: (q) => ref.read(vehiclesRepositoryProvider).searchMakes(q),
-                    displayStringForOption: (s) => s,
-                    createOptionLabel: l10n.useTypedTextOption,
-                    onCreateNew: (typedText) async => typedText,
-                    onChanged: (text) => setState(() => _make = text),
-                    onSelected: (value) => setState(() {
-                      _make = value;
-                      // A model typed for the old make is likely stale once
-                      // the make changes — clear it, same as the work-order
-                      // form clears vehicle when its client changes.
-                      _model = '';
-                      _modelFieldKey.currentState?.clear();
-                    }),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                widget.existing == null ? l10n.newVehicle : l10n.editVehicle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 14),
+              ProfileCompletenessBar(
+                fields: _completenessFields(l10n),
+                title: l10n.garageCompleteness,
+              ),
+              const SizedBox(height: 16),
+              SearchAutocompleteField<Client>(
+                key: _ownerFieldKey,
+                labelText: l10n.owner,
+                initialText: _selectedClient?.fullName ?? '',
+                search: (q) => ref.read(clientsRepositoryProvider).search(q),
+                displayStringForOption: (c) => c.fullName,
+                subtitleForOption: (c) => [
+                  c.phone,
+                  c.email,
+                ].where((s) => s != null && s.isNotEmpty).join(' · '),
+                createOptionLabel: l10n.addNewClientOption,
+                onCreateNew: (typedText) async {
+                  final result = await showClientFormSheet(
+                    context,
+                    initialFullName: typedText,
+                  );
+                  if (result == null) return null;
+                  final created = await ref
+                      .read(clientsRepositoryProvider)
+                      .create(result.data);
+                  ref.invalidate(clientsListProvider);
+                  return created;
+                },
+                onSelected: (client) => setState(() {
+                  _selectedClient = client;
+                  _clientId = client.id;
+                }),
+                validator: (_) => _clientId == null ? l10n.selectAnOwner : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _plate,
+                decoration: InputDecoration(
+                  labelText: l10n.licensePlate,
+                  hintText: l10n.licensePlateHint,
+                ),
+                textCapitalization: TextCapitalization.characters,
+                style: AppFonts.mono(
+                  const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SearchAutocompleteField<String>(
-                    key: _modelFieldKey,
-                    labelText: l10n.model,
-                    initialText: _model,
-                    search: (q) => ref.read(vehiclesRepositoryProvider).searchModels(q, make: _make.isEmpty ? null : _make),
-                    displayStringForOption: (s) => s,
-                    createOptionLabel: l10n.useTypedTextOption,
-                    onCreateNew: (typedText) async => typedText,
-                    onChanged: (text) => setState(() => _model = text),
-                    onSelected: (value) => setState(() => _model = value),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? l10n.required : null,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: SearchAutocompleteField<String>(
+                      key: _makeFieldKey,
+                      labelText: l10n.make,
+                      initialText: _make,
+                      search: (q) =>
+                          ref.read(vehiclesRepositoryProvider).searchMakes(q),
+                      displayStringForOption: (s) => s,
+                      createOptionLabel: l10n.useTypedTextOption,
+                      onCreateNew: (typedText) async => typedText,
+                      onChanged: (text) => setState(() => _make = text),
+                      onSelected: (value) => setState(() {
+                        _make = value;
+                        // A model typed for the old make is likely stale once
+                        // the make changes — clear it, same as the work-order
+                        // form clears vehicle when its client changes.
+                        _model = '';
+                        _modelFieldKey.currentState?.clear();
+                      }),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _engineType,
-                    decoration: InputDecoration(labelText: l10n.engineLabel),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SearchAutocompleteField<String>(
+                      key: _modelFieldKey,
+                      labelText: l10n.model,
+                      initialText: _model,
+                      search: (q) => ref
+                          .read(vehiclesRepositoryProvider)
+                          .searchModels(q, make: _make.isEmpty ? null : _make),
+                      displayStringForOption: (s) => s,
+                      createOptionLabel: l10n.useTypedTextOption,
+                      onCreateNew: (typedText) async => typedText,
+                      onChanged: (text) => setState(() => _model = text),
+                      onSelected: (value) => setState(() => _model = value),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _year,
-                    decoration: InputDecoration(labelText: l10n.yearFieldLabel),
-                    keyboardType: TextInputType.number,
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _engineType,
+                      decoration: InputDecoration(labelText: l10n.engineLabel),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _mileage,
-              decoration: InputDecoration(labelText: l10n.currentMileageKmLabel),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _chassisNo,
-                    decoration: InputDecoration(labelText: l10n.chassisNoLabel),
-                    textCapitalization: TextCapitalization.characters,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _year,
+                      decoration: InputDecoration(
+                        labelText: l10n.yearFieldLabel,
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _mileage,
+                decoration: InputDecoration(
+                  labelText: l10n.currentMileageKmLabel,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _engineNo,
-                    decoration: InputDecoration(labelText: l10n.engineNoLabel),
-                    textCapitalization: TextCapitalization.characters,
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _chassisNo,
+                      decoration: InputDecoration(
+                        labelText: l10n.chassisNoLabel,
+                      ),
+                      textCapitalization: TextCapitalization.characters,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _color,
-              decoration: InputDecoration(labelText: l10n.colorLabel),
-            ),
-            const SizedBox(height: 20),
-            FilledButton(onPressed: _submit, child: Text(l10n.save)),
-          ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _engineNo,
+                      decoration: InputDecoration(
+                        labelText: l10n.engineNoLabel,
+                      ),
+                      textCapitalization: TextCapitalization.characters,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _color,
+                decoration: InputDecoration(labelText: l10n.colorLabel),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(onPressed: _submit, child: Text(l10n.save)),
+            ],
+          ),
         ),
       ),
     );

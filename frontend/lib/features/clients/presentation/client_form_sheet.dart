@@ -8,11 +8,16 @@ class ClientFormResult {
   const ClientFormResult(this.data);
 }
 
-Future<ClientFormResult?> showClientFormSheet(BuildContext context, {Client? existing, String? initialFullName}) {
+Future<ClientFormResult?> showClientFormSheet(
+  BuildContext context, {
+  Client? existing,
+  String? initialFullName,
+}) {
   return showModalBottomSheet<ClientFormResult>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => _ClientFormSheet(existing: existing, initialFullName: initialFullName),
+    builder: (context) =>
+        _ClientFormSheet(existing: existing, initialFullName: initialFullName),
   );
 }
 
@@ -37,7 +42,9 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _fullName = TextEditingController(text: e?.fullName ?? widget.initialFullName ?? '');
+    _fullName = TextEditingController(
+      text: e?.fullName ?? widget.initialFullName ?? '',
+    );
     _phone = TextEditingController(text: e?.phone ?? '');
     _email = TextEditingController(text: e?.email ?? '');
     _address = TextEditingController(text: e?.address ?? '');
@@ -58,12 +65,12 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
   }
 
   List<(String, bool)> _completenessFields(AppLocalizations l) => [
-        (l.fullNameLabel, _fullName.text.trim().isNotEmpty),
-        (l.phoneLabel, _phone.text.trim().isNotEmpty),
-        (l.email, _email.text.trim().isNotEmpty),
-        (l.addressLabel, _address.text.trim().isNotEmpty),
-        (l.notes, _notes.text.trim().isNotEmpty),
-      ];
+    (l.fullNameLabel, _fullName.text.trim().isNotEmpty),
+    (l.phoneLabel, _phone.text.trim().isNotEmpty),
+    (l.email, _email.text.trim().isNotEmpty),
+    (l.addressLabel, _address.text.trim().isNotEmpty),
+    (l.notes, _notes.text.trim().isNotEmpty),
+  ];
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
@@ -83,45 +90,66 @@ class _ClientFormSheetState extends State<_ClientFormSheet> {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(widget.existing == null ? l.newClient : l.editClient, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 14),
-            ProfileCompletenessBar(fields: _completenessFields(l), title: l.garageCompleteness),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _fullName,
-              decoration: InputDecoration(labelText: l.fullNameLabel),
-              validator: (v) => (v == null || v.trim().isEmpty) ? l.required : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _phone,
-              decoration: InputDecoration(labelText: l.phoneLabel, hintText: l.phoneHint),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _email,
-              decoration: InputDecoration(labelText: l.email, hintText: l.emailHint),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(controller: _address, decoration: InputDecoration(labelText: l.addressLabel), maxLines: 2),
-            const SizedBox(height: 12),
-            TextFormField(controller: _notes, decoration: InputDecoration(labelText: l.notes), maxLines: 2),
-            const SizedBox(height: 20),
-            FilledButton(onPressed: _submit, child: Text(l.save)),
-          ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                widget.existing == null ? l.newClient : l.editClient,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 14),
+              ProfileCompletenessBar(
+                fields: _completenessFields(l),
+                title: l.garageCompleteness,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fullName,
+                decoration: InputDecoration(labelText: l.fullNameLabel),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? l.required : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _phone,
+                decoration: InputDecoration(
+                  labelText: l.phoneLabel,
+                  hintText: l.phoneHint,
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _email,
+                decoration: InputDecoration(
+                  labelText: l.email,
+                  hintText: l.emailHint,
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _address,
+                decoration: InputDecoration(labelText: l.addressLabel),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _notes,
+                decoration: InputDecoration(labelText: l.notes),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 20),
+              FilledButton(onPressed: _submit, child: Text(l.save)),
+            ],
+          ),
         ),
       ),
     );

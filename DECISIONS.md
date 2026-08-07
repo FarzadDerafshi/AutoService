@@ -966,6 +966,57 @@ add a real endpoint instead of widening the client-side window indefinitely.
 now fully wired to `AppLocalizations`, in both languages and both voice
 tones — see the i18n section above.
 
+### Bottom sheets must wrap their content in `SingleChildScrollView` — standing rule (v0.16.9)
+
+Hit in practice (pilot user report): `vehicle_form_sheet.dart`,
+`client_form_sheet.dart`, and `catalog_item_form_sheet.dart` all rendered
+their `Form` as a plain `Column` with no scrollable ancestor. This is a
+trap specific to `showModalBottomSheet(isScrollControlled: true, ...)`:
+`isScrollControlled` only lets the *sheet* grow up to the screen's height —
+it does nothing to make oversized *content* inside it scrollable. On any
+viewport too short for the field count (a smaller monitor, a tablet, a
+phone, or the same screen with the keyboard open), the Column overflows
+past the visible area and whatever's at the bottom — always the Save
+button, since that's always the last child — becomes physically
+unreachable. No error, no visual warning in a release build; it just
+silently clips.
+
+The vehicle sheet was the one actually hit (10 fields + a
+`ProfileCompletenessBar`, the tallest of the three), but all three sheets
+had the identical structural bug — this is a property of the wrapper
+pattern all master-data quick-create sheets share, not something specific
+to vehicles. Fixed by wrapping each `Form` in a `SingleChildScrollView`:
+
+```dart
+return Padding(
+  padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+  child: SingleChildScrollView(
+    padding: const EdgeInsets.all(20),
+    child: Form(...),
+  ),
+);
+```
+
+Keep the keyboard-avoidance (`viewInsets.bottom`) padding on the *outer*
+`Padding`, not inside the scroll view — that's what makes the whole
+scrollable area shift up correctly when the on-screen keyboard opens,
+rather than getting stuck inside the scroll view's own fixed padding.
+
+**Standing rule: any new `showModalBottomSheet` with form content —
+current or future — must wrap that content in a `SingleChildScrollView`
+from the start**, not added reactively once a field count grows enough to
+overflow on someone's actual device. This class of bug is invisible on a
+developer's own full-height monitor and only shows up on whatever
+smaller screen a real user happens to be on — exactly how this one
+shipped unnoticed across three sheets and multiple field-count increases
+(the vehicle sheet grew from a handful of fields to ten over several
+versions, see the Şasi No./Motor No./Renk addition in v0.15.0) before a
+pilot user actually hit it. Audited every other dialog in the app at the
+same time (team invite dialog, payment-method picker, delete/rollback
+confirmations) — those are short, fixed-content dialogs, not growing
+forms, and aren't at the same risk; no changes needed there, but the
+audit is what confirms this was a targeted fix, not a guess.
+
 ### Master-data search-autocomplete pattern (v0.16.0)
 
 Farzad set a standing architectural/UI-UX standard for every master-data
