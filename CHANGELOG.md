@@ -5,6 +5,43 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.15] — 2026-08-07  *(Inline Catalog Search on Every Work Order Line)*
+
+### Changed
+- **Collapsed three overlapping line-item controls into one, per the pilot
+  user's request.** The work order form used to have a "From catalog"
+  search box above the line-item list, a separate "Custom" button to add a
+  blank free-text row, and each row's own plain (non-searchable)
+  Description field. Now every line's Description field IS the search box
+  — the same search-as-you-type + quick-create `SearchAutocompleteField`
+  already used for client/vehicle pickers elsewhere in this form (see
+  DECISIONS.md's "Master-data search-autocomplete pattern"). Typing
+  searches the catalog and selecting a match auto-fills Quantity, Unit,
+  and Unit Price from it; typing without selecting leaves a plain
+  uncatalogued custom line, exactly like the old "Custom" button did.
+  - The top-of-list "From catalog" field and its `_catalogFieldKey` are
+    gone. The "Custom" button is now "Add line item" ("Satır ekle") and
+    simply appends one more blank row — its own Description field is the
+    entry point for either path.
+  - `addLineItem` replaces the now-unused `customLineItem`/`fromCatalog`
+    l10n keys (removed from all four locale variants).
+  - **Fixed a real stale-widget bug found during QA of this change**: each
+    row's search field is now keyed by the row's own object identity
+    (`ObjectKey(row)`), not its list position. Without this, deleting a
+    row in the middle of the list would leave the rows below it showing
+    stale Description text after the list re-indexed — the same class of
+    bug as the `initialValue`-staleness issue fixed for the Unit field in
+    v0.16.13, but for the description field's Autocomplete-managed text
+    instead of a bare `initialValue`. Verified fixed: deleting the first
+    of two rows leaves the remaining row's own data intact.
+  - Editing an existing work order still round-trips correctly: a
+    previously catalog-linked line still shows the catalog item's name on
+    reopen, and a free-text custom line still shows its typed text.
+  _Files: `frontend/lib/features/work_orders/presentation/work_order_form_screen.dart`,
+  `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`_
+
+---
+
 ## [0.16.14] — 2026-08-07  *(Backfill Line-Item Unit on Pre-Existing Work Orders)*
 
 ### Fixed

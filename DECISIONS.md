@@ -1261,6 +1261,22 @@ filters `is_active = true` since deactivated items (soft-deleted because
 they're referenced by an existing work order — see `deleteCatalogItem`)
 shouldn't be pickable into a *new* one.
 
+**One `SearchAutocompleteField` per repeated row needs a `Key` tied to the
+row's own identity, not its list index (v0.16.15).** The work order form's
+line items each embed their own field (folding the old single top-of-list
+catalog picker into every row — see the v0.16.15 changelog entry). Without
+an explicit `key: ObjectKey(row)`, deleting a row from the middle of the
+list re-indexes the ones below it, and Flutter reuses each remaining
+widget's existing `State` at its new index rather than creating a fresh
+one — silently leaving that row's Autocomplete-managed field text stale
+(showing the *deleted* row's old description). This is the same root
+cause as the `initialValue`-staleness bug fixed for the line-item Unit
+field in v0.16.13, just surfacing through a different field. Rule for any
+future per-row instance of this widget (or any widget relying on
+`initialValue`/`initialText` rather than an externally-owned
+`TextEditingController`): key it by the underlying data object's identity,
+not the row's position in the list.
+
 **Fully rolled out as of v0.16.1**: every master-data picker in the app now
 uses this pattern — `vehicle_form_sheet.dart`'s "owner" field was the last
 static dropdown, converted alongside the Work Order form. It has two

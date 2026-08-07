@@ -331,10 +331,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mileageAtServiceLabel => 'Mileage at service (km)';
 
   @override
-  String get fromCatalog => 'From catalog';
-
-  @override
-  String get customLineItem => 'Custom';
+  String get addLineItem => 'Add line item';
 
   @override
   String addNewClientOption(String name) {
@@ -1024,10 +1021,7 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String get mileageAtServiceLabel => 'Mileage at service (km)';
 
   @override
-  String get fromCatalog => 'From catalog';
-
-  @override
-  String get customLineItem => 'Custom';
+  String get addLineItem => 'Add line item';
 
   @override
   String addNewClientOption(String name) {

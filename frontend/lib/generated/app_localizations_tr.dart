@@ -332,10 +332,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mileageAtServiceLabel => 'Servis kilometresi (km)';
 
   @override
-  String get fromCatalog => 'Katalogdan seç';
-
-  @override
-  String get customLineItem => 'Özel';
+  String get addLineItem => 'Satır ekle';
 
   @override
   String addNewClientOption(String name) {
@@ -1025,10 +1022,7 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String get mileageAtServiceLabel => 'Servis kilometresi (km)';
 
   @override
-  String get fromCatalog => 'Katalogdan seç';
-
-  @override
-  String get customLineItem => 'Özel';
+  String get addLineItem => 'Satır ekle';
 
   @override
   String addNewClientOption(String name) {

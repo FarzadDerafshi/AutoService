@@ -706,17 +706,11 @@ abstract class AppLocalizations {
   /// **'Mileage at service (km)'**
   String get mileageAtServiceLabel;
 
-  /// No description provided for @fromCatalog.
+  /// No description provided for @addLineItem.
   ///
   /// In en, this message translates to:
-  /// **'From catalog'**
-  String get fromCatalog;
-
-  /// No description provided for @customLineItem.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom'**
-  String get customLineItem;
+  /// **'Add line item'**
+  String get addLineItem;
 
   /// No description provided for @addNewClientOption.
   ///

@@ -133,8 +133,7 @@
   "addAtLeastOneLineItem": "Add at least one line item",
   "serviceDateLabel": "Service Date",
   "mileageAtServiceLabel": "Mileage at service (km)",
-  "fromCatalog": "From catalog",
-  "customLineItem": "Custom",
+  "addLineItem": "Add line item",
   "addNewClientOption": "+ Add new client \"{name}\"",
   "@addNewClientOption": {
     "placeholders": { "name": { "type": "String" } }

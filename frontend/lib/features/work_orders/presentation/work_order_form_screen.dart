@@ -77,8 +77,6 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _clientFieldKey = GlobalKey<SearchAutocompleteFieldState<Client>>();
   final _vehicleFieldKey = GlobalKey<SearchAutocompleteFieldState<Vehicle>>();
-  final _catalogFieldKey =
-      GlobalKey<SearchAutocompleteFieldState<CatalogItem>>();
   Client? _selectedClient;
   Vehicle? _selectedVehicle;
   late String _serviceDate;
@@ -155,26 +153,12 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
     super.dispose();
   }
 
-  /// Adds [row] as a new line item — except when the only row present is
-  /// still the untouched blank one a fresh work order always starts with,
-  /// in which case [row] replaces it instead of stacking a second
-  /// (required-but-empty) row the user would otherwise have to delete
-  /// before saving.
   void _addItem(_ItemRow row) {
-    final onlyBlankRow =
-        _items.length == 1 &&
-        _items[0].catalogItemId == null &&
-        _items[0].description.text.trim().isEmpty;
     row.description.addListener(_markDirty);
     row.quantity.addListener(_markDirty);
     row.unitPrice.addListener(_markDirty);
     setState(() {
-      if (onlyBlankRow) {
-        _items[0].dispose();
-        _items[0] = row;
-      } else {
-        _items.add(row);
-      }
+      _items.add(row);
       _dirty = true;
     });
   }
@@ -495,45 +479,11 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
                   OutlinedButton.icon(
                     onPressed: () => _addItem(_ItemRow()),
                     icon: const Icon(Icons.add),
-                    label: Text(l10n.customLineItem),
+                    label: Text(l10n.addLineItem),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              SearchAutocompleteField<CatalogItem>(
-                key: _catalogFieldKey,
-                labelText: l10n.fromCatalog,
-                search: (q) => ref.read(catalogRepositoryProvider).search(q),
-                displayStringForOption: (c) => c.name,
-                subtitleForOption: (c) =>
-                    '${c.type == 'service' ? l10n.service : l10n.part} · ${formatCurrency(c.defaultUnitPrice)}',
-                createOptionLabel: l10n.addNewCatalogItemOption,
-                onCreateNew: (typedText) async {
-                  final result = await showCatalogItemFormSheet(
-                    context,
-                    initialName: typedText,
-                  );
-                  if (result == null) return null;
-                  final created = await ref
-                      .read(catalogRepositoryProvider)
-                      .create(result.data);
-                  ref.invalidate(catalogListProvider);
-                  return created;
-                },
-                onSelected: (item) {
-                  _addItem(
-                    _ItemRow(
-                      catalogItemId: item.id,
-                      unit: item.unit,
-                      description: item.name,
-                      quantity: '1',
-                      unitPrice: item.defaultUnitPrice.toString(),
-                    ),
-                  );
-                  _catalogFieldKey.currentState?.clear();
-                },
-              ),
-              const SizedBox(height: 12),
               for (int i = 0; i < _items.length; i++) _buildItemRow(l10n, i),
               const SizedBox(height: 16),
               if (kOrderTaxAndDiscountVisible) ...[
@@ -624,9 +574,47 @@ class _WorkOrderFormScreenState extends ConsumerState<WorkOrderFormScreen> {
         children: [
           Expanded(
             flex: 3,
-            child: TextFormField(
-              controller: row.description,
-              decoration: InputDecoration(labelText: l10n.descriptionLabel),
+            // Keyed by the row's own identity, not its list index: index
+            // shifts (a row above gets deleted) would otherwise leave this
+            // widget's State — and its Autocomplete-managed field text —
+            // stale, the same class of bug the Unit field's controller
+            // switch fixed for a static row (see CHANGELOG v0.16.13).
+            child: SearchAutocompleteField<CatalogItem>(
+              key: ObjectKey(row),
+              labelText: l10n.descriptionLabel,
+              initialText: row.description.text,
+              search: (q) => ref.read(catalogRepositoryProvider).search(q),
+              displayStringForOption: (c) => c.name,
+              subtitleForOption: (c) =>
+                  '${c.type == 'service' ? l10n.service : l10n.part} · ${formatCurrency(c.defaultUnitPrice)}',
+              createOptionLabel: l10n.addNewCatalogItemOption,
+              onCreateNew: (typedText) async {
+                final result = await showCatalogItemFormSheet(
+                  context,
+                  initialName: typedText,
+                );
+                if (result == null) return null;
+                final created = await ref
+                    .read(catalogRepositoryProvider)
+                    .create(result.data);
+                ref.invalidate(catalogListProvider);
+                return created;
+              },
+              // Free typing with no selection is still a valid, uncatalogued
+              // line — same as the old "Custom" flow, just inline now.
+              onChanged: (text) {
+                row.description.text = text;
+                _markDirty();
+              },
+              onSelected: (item) {
+                setState(() {
+                  row.catalogItemId = item.id;
+                  row.description.text = item.name;
+                  row.unit.text = item.unit;
+                  row.unitPrice.text = item.defaultUnitPrice.toString();
+                });
+                _markDirty();
+              },
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? l10n.required : null,
             ),
