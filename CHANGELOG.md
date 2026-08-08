@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.16] — 2026-08-08  *(Allow Removing a Catalog Item's Price)*
+
+### Fixed
+#### Frontend
+- **Clearing the price field on a service/part definition threw a
+  validation error, blocking save.** The default-price field's validator
+  in the catalog item form rejected an empty string as "Enter a valid
+  number" (`double.tryParse('')` returns `null`), even though the submit
+  logic already treats an empty field as `0` (`double.tryParse(...) ?? 0`)
+  — the validator was stricter than the code consuming it. Now an empty
+  field passes validation and saves as a price of 0, so users can remove
+  a price instead of being forced to keep some non-empty value. Typing an
+  actual invalid string (e.g. letters) is still rejected.
+  _Files: `frontend/lib/features/catalog/presentation/catalog_item_form_sheet.dart`_
+
+---
+
 ## [0.16.15] — 2026-08-07  *(Inline Catalog Search on Every Work Order Line)*
 
 ### Changed

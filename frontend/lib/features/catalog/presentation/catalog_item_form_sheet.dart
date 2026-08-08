@@ -130,9 +130,13 @@ class _CatalogItemFormSheetState extends State<_CatalogItemFormSheet> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      validator: (v) => (double.tryParse(v ?? '') == null)
-                          ? l10n.enterValidNumber
-                          : null,
+                      validator: (v) {
+                        final text = v?.trim() ?? '';
+                        if (text.isEmpty) return null;
+                        return double.tryParse(text) == null
+                            ? l10n.enterValidNumber
+                            : null;
+                      },
                     ),
                   ),
                 ],
