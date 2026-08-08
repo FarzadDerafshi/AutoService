@@ -1510,7 +1510,7 @@ cause. **Rule for any future Windows batch tooling in this project: always
 `docker` are native `.exe`s and are unaffected — this is specific to tools
 like Flutter that ship a `.bat` entry point on Windows.
 
-The host-side `flutter build web --release` step is being kept
+~~The host-side `flutter build web --release` step is being kept
 deliberately even though it shouldn't be load-bearing — prod's `web`
 service already builds the frontend from scratch *inside* Docker
 (`frontend/Dockerfile`). Farzad reported a deploy without it didn't show
@@ -1518,7 +1518,34 @@ the latest frontend changes; leading suspect is the browser-caching gotcha
 above (`main.dart.js` has no cache-busting hash), not an actually-stale
 Docker image, but this wasn't re-investigated — kept as a deliberate,
 explicit trade-off (~3 extra minutes per deploy) rather than spending more
-time on it. Don't re-open this unprompted.
+time on it. Don't re-open this unprompted.~~ **Superseded, 2026-08-08 —
+this assumption was wrong.** `frontend/Dockerfile` on the prod server had
+itself been locally modified (undetected until this date) into a
+single-stage build that just `COPY build/web`s whatever's already on the
+host filesystem, with no in-Docker Flutter build at all — so the
+host-side step wasn't a redundant safety net, it was the *only* thing
+actually building the app. That's the real explanation for the
+"didn't show the latest changes" symptom above, not browser caching.
+
+**Decision: reverted prod's `frontend/Dockerfile` back to the repo's
+committed self-contained version** (`git checkout -- frontend/Dockerfile`
+on the server) and **removed the host-side Flutter build step from
+`ProdRelease.bat` entirely** — Docker builds Flutter from scratch inside
+the image again, same as the original design. Farzad confirmed this is
+the preferred direction ("best practice... Option B sounds pretty stable")
+now that `--no-wasm-dry-run` (see the `ProdRelease.bat` section above)
+removes the original reason host-side building felt safer. Also added
+`--no-wasm-dry-run` to the `RUN flutter build web --release` line inside
+`frontend/Dockerfile` itself, for parity/speed — untested for whether the
+Windows-specific `'lease' not recognized` bug even reproduces on Linux
+inside the Flutter SDK image, but harmless either way since it only skips
+a diagnostic analysis pass. Net effect: `ProdRelease.bat` is simpler (no
+`cd frontend` / `call flutter build` block, no risk of the `call`-omission
+gotcha since it no longer invokes `flutter` directly at all), a plain
+`git clone` + `docker compose -f docker-compose.prod.yml up -d --build`
+now produces a correct image on any machine with no host-side
+prerequisite, and the first deploy after this change will take longer
+than usual since Docker has to pull the Flutter SDK image again.
 
 **First real production deploy of v0.14.0–v0.15.1 happened 2026-08-06**,
 after the `call` fix: both images rebuilt (`garajos-api`,
