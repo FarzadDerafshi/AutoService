@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.16.17] — 2026-08-08  *(Rename SKU Field to Part Code, Turkish Locales)*
+
+### Changed
+#### Frontend
+- **Relabeled the catalog item form's SKU field** from "SKU (isteğe
+  bağlı)" to "Parça Kodu (isteğe bağlı)" in the Turkish locales (`tr`,
+  `tr_CP`) — the pilot user's own term for the field, still optional and
+  still equally applicable (or not) to services and parts, no behavior
+  change. English locales (`en`, `en_CP`) got the equivalent "Part Code
+  (optional)" for parity, per the standing all-four-locale-variants rule —
+  key name `skuOptional` unchanged, only its four ARB values. Regenerated
+  `frontend/lib/generated/app_localizations*.dart` via `flutter gen-l10n`.
+  _Files: `frontend/lib/l10n/app_{en,tr,en_CP,tr_CP}.arb`,
+  `frontend/lib/generated/app_localizations{,_en,_tr}.dart`_
+
+---
+
 ## [0.16.16] — 2026-08-08  *(Allow Removing a Catalog Item's Price)*
 
 ### Fixed

@@ -270,7 +270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get required => 'Can\'t run without this!';
 
   @override
-  String get skuOptional => 'SKU (optional)';
+  String get skuOptional => 'Part Code (optional)';
 
   @override
   String get unit => 'Unit';
@@ -961,7 +961,7 @@ class AppLocalizationsEnCp extends AppLocalizationsEn {
   String get required => 'Required';
 
   @override
-  String get skuOptional => 'SKU (optional)';
+  String get skuOptional => 'Part Code (optional)';
 
   @override
   String get unit => 'Unit';

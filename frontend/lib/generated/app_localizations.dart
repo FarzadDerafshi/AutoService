@@ -595,7 +595,7 @@ abstract class AppLocalizations {
   /// No description provided for @skuOptional.
   ///
   /// In en, this message translates to:
-  /// **'SKU (optional)'**
+  /// **'Part Code (optional)'**
   String get skuOptional;
 
   /// No description provided for @unit.

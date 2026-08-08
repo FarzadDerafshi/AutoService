@@ -92,7 +92,7 @@
   "part": "Parça",
   "nameLabel": "İsim",
   "required": "Bu parça eksik, motor çalışmaz!",
-  "skuOptional": "SKU (isteğe bağlı)",
+  "skuOptional": "Parça Kodu (isteğe bağlı)",
   "unit": "Birim",
   "defaultPrice": "Varsayılan fiyat",
   "enterValidNumber": "Somunla ödeme almıyorsak geçerli bir rakam girelim.",

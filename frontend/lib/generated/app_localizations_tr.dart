@@ -271,7 +271,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get required => 'Bu parça eksik, motor çalışmaz!';
 
   @override
-  String get skuOptional => 'SKU (isteğe bağlı)';
+  String get skuOptional => 'Parça Kodu (isteğe bağlı)';
 
   @override
   String get unit => 'Birim';
@@ -962,7 +962,7 @@ class AppLocalizationsTrCp extends AppLocalizationsTr {
   String get required => 'Zorunlu';
 
   @override
-  String get skuOptional => 'SKU (isteğe bağlı)';
+  String get skuOptional => 'Parça Kodu (isteğe bağlı)';
 
   @override
   String get unit => 'Birim';

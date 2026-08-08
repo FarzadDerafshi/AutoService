@@ -110,7 +110,7 @@
   "part": "Part",
   "nameLabel": "Name",
   "required": "Can't run without this!",
-  "skuOptional": "SKU (optional)",
+  "skuOptional": "Part Code (optional)",
   "unit": "Unit",
   "defaultPrice": "Default price",
   "enterValidNumber": "Unless you're paying in washers, use a real number.",

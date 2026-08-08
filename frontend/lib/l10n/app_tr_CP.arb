@@ -82,7 +82,7 @@
   "part": "Parça",
   "nameLabel": "İsim",
   "required": "Zorunlu",
-  "skuOptional": "SKU (isteğe bağlı)",
+  "skuOptional": "Parça Kodu (isteğe bağlı)",
   "unit": "Birim",
   "defaultPrice": "Varsayılan fiyat",
   "enterValidNumber": "Geçerli bir sayı girin",

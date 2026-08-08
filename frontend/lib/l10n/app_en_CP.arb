@@ -82,7 +82,7 @@
   "part": "Part",
   "nameLabel": "Name",
   "required": "Required",
-  "skuOptional": "SKU (optional)",
+  "skuOptional": "Part Code (optional)",
   "unit": "Unit",
   "defaultPrice": "Default price",
   "enterValidNumber": "Enter a valid number",
