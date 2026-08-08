@@ -1561,6 +1561,32 @@ repo-wide (v0.15.1, see the Docker Compose services section above) —
 removing the implicit default entirely so the same mistake now fails
 loudly instead of silently doing the dangerous thing.
 
+**2026-08-08: root cause of the port-binding open item finally
+confirmed — not a leftover rename artifact after all.** `git diff
+docker-compose.prod.yml` on the server showed a deliberate manual edit:
+Farzad had changed `"127.0.0.1:8083:80"` to `"8083:80"` (binds to all
+interfaces) because the Cloudflare Tunnel couldn't reach the
+loopback-only binding and the app became unreachable. Real cause:
+`cloudflared` runs as its own Docker container on this host, not as a
+native Windows process — from inside that container, `127.0.0.1` is the
+*container's own* loopback, not the host's, so it could never have
+reached `127.0.0.1:8083` on the host regardless of anything else.
+Widening the bind was a working-but-insecure fix: `repairshop_web` is
+now reachable by any device on the LAN over plain HTTP, bypassing
+whatever protection Cloudflare puts in front of it (the app's own login
+still gates the data, so not a full breach, but a wider attack surface
+than intended). **Decision: leave as-is deliberately for now** — Farzad
+wants to keep shipping pilot features first and revisit this once the
+current development load eases, not mid-pilot.
+
+**Correct fix, for whenever this gets picked back up:** point
+`cloudflared`'s tunnel ingress at the `web` container over the shared
+`repairshop_net` Docker network (service name `web:80`, or
+`host.docker.internal:8083` if simpler) instead of `127.0.0.1:8083`,
+*then* restore `docker-compose.prod.yml`'s `ports:` line to
+`"127.0.0.1:8083:80"` and redeploy. Don't restore the loopback-only bind
+before fixing the tunnel target — that reproduces the original outage.
+
 ---
 
 ## Known Limitations / Future Work
