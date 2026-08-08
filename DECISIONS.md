@@ -1547,6 +1547,43 @@ now produces a correct image on any machine with no host-side
 prerequisite, and the first deploy after this change will take longer
 than usual since Docker has to pull the Flutter SDK image again.
 
+**Immediate fallout from that revert, same day: missing `frontend/
+.dockerignore` let stale host build artifacts break the in-Docker
+build.** The first deploy attempt after reverting to the self-contained
+Dockerfile failed inside `RUN flutter gen-l10n`, deep in `dart format`'s
+internals, with:
+```
+PathNotFoundException: Cannot open file, path =
+'/C:/Users/Farzad/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-6.0.0/lib/flutter.yaml'
+```
+A Windows absolute path (`C:\Users\...`), misread as a POSIX one, inside
+a Linux container — the signature of host state leaking into the build.
+Root cause: `frontend/Dockerfile` had no `.dockerignore` next to it, so
+`COPY . .` (line 6, after `RUN flutter pub get` on line 5) copied
+*everything* in the `frontend/` directory into the build context —
+including the `.dart_tool/` folder left over on the prod server's disk
+from all the past host-side `flutter build web --release` runs (now
+retired, see above). That leftover `.dart_tool/package_config.json` had
+Windows-native absolute paths baked into it from when it was generated
+on the host. `COPY . .` overwrote the container's own freshly-generated,
+correct Linux-native `.dart_tool/` with this poisoned Windows one,
+and the very next step (`flutter gen-l10n`, which shells out to `dart
+format`) tried to resolve `package:flutter_lints/flutter.yaml` through
+it and failed. `backend/Dockerfile` never hit this class of bug because
+it never does a blanket `COPY . .` — it copies only `src/` explicitly.
+
+**Fix: added `frontend/.dockerignore`**, excluding `.dart_tool/`,
+`build/`, `.pub-cache/`, `.pub/`, `.flutter-plugins-dependencies`, and
+the usual VCS/editor cruft — mirroring `frontend/.gitignore`'s Flutter/
+Dart section, since `.dockerignore` and `.gitignore` serve the same
+purpose for different tools and don't share a file. This is a
+permanent, environment-independent fix: with it, `COPY . .` can no
+longer clobber the container's own build tooling state, on this host or
+any other, regardless of whether `flutter` was ever run there directly.
+No action needed on the prod server's leftover `.dart_tool`/`build`
+folders themselves — once excluded from the build context, their mere
+presence on disk is harmless, just clutter.
+
 **First real production deploy of v0.14.0–v0.15.1 happened 2026-08-06**,
 after the `call` fix: both images rebuilt (`garajos-api`,
 `garajos-web:prod`), all three containers came up, and the

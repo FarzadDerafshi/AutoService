@@ -1,0 +1,28 @@
+# frontend/Dockerfile's build stage does `COPY . .`, so anything not
+# excluded here gets baked into the image build context as-is. This file
+# exists specifically to stop host-machine build artifacts (particularly
+# .dart_tool/, which embeds absolute host filesystem paths into
+# .dart_tool/package_config.json) from overwriting the fresh, correct
+# versions `RUN flutter pub get`/`RUN flutter build web` generate inside
+# the container. Hit in practice 2026-08-08: a Windows prod host that had
+# previously run `flutter build web --release` locally (see DECISIONS.md,
+# "ProdRelease.bat" section) left a Windows-path-poisoned .dart_tool/ on
+# disk; without this file, `COPY . .` copied it into the Linux build
+# context, clobbering the container's own .dart_tool/, and `flutter
+# gen-l10n`'s internal `dart format` step failed trying to open
+# `/C:/Users/.../flutter_lints-6.0.0/lib/flutter.yaml` — a Windows path
+# misread as a POSIX one.
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# Version control / editor / OS cruft — never useful inside the image
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+.DS_Store
